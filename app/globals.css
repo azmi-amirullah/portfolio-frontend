@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+}
+
+:root {
+ 
+  /* HSL Conversions */
+  /* #F7FAFC -> 210 20% 98% */
+  --background: hsl(210 20% 98%);
+  /* #1A202C -> 220 26% 14% */
+  --foreground: hsl(220 26% 14%);
+
+  /* #2D3748 -> 218 23% 23% */
+  --primary: hsl(218 23% 23%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* #4299E1 -> 207 73% 57% */
+  --secondary: hsl(207 73% 57%);
+  --secondary-foreground: hsl(0 0% 100%);
+
+  /* #ED8936 -> 27 84% 57% */
+  --accent: hsl(27 84% 57%);
+  --accent-foreground: hsl(0 0% 100%);
+
+  /* #E2E8F0 -> 214 32% 91% */
+  --muted: hsl(214 32% 91%);
+  --muted-foreground: hsl(220 14% 46%);
+
+  /* Cards can be pure white for contrast against off-white bg */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 26% 14%);
+
+  --border: hsl(214 32% 91%); /* Matches subtle/muted */
+  --input: hsl(214 32% 91%);
+  --ring: hsl(207 73% 57%); /* Blue ring */
+
+  --radius: 0.5rem;
+}
+
+/* Utility classes for typography */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Enable smooth scrolling for in-page anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
