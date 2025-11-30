@@ -17,7 +17,8 @@ export default function Navigation() {
   }, []);
 
   const navLinks = [
-    { name: 'Projects', href: '#projects' },
+    { name: 'Past Projects', href: '#projects' },
+    { name: 'Personal Projects', href: '#personal-projects' },
     { name: 'About', href: '#about' },
   ];
 
