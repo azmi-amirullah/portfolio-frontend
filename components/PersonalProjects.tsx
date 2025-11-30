@@ -18,7 +18,14 @@ export default function PersonalProjects() {
       title: 'Personal Portfolio V1',
       description:
         'My first personal portfolio website built to showcase my early work and skills. It features a simple design and basic project listing.',
-      tags: ['HTML', 'CSS', 'JavaScript'],
+      tags: [
+        'Next.js',
+        'Tailwind CSS',
+        'TypeScript',
+        'React',
+        'Material Ui',
+        'HTML & CSS',
+      ],
       images: ['/projects/portfolio/portfolio_1.png'],
       webUrl: '#',
       repoUrl: '#',
