@@ -63,14 +63,14 @@ export default function Hero() {
 
             <div className='mt-12 flex items-center gap-6 text-muted-foreground'>
               <a
-                href='#'
+                href='https://github.com/azmi-amirullah'
                 className='hover:text-secondary transition-colors'
                 aria-label='GitHub'
               >
                 <LuGithub size={24} />
               </a>
               <a
-                href='#'
+                href='https://www.linkedin.com/in/azmi-amirullah/'
                 className='hover:text-secondary transition-colors'
                 aria-label='LinkedIn'
               >
