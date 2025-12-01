@@ -77,7 +77,9 @@ export default function Hero() {
                 <LuLinkedin size={24} />
               </a>
               <div className='h-px w-12 bg-border'></div>
-              <span className='text-sm font-medium'>Based in Indonesia</span>
+              <span className='text-sm font-medium'>
+                Based in Indonesia, Available for remote work.
+              </span>
             </div>
           </motion.div>
         </div>

@@ -42,10 +42,11 @@ export default function About() {
             </h2>
             <div className='space-y-4 text-muted-foreground text-lg leading-relaxed'>
               <p>
-                Hello! I&apos;m Azmi, a passionate frontend developer who enjoys
-                bridging the gap between engineering and design. I have been
-                developing web applications for over 4 years, specializing in
-                the React ecosystem.
+                Hello! I&apos;m Azmi Amirullah, but you can call me Azmi, a
+                passionate frontend developer who enjoys bridging the gap
+                between engineering and design. I have been developing web
+                applications for over 4 years, specializing in the React
+                ecosystem.
               </p>
               <p>
                 My approach to development is centered around three core
