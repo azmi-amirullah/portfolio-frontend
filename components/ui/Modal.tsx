@@ -65,7 +65,7 @@ export default function Modal({
                 className={`flex items-center justify-between px-6 py-4 border-b ${headerClassName}`}
               >
                 {title && (
-                  <h3 className='text-xl font-bold truncate pr-4 flex items-center gap-3'>
+                  <h3 className='text-xl font-bold wrap-break-word pr-4 flex items-center gap-3'>
                     {headerIcon}
                     {title}
                   </h3>

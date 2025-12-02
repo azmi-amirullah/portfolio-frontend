@@ -80,20 +80,20 @@ export default function PaymentModal({
       showCloseButton={false}
     >
       {/* Header */}
-      <div className='bg-blue-600 px-6 py-4 flex justify-between items-center'>
-        <h3 className='text-2xl font-bold text-white flex items-center gap-3'>
-          <MdCreditCard size={28} />
+      <div className='bg-blue-600 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center'>
+        <h3 className='text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3'>
+          <MdCreditCard size={24} className='sm:w-7 sm:h-7' />
           Payment
         </h3>
       </div>
 
       {/* Content */}
-      <div className='bg-white px-6 py-6'>
+      <div className='bg-white px-4 py-4 sm:px-6 sm:py-6'>
         {/* Two Column Layout */}
-        <div className='grid grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
           {/* Left Column - Inputs */}
-          <div className='space-y-4'>
-            {/* Subtotal */}
+          <div className='space-y-3 sm:space-y-4'>
+            {/* Subtotal - Hidden on mobile as it's less critical and shown in breakdown */}
             <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
               <div className='text-sm text-gray-600 mb-1'>Subtotal</div>
               <div className='text-2xl font-bold text-gray-900'>
@@ -101,43 +101,45 @@ export default function PaymentModal({
               </div>
             </div>
 
-            {/* Discount Input */}
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Discount (Rp)
-              </label>
-              <input
-                type='number'
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder='Enter discount amount'
-                className='block w-full px-4 py-3 text-lg border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                min='0'
-                step='1000'
-              />
-            </div>
+            <div className='grid grid-cols-2 gap-3 sm:block sm:space-y-4'>
+              {/* Discount Input */}
+              <div>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
+                  Discount (Rp)
+                </label>
+                <input
+                  type='number'
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder='0'
+                  className='block w-full px-3 py-2 sm:px-4 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  min='0'
+                  step='1000'
+                />
+              </div>
 
-            {/* Tax Rate Input */}
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Tax (%)
-              </label>
-              <input
-                type='number'
-                value={taxRate}
-                onChange={(e) => setTaxRate(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder='Enter tax percentage'
-                className='block w-full px-4 py-3 text-lg border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                min='0'
-                max='100'
-                step='1'
-              />
+              {/* Tax Rate Input */}
+              <div>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
+                  Tax (%)
+                </label>
+                <input
+                  type='number'
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder='0'
+                  className='block w-full px-3 py-2 sm:px-4 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  min='0'
+                  max='100'
+                  step='1'
+                />
+              </div>
             </div>
 
             {/* Calculation Breakdown */}
-            <div className='bg-blue-50 rounded-xl p-4 border border-blue-200 space-y-2 text-sm'>
+            <div className='bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200 space-y-1 sm:space-y-2 text-xs sm:text-sm'>
               <div className='flex justify-between text-gray-700'>
                 <span>Subtotal:</span>
                 <span>Rp {totalAmount.toLocaleString()}</span>
@@ -150,7 +152,7 @@ export default function PaymentModal({
                 <span>Tax ({taxPercentage}%):</span>
                 <span>+ Rp {taxAmount.toLocaleString()}</span>
               </div>
-              <div className='flex justify-between font-bold text-blue-700 text-base pt-2 border-t border-blue-300'>
+              <div className='flex justify-between font-bold text-blue-700 text-sm sm:text-base pt-2 border-t border-blue-300'>
                 <span>Grand Total:</span>
                 <span>Rp {finalTotal.toLocaleString()}</span>
               </div>
@@ -158,18 +160,20 @@ export default function PaymentModal({
           </div>
 
           {/* Right Column - Payment */}
-          <div className='space-y-4'>
+          <div className='space-y-3 sm:space-y-4'>
             {/* Grand Total Display */}
-            <div className='bg-linear-to-r from-blue-500 to-blue-600 rounded-xl p-6 border-2 border-blue-400'>
-              <div className='text-sm text-blue-100 mb-1'>Grand Total</div>
-              <div className='text-4xl font-bold text-white'>
+            <div className='bg-linear-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 border-2 border-blue-400 text-center sm:text-left'>
+              <div className='text-xs sm:text-sm text-blue-100 mb-1'>
+                Grand Total
+              </div>
+              <div className='text-3xl sm:text-4xl font-bold text-white'>
                 Rp {finalTotal.toLocaleString()}
               </div>
             </div>
 
             {/* Amount Paid Input */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
                 Amount Paid
               </label>
               <input
@@ -178,8 +182,8 @@ export default function PaymentModal({
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder='Enter amount received'
-                className='block w-full px-4 py-4 text-2xl border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                placeholder='Enter amount'
+                className='block w-full px-4 py-3 sm:py-4 text-xl sm:text-2xl border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                 min='0'
                 step='1000'
               />
@@ -188,13 +192,12 @@ export default function PaymentModal({
             {/* Change Display */}
             {amountPaid && (
               <div
-                className={`rounded-xl p-6 border-2 ${
-                  isValidPayment
-                    ? 'bg-green-50 border-green-300'
-                    : 'bg-red-50 border-red-300'
-                }`}
+                className={`rounded-xl p-4 sm:p-6 border-2 ${isValidPayment
+                  ? 'bg-green-50 border-green-300'
+                  : 'bg-red-50 border-red-300'
+                  }`}
               >
-                <div className='text-sm font-medium mb-1'>
+                <div className='text-xs sm:text-sm font-medium mb-1'>
                   {isValidPayment ? (
                     <span className='text-green-700'>Change</span>
                   ) : (
@@ -202,9 +205,8 @@ export default function PaymentModal({
                   )}
                 </div>
                 <div
-                  className={`text-3xl font-bold ${
-                    isValidPayment ? 'text-green-700' : 'text-red-700'
-                  }`}
+                  className={`text-2xl sm:text-3xl font-bold ${isValidPayment ? 'text-green-700' : 'text-red-700'
+                    }`}
                 >
                   {isValidPayment ? (
                     <>Rp {changeAmount.toLocaleString()}</>
@@ -219,20 +221,20 @@ export default function PaymentModal({
       </div>
 
       {/* Footer */}
-      <div className='bg-gray-50 px-6 py-4 flex gap-3 border-t border-gray-200'>
+      <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:py-4 flex gap-3 border-t border-gray-200'>
         <Button
           variant='outline'
           onClick={onCancel}
-          className='flex-1 rounded-xl text-base h-auto py-3'
+          className='flex-1 rounded-xl text-sm sm:text-base h-auto py-2.5 sm:py-3'
         >
           Cancel
         </Button>
         <Button
           onClick={handleConfirm}
           disabled={!isValidPayment}
-          className='flex-1 rounded-xl text-base font-bold bg-blue-600 hover:bg-blue-700 h-auto py-3'
+          className='flex-1 rounded-xl text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 h-auto py-2.5 sm:py-3'
         >
-          Confirm Payment
+          Confirm
         </Button>
       </div>
     </Modal>
