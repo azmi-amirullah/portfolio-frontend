@@ -15,6 +15,22 @@ interface Project {
 export default function PersonalProjects() {
   const projects: Project[] = [
     {
+      title: 'Mini Market Cashier System',
+      description:
+        'A comprehensive point-of-sale (POS) system for mini markets featuring inventory management, sales tracking, stock batch management with expiration dates, and detailed sales history. (In Progress - Currently using mock API with localStorage)',
+      tags: [
+        'Next.js',
+        'TypeScript',
+        'React',
+        'Tailwind CSS',
+        'LocalStorage API',
+        'Framer Motion',
+      ],
+      images: [],
+      webUrl: '/cashier',
+      repoUrl: '',
+    },
+    {
       title: 'Personal Portfolio V1',
       description:
         'My first personal portfolio website built to showcase my early work and skills. It features a simple design and basic project listing.',

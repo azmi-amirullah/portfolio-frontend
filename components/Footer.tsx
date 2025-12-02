@@ -6,9 +6,6 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} Mohd Azmi Amirullah A. All rights
           reserved.
         </p>
-        {/* <p className="text-xs mt-2 text-primary-foreground/50">
-          Designed & Built with React and Tailwind CSS
-        </p> */}
       </div>
     </footer>
   );

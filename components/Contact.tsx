@@ -19,8 +19,6 @@ export default function Contact() {
       newErrors.name = 'Name must be at least 2 characters.';
     if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = 'Please enter a valid email address.';
-    // if (formData.message.length < 10)
-    //   newErrors.message = 'Message must be at least 10 characters.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

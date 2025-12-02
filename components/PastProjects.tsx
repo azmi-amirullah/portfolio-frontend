@@ -33,24 +33,6 @@ export default function PastProjects() {
       webUrl: '',
       repoUrl: '',
     },
-    // {
-    //   title: 'HAHN Rechtsanwälte Website',
-    //   description:
-    //     'Maintenance and feature development for a major German consumer-rights law firm. Improved reliability, forms, and workflow logic across a Drupal-based system while ensuring compatibility and performance.',
-    //   tags: ['Drupal', 'PHP', 'Webform', 'MySQL', 'CSS'],
-    //   images: [],
-    //   webUrl: '',
-    //   repoUrl: '',
-    // },
-    // {
-    //   title: 'Keen Law Website',
-    //   description:
-    //     'Enhanced and maintained Keen-Law’s insurance and liability litigation platform. Worked on Contao CMS modules, styling, and backend logic to improve stability and content delivery.',
-    //   tags: ['PHP', 'Contao', 'CSS', 'Tailwind', 'MySQL'],
-    //   images: [],
-    //   webUrl: '',
-    //   repoUrl: '',
-    // },
     {
       title: 'Claimback',
       description:

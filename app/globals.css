@@ -51,9 +51,9 @@
   --secondary: hsl(207 73% 57%);
   --secondary-foreground: hsl(0 0% 100%);
 
-  /* #ED8936 -> 27 84% 57% */
-  --accent: hsl(27 84% 57%);
-  --accent-foreground: hsl(0 0% 100%);
+  /* #F0F2F5 -> 210 20% 95% */
+  --accent: hsl(210 20% 95%);
+  --accent-foreground: hsl(220 26% 14%);
 
   /* #E2E8F0 -> 214 32% 91% */
   --muted: hsl(214 32% 91%);

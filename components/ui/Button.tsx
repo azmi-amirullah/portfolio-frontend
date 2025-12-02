@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { CgSpinner } from 'react-icons/cg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'outline';
@@ -7,6 +8,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   href?: string;
   className?: string;
   children: React.ReactNode;
+  isLoading?: boolean;
 }
 
 export const Button = React.forwardRef<
@@ -20,12 +22,14 @@ export const Button = React.forwardRef<
       size = 'md',
       href,
       children,
+      isLoading,
+      disabled,
       ...props
     },
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
+      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer';
 
     const variants = {
       primary: 'bg-primary text-white hover:bg-primary/90 shadow',
@@ -52,7 +56,9 @@ export const Button = React.forwardRef<
       className
     );
 
-    if (href) {
+    const isButtonDisabled = isLoading || disabled;
+
+    if (href && !isButtonDisabled) {
       return (
         <a
           href={href}
@@ -69,8 +75,10 @@ export const Button = React.forwardRef<
       <button
         className={combinedClassName}
         ref={ref as React.Ref<HTMLButtonElement>}
+        disabled={isButtonDisabled}
         {...props}
       >
+        {isLoading && <CgSpinner className='mr-2 h-4 w-4 animate-spin' />}
         {children}
       </button>
     );

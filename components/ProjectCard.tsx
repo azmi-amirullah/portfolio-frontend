@@ -22,8 +22,7 @@ export default function ProjectCard({
   tags,
   images = [],
   webUrl,
-}: // repoUrl,
-ProjectCardProps) {
+}: ProjectCardProps) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const displayImage = images.length > 0 ? images[0] : '';
