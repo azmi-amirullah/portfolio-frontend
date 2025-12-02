@@ -25,6 +25,7 @@ export interface Sale {
   taxRate?: number;
   amountPaid?: number;
   grandTotal?: number;
+  price?: number; // Price per unit at the time of sale
 }
 
 const STORAGE_KEYS = {
@@ -120,7 +121,7 @@ class CashierService {
   // --- Sales ---
 
   async processSale(
-    cartItems: { productId: string; quantity: number }[],
+    cartItems: { productId: string; quantity: number; price: number }[],
     paymentDetails?: {
       discount: number;
       taxRate: number;
@@ -142,6 +143,7 @@ class CashierService {
         taxRate: paymentDetails?.taxRate,
         amountPaid: paymentDetails?.amountPaid,
         grandTotal: paymentDetails?.grandTotal,
+        price: item.price,
       };
       allSales.push(sale);
     });
@@ -162,7 +164,7 @@ class CashierService {
         return {
           ...sale,
           productName: product?.name || 'Unknown Product',
-          productPrice: product?.price || 0,
+          productPrice: sale.price || 0, // Use recorded price, fallback to 0 for old records
         };
       })
       .sort((a, b) => b.timestamp - a.timestamp); // Most recent first

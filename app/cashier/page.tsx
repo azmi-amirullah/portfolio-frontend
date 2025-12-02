@@ -98,6 +98,7 @@ export default function POSPage() {
     const salesData = cart.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
+      price: item.price,
     }));
 
     // Calculate grand total

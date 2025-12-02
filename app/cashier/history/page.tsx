@@ -4,7 +4,14 @@ import { useState, useEffect } from 'react';
 import { cashierService } from '@/lib/services/cashier-service';
 import { MdHistory, MdSearch } from 'react-icons/md';
 import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
+
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  SelectChangeEvent,
+} from '@mui/material';
 
 interface SaleRecord {
   id: string;
@@ -23,7 +30,7 @@ export default function SalesHistoryPage() {
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [filteredSales, setFilteredSales] = useState<SaleRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('today');
   const [selectedSale, setSelectedSale] = useState<SaleRecord | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,10 +117,9 @@ export default function SalesHistoryPage() {
         <div>
           <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
             <MdHistory className='text-blue-600' size={28} />
-            <span className='hidden sm:inline'>Sales History</span>
-            <span className='sm:hidden'>History</span>
+            <span>Sales History</span>
           </h1>
-          <p className='text-gray-500 mt-1 text-sm lg:text-base hidden sm:block'>
+          <p className='text-gray-500 mt-1 text-sm lg:text-base'>
             View all completed transactions
           </p>
         </div>
@@ -157,20 +163,36 @@ export default function SalesHistoryPage() {
               placeholder='Search by product name...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm'
+              className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm h-10'
             />
           </div>
 
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className='block w-full px-3 py-3 lg:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm'
-          >
-            <option value='all'>All Time</option>
-            <option value='today'>Today</option>
-            <option value='week'>Last 7 Days</option>
-            <option value='month'>Last 30 Days</option>
-          </select>
+          <FormControl size='small' className='w-full'>
+            <Select
+              value={dateFilter}
+              onChange={(e: SelectChangeEvent) => setDateFilter(e.target.value)}
+              displayEmpty
+              inputProps={{ 'aria-label': 'Date Filter' }}
+              sx={{
+                borderRadius: '0.5rem',
+                backgroundColor: 'white',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#d1d5db', // gray-300
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3b82f6', // blue-500
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#3b82f6', // blue-500
+                },
+              }}
+            >
+              <MenuItem value='all'>All Time</MenuItem>
+              <MenuItem value='today'>Today</MenuItem>
+              <MenuItem value='week'>Last 7 Days</MenuItem>
+              <MenuItem value='month'>Last 30 Days</MenuItem>
+            </Select>
+          </FormControl>
         </div>
       </div>
 
@@ -203,6 +225,9 @@ export default function SalesHistoryPage() {
                       {formatDate(sale.timestamp)} •{' '}
                       {formatTime(sale.timestamp)}
                     </div>
+                    <div className='text-sm font-medium mt-1 text-gray-900'>
+                      @ Rp {sale.productPrice.toLocaleString()}
+                    </div>
                   </div>
                   <span className='text-sm font-semibold text-gray-900 bg-gray-100 px-2 py-1 rounded'>
                     ×{sale.quantity}
@@ -219,7 +244,7 @@ export default function SalesHistoryPage() {
                       <span className='ml-2'>Tax: {sale.taxRate}%</span>
                     ) : null}
                   </div>
-                  <div className='text-base font-bold text-gray-900'>
+                  <div className='text-base font-bold text-blue-600'>
                     Rp {(sale.grandTotal || 0).toLocaleString()}
                   </div>
                 </div>
@@ -238,6 +263,9 @@ export default function SalesHistoryPage() {
                     </th>
                     <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                       Product
+                    </th>
+                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      Price
                     </th>
                     <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
                       Quantity
@@ -273,6 +301,9 @@ export default function SalesHistoryPage() {
                           {sale.productName}
                         </div>
                       </td>
+                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900'>
+                        Rp {sale.productPrice.toLocaleString()}
+                      </td>
                       <td className='px-6 py-4 whitespace-nowrap text-center'>
                         <span className='text-sm font-semibold text-gray-900'>
                           {sale.quantity}
@@ -294,7 +325,7 @@ export default function SalesHistoryPage() {
                           <span className='text-gray-400'>-</span>
                         )}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900'>
+                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-blue-600'>
                         Rp {(sale.grandTotal || 0).toLocaleString()}
                       </td>
                     </tr>

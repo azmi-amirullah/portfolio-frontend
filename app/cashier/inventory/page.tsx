@@ -143,9 +143,15 @@ export default function InventoryPage() {
   return (
     <div className='space-y-4 lg:space-y-6'>
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-        <h2 className='text-xl lg:text-2xl font-bold text-gray-800'>
-          Inventory Management
-        </h2>
+        <div>
+          <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
+            <MdInventory className='text-blue-600' size={28} />
+            <span>Inventory Management</span>
+          </h1>
+          <p className='text-gray-500 mt-1 text-sm lg:text-base'>
+            Manage your product inventory and stock
+          </p>
+        </div>
         <Button
           onClick={handleAddClick}
           className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
@@ -165,7 +171,7 @@ export default function InventoryPage() {
           placeholder='Search by name or barcode...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm'
+          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm h-10'
         />
       </div>
 
@@ -211,28 +217,6 @@ export default function InventoryPage() {
                 <div className='flex justify-between items-center'>
                   <div className='text-sm font-semibold text-blue-600'>
                     Rp {product.price.toLocaleString()}
-                  </div>
-                  <div className='flex gap-2'>
-                    <Button
-                      variant='ghost'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewClick(product);
-                      }}
-                      className='text-green-600 hover:text-green-900 hover:bg-green-50 p-2 h-auto'
-                    >
-                      <MdVisibility size={18} />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditClick(product);
-                      }}
-                      className='text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 h-auto'
-                    >
-                      <MdEdit size={18} />
-                    </Button>
                   </div>
                 </div>
               </div>
