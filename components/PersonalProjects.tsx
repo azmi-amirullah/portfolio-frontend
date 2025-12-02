@@ -26,7 +26,7 @@ export default function PersonalProjects() {
         'LocalStorage API',
         'Framer Motion',
       ],
-      images: [],
+      images: ['/projects/cashier/cashier_1.png'],
       webUrl: '/cashier',
       repoUrl: '',
     },
