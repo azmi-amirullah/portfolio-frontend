@@ -60,7 +60,8 @@ export default function CashierLayoutClient({
         router.replace('/cashier');
     };
 
-
+    const user = authService.getUser();
+    const username = user?.username || 'User';
 
     const navItems = [
         { path: '/cashier/pos', icon: MdShoppingCart, label: 'POS' },
@@ -115,6 +116,19 @@ export default function CashierLayoutClient({
                                 </Link>
                             ))}
 
+                            <div className='px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-lg mt-2'>
+                                <div className='flex items-center gap-2'>
+                                    <div className='w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center'>
+                                        <span className='text-blue-600 font-semibold text-sm'>
+                                            {username.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div className='flex-1 min-w-0'>
+                                        <p className='text-sm font-medium text-gray-900 truncate'>{username}</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={handleLogout}
                                 className='w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer'
@@ -161,7 +175,17 @@ export default function CashierLayoutClient({
                     ))}
                 </nav>
 
-                <div className='p-4 border-t border-gray-200 space-y-2'>
+                <div className='p-4 border-t border-gray-200 bg-gray-50'>
+                    <div className='flex items-center gap-3 mb-4'>
+                        <div className='w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center'>
+                            <span className='text-blue-600 font-semibold'>
+                                {username.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                            <p className='text-sm font-medium text-gray-900 truncate'>{username}</p>
+                        </div>
+                    </div>
 
                     <button
                         onClick={handleLogout}
@@ -177,6 +201,11 @@ export default function CashierLayoutClient({
                         <MdArrowBack size={20} />
                         Back to Portfolio
                     </Link>
+                    <div className='text-center pt-2 border-t border-gray-200'>
+                        <p className='text-xs text-gray-500'>
+                            &copy; {new Date().getFullYear()} Mohd Azmi Amirullah A
+                        </p>
+                    </div>
                 </div>
             </aside>
 

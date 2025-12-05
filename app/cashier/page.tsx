@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/services/auth-service';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-toastify';
-import { MdDashboard, MdLock, MdPerson } from 'react-icons/md';
+import { MdDashboard, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
 export default function CashierLoginPage() {
     const router = useRouter();
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
@@ -109,13 +110,24 @@ export default function CashierLoginPage() {
                                 <input
                                     id='password'
                                     name='password'
-                                    type='password'
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+                                    className='block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
                                     placeholder='Enter your password'
                                 />
+                                <button
+                                    type='button'
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
+                                >
+                                    {showPassword ? (
+                                        <MdVisibilityOff className='h-5 w-5 text-gray-400 hover:text-gray-600' />
+                                    ) : (
+                                        <MdVisibility className='h-5 w-5 text-gray-400 hover:text-gray-600' />
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -131,9 +143,18 @@ export default function CashierLoginPage() {
                     </div>
                 </form>
 
+                <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                    <p className='text-sm font-medium text-blue-900 mb-2'>Try it out:</p>
+                    <div className='space-y-1 text-sm text-blue-700'>
+                        <p><span className='font-medium'>Username:</span> guest</p>
+                        <p><span className='font-medium'>Password:</span> guest.password</p>
+                    </div>
+                </div>
+
                 <div className='text-center'>
                     <p className='text-xs text-gray-500'>
-                        Protected by Mini Market Security System
+                        &copy; {new Date().getFullYear()} Mohd Azmi Amirullah A. All rights
+                        reserved.
                     </p>
                 </div>
             </div>
