@@ -84,7 +84,7 @@ class CashierService {
 
         const response = await fetch(
           `${
-            process.env.STRAPI_URL || 'http://localhost:1337'
+            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
           }/api/frontend/getProducts`,
           {
             method: 'GET',
@@ -166,7 +166,7 @@ class CashierService {
         // Edit existing product
         response = await fetch(
           `${
-            process.env.STRAPI_URL || 'http://localhost:1337'
+            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
           }/api/frontend/editProduct`,
           {
             method: 'PUT',
@@ -184,7 +184,7 @@ class CashierService {
         // Add new product
         response = await fetch(
           `${
-            process.env.STRAPI_URL || 'http://localhost:1337'
+            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
           }/api/frontend/addProduct`,
           {
             method: 'POST',
@@ -244,7 +244,7 @@ class CashierService {
 
       const response = await fetch(
         `${
-          process.env.STRAPI_URL || 'http://localhost:1337'
+          process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
         }/api/frontend/deleteProduct`,
         {
           method: 'POST',
@@ -337,7 +337,7 @@ class CashierService {
 
       const response = await fetch(
         `${
-          process.env.STRAPI_URL || 'http://localhost:1337'
+          process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
         }/api/frontend/saveSale`,
         {
           method: 'POST',
@@ -432,7 +432,7 @@ class CashierService {
 
         const response = await fetch(
           `${
-            process.env.STRAPI_URL || 'http://localhost:1337'
+            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
           }/api/frontend/getSales`,
           {
             method: 'GET',

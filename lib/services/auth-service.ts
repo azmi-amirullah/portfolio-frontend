@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 
-const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
+const NEXT_PUBLIC_STRAPI_URL =
+  process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
 export interface User {
   id: number;
@@ -24,7 +25,7 @@ class AuthService {
 
   async login(identifier: string, password: string): Promise<boolean> {
     try {
-      const response = await fetch(`${STRAPI_URL}/api/auth/local`, {
+      const response = await fetch(`${NEXT_PUBLIC_STRAPI_URL}/api/auth/local`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
