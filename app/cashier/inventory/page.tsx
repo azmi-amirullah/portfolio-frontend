@@ -13,6 +13,8 @@ import {
   MdSearch,
   MdInventory,
   MdVisibility,
+  MdSync,
+  MdDelete,
 } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -23,11 +25,13 @@ function ProductRow({
   stock,
   onEdit,
   onView,
+  onDelete,
 }: {
   product: Product & { batches: StockBatch[] };
   stock: number;
   onEdit: (p: Product & { batches: StockBatch[] }) => void;
   onView: (p: Product & { batches: StockBatch[] }) => void;
+  onDelete: (p: Product & { batches: StockBatch[] }) => void;
 }) {
   return (
     <tr
@@ -45,11 +49,10 @@ function ProductRow({
       </td>
       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
         <span
-          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-            stock > 0
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}
+          className={`px-2 inline-flex leading-5 font-semibold rounded-full ${stock > 0
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}
         >
           {stock}
         </span>
@@ -71,9 +74,19 @@ function ProductRow({
             e.stopPropagation();
             onEdit(product);
           }}
-          className='text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 h-auto'
+          className='text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 h-auto mr-2'
         >
           <MdEdit size={18} />
+        </Button>
+        <Button
+          variant='ghost'
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(product);
+          }}
+          className='text-red-600 hover:text-red-900 hover:bg-red-50 p-2 h-auto'
+        >
+          <MdDelete size={18} />
         </Button>
       </td>
     </tr>
@@ -82,7 +95,7 @@ function ProductRow({
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<
-    (Product & { stock: number; batches: StockBatch[] })[]
+    (Product & { availableStock: number; batches: StockBatch[] })[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,12 +104,16 @@ export default function InventoryPage() {
   >(undefined);
   const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<
+    (Product & { batches: StockBatch[] }) | null
+  >(null);
 
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
       try {
-        const allProducts = await cashierService.getProductsWithStock();
+        const allProducts = cashierService.getProductsWithStock();
         setProducts(allProducts);
       } finally {
         setIsLoading(false);
@@ -106,8 +123,8 @@ export default function InventoryPage() {
     loadProducts();
   }, []);
 
-  const refreshProducts = async () => {
-    const allProducts = await cashierService.getProductsWithStock();
+  const refreshProducts = () => {
+    const allProducts = cashierService.getProductsWithStock();
     setProducts(allProducts);
   };
 
@@ -134,6 +151,24 @@ export default function InventoryPage() {
     refreshProducts();
   };
 
+  const handleDelete = (product: Product & { batches: StockBatch[] }) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await cashierService.deleteProduct(productToDelete.name);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
+      refreshProducts();
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+    }
+  };
+
   const filteredProducts = products.filter(
     (p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,13 +187,28 @@ export default function InventoryPage() {
             Manage your product inventory and stock
           </p>
         </div>
-        <Button
-          onClick={handleAddClick}
-          className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
-        >
-          <MdAdd size={20} />
-          <span>Add Product</span>
-        </Button>
+        <div className='flex gap-2 w-full sm:w-auto'>
+          <Button
+            onClick={async () => {
+              setIsLoading(true);
+              await cashierService.syncWithBackend();
+              refreshProducts();
+              setIsLoading(false);
+            }}
+            variant='outline'
+            className='flex items-center gap-2 w-full sm:w-auto justify-center'
+          >
+            <MdSync size={20} />
+            <span>Sync</span>
+          </Button>
+          <Button
+            onClick={handleAddClick}
+            className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
+          >
+            <MdAdd size={20} />
+            <span>Add Product</span>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -183,7 +233,15 @@ export default function InventoryPage() {
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-          <p className='text-gray-500'>No products found.</p>
+          <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <MdInventory size={32} className='text-gray-400' />
+          </div>
+          <h3 className='text-lg font-medium text-gray-900 mb-1'>
+            No products found
+          </h3>
+          <p className='text-gray-500'>
+            {searchTerm ? 'Try adjusting your search query' : 'Add your first product to get started'}
+          </p>
         </div>
       ) : (
         <>
@@ -205,13 +263,12 @@ export default function InventoryPage() {
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      product.stock > 0
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
                   >
-                    {product.stock}
+                    {product.availableStock}
                   </span>
                 </div>
                 <div className='flex justify-between items-center'>
@@ -250,9 +307,10 @@ export default function InventoryPage() {
                   <ProductRow
                     key={product.id}
                     product={product}
-                    stock={product.stock}
+                    stock={product.availableStock}
                     onEdit={handleEditClick}
                     onView={handleViewClick}
+                    onDelete={handleDelete}
                   />
                 ))}
               </tbody>
@@ -273,8 +331,8 @@ export default function InventoryPage() {
           !editingProduct
             ? 'Add New Product'
             : isEditMode
-            ? 'Edit Product'
-            : 'Product Details'
+              ? 'Edit Product'
+              : 'Product Details'
         }
         headerIcon={<MdInventory size={24} />}
         headerClassName='bg-blue-600 border-blue-400 text-white'
@@ -318,6 +376,14 @@ export default function InventoryPage() {
                     Rp {editingProduct.price.toLocaleString()}
                   </div>
                 </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Total Sold
+                  </label>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-semibold text-gray-900'>
+                    {editingProduct.sold || 0} units
+                  </div>
+                </div>
               </div>
 
               {/* Stock Table - Read-only */}
@@ -325,7 +391,7 @@ export default function InventoryPage() {
                 <h3 className='text-sm font-medium text-gray-700 mb-3'>
                   Stock Batches
                 </h3>
-                <div className='border rounded-md overflow-hidden'>
+                <div className='border rounded-md overflow-x-auto'>
                   <table className='min-w-full divide-y divide-gray-200'>
                     <thead className='bg-gray-50'>
                       <tr>
@@ -333,7 +399,7 @@ export default function InventoryPage() {
                           Exp. Date
                         </th>
                         <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                          Added
+                          Created At
                         </th>
                         <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                           Qty
@@ -356,45 +422,48 @@ export default function InventoryPage() {
                       ) : (
                         editingProduct.batches.map((batch) => (
                           <tr
-                            key={batch.id}
+                            key={batch.addedDate}
                             className={batch.isSoldOut ? 'bg-gray-50' : ''}
                           >
                             <td
-                              className={`px-3 py-2 text-sm text-gray-900 ${
-                                batch.isSoldOut
-                                  ? 'line-through text-gray-400'
-                                  : ''
-                              }`}
+                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
+                                ? 'line-through text-gray-400'
+                                : ''
+                                }`}
                             >
-                              {batch.expirationDate}
+                              {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
                             </td>
                             <td
-                              className={`px-3 py-2 text-sm text-gray-500 ${
-                                batch.isSoldOut
-                                  ? 'line-through text-gray-400'
-                                  : ''
-                              }`}
+                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
+                                ? 'line-through text-gray-400'
+                                : ''
+                                }`}
                             >
-                              {batch.addedDate}
+                              {new Date(batch.addedDate).toLocaleString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false,
+                              })}
                             </td>
                             <td
-                              className={`px-3 py-2 text-sm text-gray-900 ${
-                                batch.isSoldOut
-                                  ? 'line-through text-gray-400'
-                                  : ''
-                              }`}
+                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
+                                ? 'line-through text-gray-400'
+                                : ''
+                                }`}
                             >
                               {batch.quantity}
                             </td>
                             <td className='px-3 py-2 text-sm'>
                               <span
-                                className={`text-xs px-2 py-1 rounded-full ${
-                                  batch.isSoldOut
-                                    ? 'bg-red-100 text-red-700 font-medium'
-                                    : 'bg-green-100 text-green-700'
-                                }`}
+                                className={`text-xs px-2 py-1 rounded-full ${batch.isSoldOut
+                                  ? 'bg-red-100 text-red-700 font-medium'
+                                  : 'bg-green-100 text-green-700'
+                                  }`}
                               >
-                                {batch.isSoldOut ? 'Sold Out' : 'Available'}
+                                {batch.isSoldOut ? 'Unavailable' : 'Available'}
                               </span>
                             </td>
                           </tr>
@@ -417,6 +486,52 @@ export default function InventoryPage() {
               </div>
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setProductToDelete(null);
+        }}
+        title='Delete Product'
+        headerIcon={<MdDelete size={24} />}
+        headerClassName='bg-red-600 border-red-400 text-white'
+        maxWidth='md'
+      >
+        <div className='p-6'>
+          <p className='text-gray-700 mb-1'>
+            Are you sure you want to delete{' '}
+            <span className='font-semibold text-gray-900'>
+              &quot;{productToDelete?.name}&quot;
+            </span>
+            ?
+          </p>
+          <p className='text-sm text-gray-500'>
+            ⚠️ This action cannot be undone.
+          </p>
+          <div className='flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setProductToDelete(null);
+              }}
+              className='text-sm'
+              type='button'
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              className='text-sm bg-red-600 hover:bg-red-700'
+              type='button'
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

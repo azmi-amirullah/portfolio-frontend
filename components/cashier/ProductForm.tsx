@@ -1,6 +1,6 @@
-'use client';
 
-import { useState, useEffect } from 'react';
+
+import { useState, useMemo } from 'react';
 import {
   Product,
   StockBatch,
@@ -9,14 +9,8 @@ import {
 import ExpirationManager from './ExpirationManager';
 import { MdSave } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { toast } from 'react-toastify';
 
-// Extend Window interface for temporary product ID storage
-interface WindowWithTempProduct extends Window {
-  tempProductId?: string;
-}
-
-declare const window: WindowWithTempProduct;
 
 interface ProductFormProps {
   initialProduct?: Product;
@@ -35,86 +29,138 @@ export default function ProductForm({
   const [name, setName] = useState(initialProduct?.name || '');
   const [price, setPrice] = useState(initialProduct?.price?.toString() || '');
   const [batches, setBatches] = useState<StockBatch[]>(initialBatches || []);
-  const [isLoadingBatches, setIsLoadingBatches] = useState(false);
 
-  useEffect(() => {
-    if (initialProduct && !initialBatches) {
-      const fetchBatches = async () => {
-        setIsLoadingBatches(true);
-        try {
-          const fetchedBatches = await cashierService.getStockBatches(
-            initialProduct.id
-          );
-          setBatches(fetchedBatches);
-        } finally {
-          setIsLoadingBatches(false);
+
+
+
+  const [deletedBatchIds, setDeletedBatchIds] = useState<Set<string>>(new Set());
+
+  const unsavedBatchIds = useMemo(() => {
+    const unsaved = new Set<string>();
+    const initialMap = new Map(
+      (initialBatches || []).map((b) => [b.addedDate, b])
+    );
+
+    batches.forEach((batch) => {
+      // If marked for deletion, it's definitely "unsaved" change (unless we want to treat it differently)
+      // Actually, let's handle deletion visualization separately.
+      if (deletedBatchIds.has(batch.addedDate)) return;
+
+      const initial = initialMap.get(batch.addedDate);
+      if (!initial) {
+        // New batch
+        unsaved.add(batch.addedDate);
+      } else {
+        // Check if modified
+        if (
+          initial.quantity !== batch.quantity ||
+          initial.expirationDate !== batch.expirationDate ||
+          initial.isSoldOut !== batch.isSoldOut
+        ) {
+          unsaved.add(batch.addedDate);
         }
-      };
-      fetchBatches();
-    }
-  }, [initialProduct, initialBatches]);
-
-  const refreshBatches = async () => {
-    // We can also show loading here if desired, but usually refresh is quick after an action
-    // For now, let's keep it simple as user mainly asked for "first open" / initial load
-    if (initialProduct) {
-      const updated = await cashierService.getStockBatches(initialProduct.id);
-      setBatches(updated);
-    } else {
-      const productId = window.tempProductId;
-      if (productId) {
-        const updated = await cashierService.getStockBatches(productId);
-        setBatches(updated);
       }
-    }
-  };
+    });
+    return unsaved;
+  }, [batches, initialBatches, deletedBatchIds]);
 
-  const handleAddBatch = async (
-    batch: Omit<StockBatch, 'id' | 'productId' | 'isSoldOut'>
+  const handleAddBatch = (
+    batch: Omit<StockBatch, 'productId' | 'isSoldOut'>
   ) => {
-    const productId =
-      initialProduct?.id || window.tempProductId || crypto.randomUUID();
-    if (!initialProduct) {
-      window.tempProductId = productId;
-    }
+    // Use product name as ID
+    const productId = initialProduct?.id || name;
 
-    await cashierService.addStock(productId, batch);
-    await refreshBatches();
+    const newBatch: StockBatch = {
+      ...batch,
+      productId,
+      isSoldOut: false,
+    };
+    setBatches([...batches, newBatch]);
   };
 
-  const handleToggleSoldOut = async (batchId: string) => {
-    const batch = batches.find((b) => b.id === batchId);
+  const handleToggleSoldOut = (batchId: string) => {
+    const batch = batches.find((b) => b.addedDate === batchId);
     if (batch) {
       const updatedBatch = { ...batch, isSoldOut: !batch.isSoldOut };
-      await cashierService.updateStockBatch(updatedBatch);
-      await refreshBatches();
+      setBatches(
+        batches.map((b) => (b.addedDate === batchId ? updatedBatch : b))
+      );
     }
   };
 
-  const handleUpdateBatch = async (batch: StockBatch) => {
-    await cashierService.updateStockBatch(batch);
-    await refreshBatches();
+  const handleUpdateBatch = (batch: StockBatch) => {
+    setBatches(
+      batches.map((b) => (b.addedDate === batch.addedDate ? batch : b))
+    );
+  };
+
+  const handleDeleteBatch = (batchId: string) => {
+    const isExisting = initialBatches?.some((b) => b.addedDate === batchId);
+
+    if (isExisting) {
+      // Toggle deletion status for existing batches
+      const newDeleted = new Set(deletedBatchIds);
+      if (newDeleted.has(batchId)) {
+        newDeleted.delete(batchId);
+      } else {
+        newDeleted.add(batchId);
+      }
+      setDeletedBatchIds(newDeleted);
+    } else {
+      // Directly remove new batches
+      setBatches(batches.filter((b) => b.addedDate !== batchId));
+    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcode || !name || !price) return;
 
-    const productId =
-      initialProduct?.id || window.tempProductId || crypto.randomUUID();
+    // Check for duplicate name
+    const allProducts = await cashierService.getProducts();
+    const duplicate = allProducts.find(
+      (p) => p.name.toLowerCase() === name.toLowerCase()
+    );
+
+    // If adding new product and duplicate found
+    if (!initialProduct && duplicate) {
+      toast.error(
+        'A product with this name already exists. Please use a different name.'
+      );
+      return;
+    }
+
+    // If editing and name changed, check if new name conflicts
+    if (initialProduct && name !== initialProduct.name && duplicate) {
+      toast.error(
+        'A product with this name already exists. Please use a different name.'
+      );
+      return;
+    }
+
+    // Filter out deleted batches
+    const finalBatches = batches.filter((b) => !deletedBatchIds.has(b.addedDate));
 
     const product: Product = {
-      id: productId,
+      id: initialProduct?.id || name, // Use original ID if editing, otherwise use name
       barcode,
       name,
       price: parseFloat(price),
+      stock: finalBatches, // Include only non-deleted batches
     };
 
     await cashierService.saveProduct(product);
 
-    if (window.tempProductId) delete window.tempProductId;
-
     onSave();
+  };
+
+  const getInputClass = (current: string, initial?: string) => {
+    const baseClass =
+      'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm';
+    if (initial !== undefined && current !== initial) {
+      return `${baseClass} border-yellow-400 bg-yellow-50`;
+    }
+    return `${baseClass} border-gray-300`;
   };
 
   return (
@@ -128,7 +174,7 @@ export default function ProductForm({
             type='text'
             value={barcode}
             onChange={(e) => setBarcode(e.target.value)}
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+            className={getInputClass(barcode, initialProduct?.barcode)}
             required
           />
         </div>
@@ -140,7 +186,7 @@ export default function ProductForm({
             type='text'
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+            className={getInputClass(name, initialProduct?.name)}
             required
           />
         </div>
@@ -152,37 +198,46 @@ export default function ProductForm({
             type='number'
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+            className={getInputClass(
+              price,
+              initialProduct?.price?.toString()
+            )}
             required
             min='0'
+          />
+        </div>
+        <div>
+          <label className='block text-sm font-medium text-gray-700'>
+            Total Sold
+          </label>
+          <input
+            type='text'
+            value={`${initialProduct?.sold || 0} units`}
+            disabled
+            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500 sm:text-sm'
           />
         </div>
       </div>
 
       <div className='border-t border-gray-200 pt-4'>
-        {isLoadingBatches ? (
-          <div className='flex justify-center py-8'>
-            <LoadingSpinner size='md' />
-          </div>
-        ) : (
-          <>
-            <ExpirationManager
-              batches={batches}
-              onAddBatch={handleAddBatch}
-              onUpdateBatch={handleUpdateBatch}
-              onToggleSoldOut={handleToggleSoldOut}
-            />
-            {!initialProduct && batches.length === 0 && (
-              <p className='text-xs text-yellow-600 mt-2'>
-                Note: You can add stock after saving, or add it now.
-              </p>
-            )}
-          </>
+        <ExpirationManager
+          batches={batches}
+          onAddBatch={handleAddBatch}
+          onUpdateBatch={handleUpdateBatch}
+          onDeleteBatch={handleDeleteBatch}
+          onToggleSoldOut={handleToggleSoldOut}
+          unsavedBatchIds={unsavedBatchIds}
+          deletedBatchIds={deletedBatchIds}
+        />
+        {!initialProduct && batches.length === 0 && (
+          <p className='text-xs text-yellow-600 mt-2'>
+            Note: You can add stock after saving, or add it now.
+          </p>
         )}
       </div>
 
       <div className='flex justify-end gap-3 pt-4 border-t border-gray-200'>
-        <Button variant='outline' onClick={onCancel} className='text-sm'>
+        <Button variant='outline' onClick={onCancel} className='text-sm' type='button'>
           Cancel
         </Button>
         <Button

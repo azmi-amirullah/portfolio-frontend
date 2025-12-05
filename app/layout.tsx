@@ -34,7 +34,7 @@ export default function RootLayout({
       >
         {children}
 
-        <ToastContainer />
+        <ToastContainer closeOnClick autoClose={2000} />
         <ScrollToTop />
 
         <SpeedInsights />

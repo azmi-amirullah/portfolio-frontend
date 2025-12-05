@@ -1,24 +1,31 @@
-'use client';
+
 
 import { useState } from 'react';
 import { StockBatch } from '@/lib/services/cashier-service';
-import { MdAdd, MdEdit, MdCheck, MdClose } from 'react-icons/md';
+import { MdAdd, MdEdit, MdCheck, MdClose, MdDelete } from 'react-icons/md';
+import { IoArrowUndoCircle } from 'react-icons/io5';
 import { Button } from '@/components/ui/Button';
 
 interface ExpirationManagerProps {
   batches: StockBatch[];
   onAddBatch: (
-    batch: Omit<StockBatch, 'id' | 'productId' | 'isSoldOut'>
+    batch: Omit<StockBatch, 'productId' | 'isSoldOut'>
   ) => void;
   onUpdateBatch?: (batch: StockBatch) => void;
+  onDeleteBatch?: (batchId: string) => void;
   onToggleSoldOut: (batchId: string) => void;
+  unsavedBatchIds?: Set<string>;
+  deletedBatchIds?: Set<string>;
 }
 
 export default function ExpirationManager({
   batches,
   onAddBatch,
   onUpdateBatch,
+  onDeleteBatch,
   onToggleSoldOut,
+  unsavedBatchIds,
+  deletedBatchIds,
 }: ExpirationManagerProps) {
   const [newExpiration, setNewExpiration] = useState('');
   const [newQuantity, setNewQuantity] = useState<number>(1);
@@ -31,7 +38,7 @@ export default function ExpirationManager({
 
     onAddBatch({
       expirationDate: newExpiration,
-      addedDate: new Date().toISOString().split('T')[0],
+      addedDate: new Date().toISOString(),
       quantity: newQuantity,
     });
 
@@ -40,7 +47,7 @@ export default function ExpirationManager({
   };
 
   const startEditing = (batch: StockBatch) => {
-    setEditingBatchId(batch.id);
+    setEditingBatchId(batch.addedDate);
     setEditExpiration(batch.expirationDate);
     setEditQuantity(batch.quantity);
   };
@@ -67,8 +74,8 @@ export default function ExpirationManager({
       <h3 className='text-sm font-medium text-gray-700'>Stock Management</h3>
 
       {/* Add New Batch */}
-      <div className='flex gap-2 items-end bg-gray-50 p-3 rounded-md border border-gray-200'>
-        <div className='flex-1'>
+      <div className='flex flex-wrap gap-2 items-end bg-gray-50 p-3 rounded-md border border-gray-200'>
+        <div className='flex-1 min-w-[150px]'>
           <label className='block text-xs text-gray-500 mb-1'>
             Expiration Date
           </label>
@@ -101,7 +108,7 @@ export default function ExpirationManager({
       </div>
 
       {/* List Batches */}
-      <div className='border rounded-md overflow-hidden'>
+      <div className='border rounded-md overflow-x-auto'>
         <table className='min-w-full divide-y divide-gray-200'>
           <thead className='bg-gray-50'>
             <tr>
@@ -109,7 +116,7 @@ export default function ExpirationManager({
                 Exp. Date
               </th>
               <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Added
+                Created At
               </th>
               <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Qty
@@ -133,132 +140,167 @@ export default function ExpirationManager({
                 </td>
               </tr>
             ) : (
-              batches.map((batch) => (
-                <tr
-                  key={batch.id}
-                  className={batch.isSoldOut ? 'bg-gray-50' : ''}
-                >
-                  {editingBatchId === batch.id ? (
-                    <>
-                      <td className='px-3 py-2'>
-                        <input
-                          type='date'
-                          value={editExpiration}
-                          onChange={(e) => setEditExpiration(e.target.value)}
-                          onClick={(e) => e.currentTarget.showPicker()}
-                          className='w-full px-2 py-1 text-xs border border-gray-300 rounded cursor-pointer'
-                        />
-                      </td>
-                      <td className='px-3 py-2 text-sm text-gray-500'>
-                        {batch.addedDate}
-                      </td>
-                      <td className='px-3 py-2'>
-                        <input
-                          type='number'
-                          min='0'
-                          value={editQuantity}
-                          onChange={(e) =>
-                            setEditQuantity(parseInt(e.target.value) || 0)
-                          }
-                          className='w-20 px-2 py-1 text-xs border border-gray-300 rounded'
-                        />
-                      </td>
-                      <td className='px-3 py-2 text-sm'>
-                        <label className='flex items-center space-x-2 cursor-pointer'>
+              batches.map((batch) => {
+                const isUnsaved = unsavedBatchIds?.has(batch.addedDate);
+                const isDeleted = deletedBatchIds?.has(batch.addedDate);
+                const rowClass = isDeleted
+                  ? 'bg-gray-500'
+                  : isUnsaved
+                    ? 'bg-yellow-100'
+                    : batch.isSoldOut
+                      ? 'bg-gray-50'
+                      : '';
+
+                return (
+                  <tr
+                    key={batch.addedDate}
+                    className={rowClass}
+                  >
+                    {editingBatchId === batch.addedDate ? (
+                      <>
+                        <td className='px-3 py-2'>
                           <input
-                            type='checkbox'
-                            checked={batch.isSoldOut}
-                            onChange={() => onToggleSoldOut(batch.id)}
-                            className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
+                            type='date'
+                            value={editExpiration}
+                            onChange={(e) => setEditExpiration(e.target.value)}
+                            onClick={(e) => e.currentTarget.showPicker()}
+                            className='w-full px-2 py-1 text-xs border border-gray-300 rounded cursor-pointer'
                           />
-                          <span
-                            className={`text-xs ${
-                              batch.isSoldOut
+                        </td>
+                        <td className='px-3 py-2 text-sm text-gray-500'>
+                          {new Date(batch.addedDate).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className='px-3 py-2'>
+                          <input
+                            type='number'
+                            min='0'
+                            value={editQuantity}
+                            onChange={(e) =>
+                              setEditQuantity(parseInt(e.target.value) || 0)
+                            }
+                            className='w-20 px-2 py-1 text-xs border border-gray-300 rounded'
+                          />
+                        </td>
+                        <td className='px-3 py-2 text-sm'>
+                          <label className='flex items-center space-x-2 cursor-pointer'>
+                            <input
+                              type='checkbox'
+                              checked={batch.isSoldOut}
+                              onChange={() => onToggleSoldOut(batch.addedDate)}
+                              className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
+                            />
+                            <span
+                              className={`text-xs ${batch.isSoldOut
                                 ? 'text-red-500 font-medium'
                                 : 'text-gray-500'
-                            }`}
-                          >
-                            {batch.isSoldOut ? 'Sold Out' : 'Available'}
-                          </span>
-                        </label>
-                      </td>
-                      <td className='px-3 py-2 text-right'>
-                        <div className='flex justify-end gap-2'>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => saveEditing(batch)}
-                            className='text-green-600 hover:text-green-800 hover:bg-green-50 h-6 w-6'
-                          >
-                            <MdCheck size={16} />
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={cancelEditing}
-                            className='text-red-600 hover:text-red-800 hover:bg-red-50 h-6 w-6'
-                          >
-                            <MdClose size={16} />
-                          </Button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td
-                        className={`px-3 py-2 text-sm text-gray-900 ${
-                          batch.isSoldOut ? 'line-through text-gray-400' : ''
-                        }`}
-                      >
-                        {batch.expirationDate}
-                      </td>
-                      <td
-                        className={`px-3 py-2 text-sm text-gray-500 ${
-                          batch.isSoldOut ? 'line-through text-gray-400' : ''
-                        }`}
-                      >
-                        {batch.addedDate}
-                      </td>
-                      <td
-                        className={`px-3 py-2 text-sm text-gray-900 ${
-                          batch.isSoldOut ? 'line-through text-gray-400' : ''
-                        }`}
-                      >
-                        {batch.quantity}
-                      </td>
-                      <td className='px-3 py-2 text-sm'>
-                        <label className='flex items-center space-x-2 cursor-pointer'>
-                          <input
-                            type='checkbox'
-                            checked={batch.isSoldOut}
-                            onChange={() => onToggleSoldOut(batch.id)}
-                            className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
-                          />
-                          <span
-                            className={`text-xs ${
-                              batch.isSoldOut
-                                ? 'text-red-500 font-medium'
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {batch.isSoldOut ? 'Sold Out' : 'Available'}
-                          </span>
-                        </label>
-                      </td>
-                      <td className='px-3 py-2 text-right'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => startEditing(batch)}
-                          className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-6 w-6'
+                                }`}
+                            >
+                              {batch.isSoldOut ? 'Unavailable' : 'Available'}
+                            </span>
+                          </label>
+                        </td>
+                        <td className='px-3 py-2 text-right'>
+                          <div className='flex justify-end gap-2'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => saveEditing(batch)}
+                              className='text-green-600 hover:text-green-800 hover:bg-green-50 h-6 w-6'
+                            >
+                              <MdCheck size={16} />
+                            </Button>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              onClick={cancelEditing}
+                              className='text-red-600 hover:text-red-800 hover:bg-red-50 h-6 w-6'
+                            >
+                              <MdClose size={16} />
+                            </Button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td
+                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
                         >
-                          <MdEdit size={14} />
-                        </Button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))
+                          {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
+                        </td>
+                        <td
+                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
+                        >
+                          {new Date(batch.addedDate).toLocaleString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                          })}
+                        </td>
+                        <td
+                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
+                        >
+                          {batch.quantity}
+                        </td>
+                        <td className='px-3 py-2 text-sm'>
+                          <label className='flex items-center space-x-2 cursor-pointer'>
+                            <input
+                              type='checkbox'
+                              checked={batch.isSoldOut}
+                              onChange={() => onToggleSoldOut(batch.addedDate)}
+                              className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
+                            />
+                            <span
+                              className={`text-xs ${batch.isSoldOut
+                                ? 'text-red-500 font-medium'
+                                : 'text-gray-900'
+                                }`}
+                            >
+                              {batch.isSoldOut ? 'Unavailable' : 'Available'}
+                            </span>
+                          </label>
+                        </td>
+                        <td className='px-3 py-2 text-right'>
+                          <div className='flex justify-end gap-1'>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => startEditing(batch)}
+                              disabled={isDeleted}
+                              className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-6 w-6 disabled:opacity-30'
+                            >
+                              <MdEdit size={14} />
+                            </Button>
+                            {onDeleteBatch && (
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => onDeleteBatch(batch.addedDate)}
+                                className={`h-6 w-6 ${isDeleted ? 'text-green-600 hover:text-green-800 hover:bg-green-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'}`}
+                                title={isDeleted ? 'Undo Delete' : 'Delete'}
+                              >
+                                {isDeleted ? <IoArrowUndoCircle size={14} /> : <MdDelete size={14} />}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

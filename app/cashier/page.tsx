@@ -1,387 +1,142 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Product, cashierService } from '@/lib/services/cashier-service';
-import {
-  MdSearch,
-  MdShoppingCart,
-  MdDelete,
-  MdAdd,
-  MdRemove,
-  MdCreditCard,
-  MdClose,
-} from 'react-icons/md';
-import { toast } from 'react-toastify';
-import PaymentModal from '@/components/cashier/PaymentModal';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/lib/services/auth-service';
 import { Button } from '@/components/ui/Button';
+import { toast } from 'react-toastify';
+import { MdDashboard, MdLock, MdPerson } from 'react-icons/md';
 
-interface CartItem extends Product {
-  quantity: number;
-}
+export default function CashierLoginPage() {
+    const router = useRouter();
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-export default function POSPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+    useEffect(() => {
+        const checkAuth = () => {
+            if (authService.isAuthenticated()) {
+                router.replace('/cashier/pos');
+            } else {
+                setIsCheckingAuth(false);
+            }
+        };
+        checkAuth();
+    }, [router]);
 
-  useEffect(() => {
-    cashierService.getProducts().then(setProducts);
-    searchInputRef.current?.focus();
-
-    // Click outside to close dropdown
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !searchInputRef.current?.contains(event.target as Node)
-      ) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const addToCart = (product: Product) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevCart, { ...product, quantity: 1 }];
-    });
-    setSearchTerm('');
-    setShowDropdown(false);
-    searchInputRef.current?.focus();
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
-  };
-
-  const updateQuantity = (productId: string, delta: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) => {
-        if (item.id === productId) {
-          const newQty = item.quantity + delta;
-          return newQty > 0 ? { ...item, quantity: newQty } : item;
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!identifier || !password) {
+            toast.error('Please fill in all fields');
+            return;
         }
-        return item;
-      })
-    );
-  };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setShowDropdown(!!value);
-  };
+        setIsLoading(true);
+        const success = await authService.login(identifier, password);
 
-  const handlePayment = () => {
-    if (cart.length === 0) return;
-    setShowPaymentModal(true);
-  };
+        if (success) {
 
-  const handleConfirmPayment = async (paymentDetails: {
-    discount: number;
-    taxRate: number;
-    amountPaid: number;
-  }) => {
-    const salesData = cart.map((item) => ({
-      productId: item.id,
-      quantity: item.quantity,
-      price: item.price,
-    }));
+            toast.success('Login successful');
+            router.push('/cashier/pos');
+        }
+        setIsLoading(false);
+    };
 
-    // Calculate grand total
-    const subtotalAfterDiscount = totalAmount - paymentDetails.discount;
-    const taxAmount = (subtotalAfterDiscount * paymentDetails.taxRate) / 100;
-    const grandTotal = subtotalAfterDiscount + taxAmount;
-
-    await cashierService.processSale(salesData, {
-      ...paymentDetails,
-      grandTotal,
-    });
-    setCart([]);
-    setShowPaymentModal(false);
-    toast.success('Payment successful!');
-  };
-
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const filteredProducts = searchTerm
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.barcode.includes(searchTerm)
-      )
-    : [];
-
-  return (
-    <div className='flex flex-col h-[calc(100vh-10rem)] lg:h-[calc(100vh-4rem)] gap-4 lg:gap-6'>
-      {/* Top Search Bar */}
-      <div className='relative z-30'>
-        <div className='relative'>
-          <div className='absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none'>
-            <MdSearch className='h-5 w-5 lg:h-6 lg:w-6 text-gray-400' />
-          </div>
-          <input
-            ref={searchInputRef}
-            type='text'
-            placeholder='Scan barcode or search item...'
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onFocus={() => setShowDropdown(!!searchTerm)}
-            className='block w-full pl-10 lg:pl-12 pr-4 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
-            autoFocus
-          />
-          {searchTerm && (
-            <Button
-              variant='ghost'
-              onClick={() => {
-                setSearchTerm('');
-                setShowDropdown(false);
-                searchInputRef.current?.focus();
-              }}
-              className='absolute inset-y-0 right-0 pr-3 lg:pr-4 flex items-center text-gray-400 hover:text-gray-600 h-full'
-            >
-              <MdClose size={20} />
-            </Button>
-          )}
-        </div>
-
-        {/* Dropdown Results */}
-        {showDropdown && filteredProducts.length > 0 && (
-          <div
-            ref={dropdownRef}
-            className='absolute mt-2 w-full bg-white rounded-lg lg:rounded-xl shadow-2xl border border-gray-200 max-h-80 lg:max-h-96 overflow-y-auto'
-          >
-            {filteredProducts.map((product) => (
-              <Button
-                key={product.id}
-                variant='ghost'
-                onClick={() => addToCart(product)}
-                className='w-full text-left px-4 lg:px-6 py-3 lg:py-4 hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 last:border-0 transition-colors h-auto rounded-none'
-              >
-                <div>
-                  <div className='font-semibold text-base lg:text-lg text-gray-900'>
-                    {product.name}
-                  </div>
-                  <div className='text-xs lg:text-sm text-gray-500'>
-                    Barcode: {product.barcode}
-                  </div>
+    if (isCheckingAuth) {
+        return (
+            <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+                <div className='text-center'>
+                    <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-pulse'>
+                        <MdDashboard className='h-8 w-8 text-blue-600' />
+                    </div>
+                    <p className='text-gray-600'>Loading...</p>
                 </div>
-                <div className='font-bold text-blue-600 text-base lg:text-lg'>
-                  Rp {product.price.toLocaleString()}
-                </div>
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Main Cart Area */}
-      <div className='flex-1 bg-white rounded-xl lg:rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden'>
-        <div className='p-4 lg:p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center'>
-          <h2 className='text-lg lg:text-2xl font-bold text-gray-800 flex items-center gap-2 lg:gap-3'>
-            <MdShoppingCart className='text-blue-600' size={24} />
-            <span className='hidden sm:inline'>Current Order</span>
-            <span className='sm:hidden'>Cart</span>
-          </h2>
-          <div className='text-xs lg:text-sm text-gray-500'>
-            {cart.length} items
-          </div>
-        </div>
-
-        <div className='flex-1 overflow-y-auto p-3 lg:p-6'>
-          {cart.length === 0 ? (
-            <div className='h-full flex flex-col items-center justify-center text-gray-300 space-y-3 lg:space-y-4'>
-              <MdShoppingCart
-                size={60}
-                className='opacity-20 lg:w-20 lg:h-20'
-              />
-              <p className='text-base lg:text-xl font-medium'>Cart is empty</p>
-              <p className='text-xs lg:text-sm'>Scan an item to start</p>
             </div>
-          ) : (
-            <>
-              {/* Mobile Card Layout */}
-              <div className='lg:hidden space-y-3'>
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className='bg-gray-50 rounded-lg p-3 border border-gray-200'
-                  >
-                    <div className='flex justify-between items-start mb-2'>
-                      <div className='flex-1'>
-                        <div className='font-semibold text-gray-900'>
-                          {item.name}
-                        </div>
-                        <div className='text-xs text-gray-500'>
-                          {item.barcode}
-                        </div>
-                      </div>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => removeFromCart(item.id)}
-                        className='text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8'
-                      >
-                        <MdDelete size={18} />
-                      </Button>
+        );
+    }
+
+    return (
+        <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+            <div className='max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg'>
+                <div className='text-center'>
+                    <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4'>
+                        <MdDashboard className='h-8 w-8 text-blue-600' />
                     </div>
-                    <div className='flex justify-between items-center'>
-                      <div className='text-sm text-gray-600'>
-                        Rp {item.price.toLocaleString()}
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 h-8 w-8'
-                        >
-                          <MdRemove size={16} />
-                        </Button>
-                        <span className='text-base font-semibold w-8 text-center'>
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 h-8 w-8'
-                        >
-                          <MdAdd size={16} />
-                        </Button>
-                      </div>
-                      <div className='font-bold text-gray-900'>
-                        Rp {(item.price * item.quantity).toLocaleString()}
-                      </div>
+                    <h2 className='text-3xl font-bold text-gray-900'>Welcome Back</h2>
+                    <p className='mt-2 text-sm text-gray-600'>
+                        Sign in to access the cashier system
+                    </p>
+                </div>
+
+                <form className='mt-8 space-y-6' onSubmit={handleLogin}>
+                    <div className='space-y-4'>
+                        <div>
+                            <label
+                                htmlFor='identifier'
+                                className='block text-sm font-medium text-gray-700'
+                            >
+                                Username or Email
+                            </label>
+                            <div className='mt-1 relative rounded-md shadow-sm'>
+                                <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                                    <MdPerson className='h-5 w-5 text-gray-400' />
+                                </div>
+                                <input
+                                    id='identifier'
+                                    name='identifier'
+                                    type='text'
+                                    required
+                                    value={identifier}
+                                    onChange={(e) => setIdentifier(e.target.value)}
+                                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+                                    placeholder='Enter your username or email'
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor='password'
+                                className='block text-sm font-medium text-gray-700'
+                            >
+                                Password
+                            </label>
+                            <div className='mt-1 relative rounded-md shadow-sm'>
+                                <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                                    <MdLock className='h-5 w-5 text-gray-400' />
+                                </div>
+                                <input
+                                    id='password'
+                                    name='password'
+                                    type='password'
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+                                    placeholder='Enter your password'
+                                />
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                ))}
-              </div>
 
-              {/* Desktop Table Layout */}
-              <table className='hidden lg:table min-w-full divide-y divide-gray-200'>
-                <thead className='bg-white sticky top-0 z-10'>
-                  <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Product
-                    </th>
-                    <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Price
-                    </th>
-                    <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Quantity
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Total
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'></th>
-                  </tr>
-                </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
-                  {cart.map((item) => (
-                    <tr
-                      key={item.id}
-                      className='hover:bg-gray-50 transition-colors'
-                    >
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='text-lg font-medium text-gray-900'>
-                          {item.name}
-                        </div>
-                        <div className='text-sm text-gray-500'>
-                          {item.barcode}
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-center text-gray-500'>
-                        Rp {item.price.toLocaleString()}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='flex justify-center items-center gap-3'>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 h-8 w-8'
-                          >
-                            <MdRemove size={16} />
-                          </Button>
-                          <span className='text-lg font-semibold w-8 text-center'>
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 h-8 w-8'
-                          >
-                            <MdAdd size={16} />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900 text-lg'>
-                        Rp {(item.price * item.quantity).toLocaleString()}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right'>
+                    <div>
                         <Button
-                          variant='ghost'
-                          size='icon'
-                          onClick={() => removeFromCart(item.id)}
-                          className='text-gray-400 hover:text-red-500 hover:bg-red-50'
+                            type='submit'
+                            disabled={isLoading}
+                            className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
-                          <MdDelete size={20} />
+                            {isLoading ? 'Signing in...' : 'Sign in'}
                         </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          )}
-        </div>
+                    </div>
+                </form>
 
-        {/* Footer / Payment */}
-        <div className='p-4 lg:p-6 border-t border-gray-200 bg-gray-50'>
-          <div className='flex justify-between items-center mb-4 lg:mb-6'>
-            <span className='text-lg lg:text-2xl font-bold text-gray-600'>
-              Total Amount
-            </span>
-            <span className='text-2xl lg:text-4xl font-bold text-blue-600'>
-              Rp {totalAmount.toLocaleString()}
-            </span>
-          </div>
-          <Button
-            onClick={handlePayment}
-            disabled={cart.length === 0}
-            className='w-full py-4 lg:py-5 px-4 lg:px-6 bg-blue-600 text-white rounded-lg lg:rounded-xl text-base lg:text-xl font-bold hover:bg-blue-700 h-auto shadow-lg'
-          >
-            <MdCreditCard size={24} className='mr-2 lg:mr-3' />
-            Process Payment
-          </Button>
+                <div className='text-center'>
+                    <p className='text-xs text-gray-500'>
+                        Protected by Mini Market Security System
+                    </p>
+                </div>
+            </div>
         </div>
-      </div>
-
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        totalAmount={totalAmount}
-        onConfirm={handleConfirmPayment}
-        onCancel={() => setShowPaymentModal(false)}
-      />
-    </div>
-  );
+    );
 }

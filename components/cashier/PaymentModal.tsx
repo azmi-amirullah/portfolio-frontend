@@ -7,8 +7,6 @@ interface PaymentModalProps {
   isOpen: boolean;
   totalAmount: number;
   onConfirm: (paymentDetails: {
-    discount: number;
-    taxRate: number;
     amountPaid: number;
   }) => void;
   onCancel: () => void;
@@ -21,8 +19,6 @@ export default function PaymentModal({
   onCancel,
 }: PaymentModalProps) {
   const [amountPaid, setAmountPaid] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [taxRate, setTaxRate] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus input when modal is visible
@@ -34,31 +30,20 @@ export default function PaymentModal({
   }, [isOpen]);
 
   // Reset state when modal closes
-  if (!isOpen && (amountPaid || discount || taxRate)) {
+  if (!isOpen && amountPaid) {
     // Use setTimeout to avoid synchronous setState in render
     setTimeout(() => {
       setAmountPaid('');
-      setDiscount('');
-      setTaxRate('');
     }, 0);
   }
 
-  // Calculate final total with discount and tax
-  const discountAmount = parseFloat(discount) || 0;
-  const taxPercentage = parseFloat(taxRate) || 0;
-  const subtotalAfterDiscount = totalAmount - discountAmount;
-  const taxAmount = (subtotalAfterDiscount * taxPercentage) / 100;
-  const finalTotal = subtotalAfterDiscount + taxAmount;
-
   const paidAmount = parseFloat(amountPaid) || 0;
-  const changeAmount = paidAmount - finalTotal;
-  const isValidPayment = paidAmount >= finalTotal && finalTotal > 0;
+  const changeAmount = paidAmount - totalAmount;
+  const isValidPayment = paidAmount >= totalAmount && totalAmount > 0;
 
   const handleConfirm = () => {
     if (isValidPayment) {
       onConfirm({
-        discount: discountAmount,
-        taxRate: taxPercentage,
         amountPaid: paidAmount,
       });
     }
@@ -89,133 +74,90 @@ export default function PaymentModal({
 
       {/* Content */}
       <div className='bg-white px-4 py-4 sm:px-6 sm:py-6'>
-        {/* Two Column Layout */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
-          {/* Left Column - Inputs */}
-          <div className='space-y-3 sm:space-y-4'>
-            {/* Subtotal - Hidden on mobile as it's less critical and shown in breakdown */}
-            <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
-              <div className='text-sm text-gray-600 mb-1'>Subtotal</div>
-              <div className='text-2xl font-bold text-gray-900'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          {/* Left Column - Total to Pay */}
+          <div className='flex flex-col justify-center space-y-4'>
+            <div className='bg-blue-50 rounded-2xl p-6 border-2 border-blue-100 text-center'>
+              <div className='text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide'>
+                Total to Pay
+              </div>
+              <div className='text-4xl sm:text-5xl font-bold text-blue-700'>
                 Rp {totalAmount.toLocaleString()}
               </div>
             </div>
-
-            <div className='grid grid-cols-2 gap-3 sm:block sm:space-y-4'>
-              {/* Discount Input */}
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
-                  Discount (Rp)
-                </label>
-                <input
-                  type='number'
-                  value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder='0'
-                  className='block w-full px-3 py-2 sm:px-4 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  min='0'
-                  step='1000'
-                />
-              </div>
-
-              {/* Tax Rate Input */}
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
-                  Tax (%)
-                </label>
-                <input
-                  type='number'
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder='0'
-                  className='block w-full px-3 py-2 sm:px-4 sm:py-3 text-base sm:text-lg border border-gray-300 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  min='0'
-                  max='100'
-                  step='1'
-                />
-              </div>
-            </div>
-
-            {/* Calculation Breakdown */}
-            <div className='bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200 space-y-1 sm:space-y-2 text-xs sm:text-sm'>
-              <div className='flex justify-between text-gray-700'>
-                <span>Subtotal:</span>
-                <span>Rp {totalAmount.toLocaleString()}</span>
-              </div>
-              <div className='flex justify-between text-red-600'>
-                <span>Discount:</span>
-                <span>- Rp {discountAmount.toLocaleString()}</span>
-              </div>
-              <div className='flex justify-between text-gray-700'>
-                <span>Tax ({taxPercentage}%):</span>
-                <span>+ Rp {taxAmount.toLocaleString()}</span>
-              </div>
-              <div className='flex justify-between font-bold text-blue-700 text-sm sm:text-base pt-2 border-t border-blue-300'>
-                <span>Grand Total:</span>
-                <span>Rp {finalTotal.toLocaleString()}</span>
-              </div>
-            </div>
+            <p className='text-center text-gray-500 text-sm'>
+              Please ensure the customer pays the exact amount or more.
+            </p>
           </div>
 
-          {/* Right Column - Payment */}
-          <div className='space-y-3 sm:space-y-4'>
-            {/* Grand Total Display */}
-            <div className='bg-linear-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 border-2 border-blue-400 text-center sm:text-left'>
-              <div className='text-xs sm:text-sm text-blue-100 mb-1'>
-                Grand Total
-              </div>
-              <div className='text-3xl sm:text-4xl font-bold text-white'>
-                Rp {finalTotal.toLocaleString()}
-              </div>
-            </div>
-
+          {/* Right Column - Payment Input */}
+          <div className='space-y-5'>
             {/* Amount Paid Input */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1 sm:mb-2'>
+              <label className='block text-sm font-semibold text-gray-700 mb-2'>
                 Amount Paid
               </label>
-              <input
-                ref={inputRef}
-                type='number'
-                value={amountPaid}
-                onChange={(e) => setAmountPaid(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder='Enter amount'
-                className='block w-full px-4 py-3 sm:py-4 text-xl sm:text-2xl border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                min='0'
-                step='1000'
-              />
+              <div className='relative'>
+                <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
+                  <span className='text-gray-500 font-bold'>Rp</span>
+                </div>
+                <input
+                  ref={inputRef}
+                  type='number'
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder='0'
+                  className='block w-full pl-12 pr-4 py-4 text-2xl font-bold text-gray-900 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all'
+                  min='0'
+                />
+              </div>
             </div>
 
             {/* Change Display */}
-            {amountPaid && (
-              <div
-                className={`rounded-xl p-4 sm:p-6 border-2 ${isValidPayment
-                  ? 'bg-green-50 border-green-300'
-                  : 'bg-red-50 border-red-300'
-                  }`}
-              >
-                <div className='text-xs sm:text-sm font-medium mb-1'>
-                  {isValidPayment ? (
-                    <span className='text-green-700'>Change</span>
-                  ) : (
-                    <span className='text-red-700'>Insufficient Payment</span>
-                  )}
-                </div>
-                <div
-                  className={`text-2xl sm:text-3xl font-bold ${isValidPayment ? 'text-green-700' : 'text-red-700'
+            <div
+              className={`rounded-xl p-5 border-2 transition-all duration-200 ${amountPaid
+                  ? isValidPayment
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-red-50 border-red-200'
+                  : 'bg-gray-50 border-gray-200'
+                }`}
+            >
+              <div className='flex justify-between items-center mb-1'>
+                <span
+                  className={`text-sm font-semibold ${amountPaid
+                      ? isValidPayment
+                        ? 'text-green-700'
+                        : 'text-red-700'
+                      : 'text-gray-500'
                     }`}
                 >
-                  {isValidPayment ? (
+                  {amountPaid
+                    ? isValidPayment
+                      ? 'Change Due'
+                      : 'Insufficient Payment'
+                    : 'Change'}
+                </span>
+              </div>
+              <div
+                className={`text-3xl font-bold ${amountPaid
+                    ? isValidPayment
+                      ? 'text-green-700'
+                      : 'text-red-700'
+                    : 'text-gray-400'
+                  }`}
+              >
+                {amountPaid ? (
+                  isValidPayment ? (
                     <>Rp {changeAmount.toLocaleString()}</>
                   ) : (
                     <>Rp {Math.abs(changeAmount).toLocaleString()} short</>
-                  )}
-                </div>
+                  )
+                ) : (
+                  'Rp 0'
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

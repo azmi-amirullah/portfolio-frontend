@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
     MdArrowBack,
     MdShoppingCart,
@@ -11,7 +11,10 @@ import {
     MdHistory,
     MdMenu,
     MdClose,
+    MdLogout,
 } from 'react-icons/md';
+import { authService } from '@/lib/services/auth-service';
+import { cashierService } from '@/lib/services/cashier-service';
 
 export default function CashierLayoutClient({
     children,
@@ -19,12 +22,48 @@ export default function CashierLayoutClient({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setTimeout(() => setIsMounted(true), 0);
+    }, []);
+
+    useEffect(() => {
+        // Redirect to login if not authenticated and not on login page
+        if (isMounted && !authService.isAuthenticated() && pathname !== '/cashier') {
+            router.replace('/cashier');
+        }
+    }, [isMounted, pathname, router]);
+
+    useEffect(() => {
+        const checkAndFetchData = async () => {
+            if (isMounted && authService.isAuthenticated()) {
+                if (!cashierService.hasData()) {
+                    await cashierService.syncWithBackend();
+                }
+            }
+        };
+        checkAndFetchData();
+    }, [isMounted]);
+
+    // Don't render layout elements on login page
+    if (pathname === '/cashier') {
+        return <>{children}</>;
+    }
 
     const isActive = (path: string) => pathname === path;
 
+    const handleLogout = () => {
+        authService.logout();
+        router.replace('/cashier');
+    };
+
+
+
     const navItems = [
-        { path: '/cashier', icon: MdShoppingCart, label: 'POS' },
+        { path: '/cashier/pos', icon: MdShoppingCart, label: 'POS' },
         { path: '/cashier/inventory', icon: MdInventory, label: 'Inventory' },
         { path: '/cashier/history', icon: MdHistory, label: 'History' },
     ];
@@ -67,14 +106,22 @@ export default function CashierLayoutClient({
                                     href={item.path}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-blue-50 text-blue-700'
+                                        : 'text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
                                     <item.icon size={20} />
                                     {item.label}
                                 </Link>
                             ))}
+
+                            <button
+                                onClick={handleLogout}
+                                className='w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer'
+                            >
+                                <MdLogout size={20} />
+                                Logout
+                            </button>
                             <Link
                                 href='/'
                                 onClick={() => setIsMobileMenuOpen(false)}
@@ -84,14 +131,7 @@ export default function CashierLayoutClient({
                                 Back to Portfolio
                             </Link>
                         </nav>
-                        <div className='mx-4 mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
-                            <p className='text-xs font-medium text-amber-800'>
-                                ⚠️ In Progress
-                            </p>
-                            <p className='text-xs text-amber-700 mt-1'>
-                                Using mock API (localStorage)
-                            </p>
-                        </div>
+
                     </div>
                 </div>
             )}
@@ -106,47 +146,30 @@ export default function CashierLayoutClient({
                 </div>
 
                 <nav className='flex-1 p-4 space-y-2'>
-                    <Link
-                        href='/cashier'
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/cashier')
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.path}
+                            href={item.path}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
                                 ? 'bg-blue-50 text-blue-700'
                                 : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                    >
-                        <MdShoppingCart size={20} />
-                        Point of Sale
-                    </Link>
-                    <Link
-                        href='/cashier/inventory'
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/cashier/inventory')
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                    >
-                        <MdInventory size={20} />
-                        Inventory
-                    </Link>
-                    <Link
-                        href='/cashier/history'
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/cashier/history')
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                    >
-                        <MdHistory size={20} />
-                        Sales History
-                    </Link>
+                                }`}
+                        >
+                            <item.icon size={20} />
+                            {item.label}
+                        </Link>
+                    ))}
                 </nav>
 
-                {/* In Progress Alert */}
-                <div className='mx-4 mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
-                    <p className='text-xs font-medium text-amber-800'>⚠️ In Progress</p>
-                    <p className='text-xs text-amber-700 mt-1'>
-                        Using mock API (localStorage)
-                    </p>
-                </div>
+                <div className='p-4 border-t border-gray-200 space-y-2'>
 
-                <div className='p-4 border-t border-gray-200'>
+                    <button
+                        onClick={handleLogout}
+                        className='w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer'
+                    >
+                        <MdLogout size={20} />
+                        Logout
+                    </button>
                     <Link
                         href='/'
                         className='flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors'
@@ -165,8 +188,8 @@ export default function CashierLayoutClient({
                             key={item.path}
                             href={item.path}
                             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${isActive(item.path)
-                                    ? 'text-blue-600'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'text-blue-600'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             <item.icon size={24} />

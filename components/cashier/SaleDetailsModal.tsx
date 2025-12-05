@@ -1,19 +1,11 @@
 import Modal from '@/components/ui/Modal';
 import { MdReceipt } from 'react-icons/md';
+import { Transaction } from '@/lib/services/cashier-service';
 
 interface SaleDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  sale: {
-    id: string;
-    productName: string;
-    productPrice: number;
-    quantity: number;
-    timestamp: number;
-    discount?: number;
-    taxRate?: number;
-    amountPaid?: number;
-  } | null;
+  sale: Transaction | null;
 }
 
 export default function SaleDetailsModal({
@@ -23,30 +15,21 @@ export default function SaleDetailsModal({
 }: SaleDetailsModalProps) {
   if (!sale) return null;
 
-  const subtotal = sale.productPrice * sale.quantity;
-  const discount = sale.discount || 0;
-  const taxRate = sale.taxRate || 0;
-  const subtotalAfterDiscount = subtotal - discount;
-  const taxAmount = (subtotalAfterDiscount * taxRate) / 100;
-  const grandTotal = subtotalAfterDiscount + taxAmount;
-  const amountPaid = sale.amountPaid || grandTotal;
-  const change = amountPaid - grandTotal;
-
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
+    return date.toLocaleDateString('en-GB', {
       day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
   };
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
+      hour12: false,
     });
   };
 
@@ -55,81 +38,86 @@ export default function SaleDetailsModal({
       isOpen={isOpen}
       onClose={onClose}
       maxWidth='lg'
-      title='Sale Details'
+      title={`Transaction #${sale.id}`}
       headerIcon={<MdReceipt size={28} />}
       headerClassName='bg-blue-600 border-blue-400 text-white'
     >
       {/* Content */}
-      <div className='bg-white px-6 py-6 space-y-6'>
-        {/* Date & Time */}
-        <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
-          <div className='text-sm text-gray-600 mb-1'>Transaction Date</div>
-          <div className='text-lg font-bold text-gray-900'>
-            {formatDate(sale.timestamp)}
-          </div>
-          <div className='text-sm text-gray-500'>
-            {formatTime(sale.timestamp)}
-          </div>
-        </div>
-
-        {/* Product Info */}
-        <div>
-          <h4 className='text-sm font-medium text-gray-700 mb-3'>Product</h4>
-          <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
-            <div className='flex justify-between items-center mb-2'>
-              <span className='font-semibold text-gray-900'>
-                {sale.productName}
-              </span>
-              <span className='text-gray-600'>
-                Rp {sale.productPrice.toLocaleString()}
-              </span>
+      <div className='bg-white px-6 py-6 space-y-8'>
+        {/* Top Section: Date & Time */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='bg-gray-50 rounded-2xl p-5 border border-gray-200 flex flex-col justify-center'>
+            <div className='text-sm text-gray-500 mb-1'>Date</div>
+            <div className='text-base font-bold text-gray-900'>
+              {formatDate(sale.timestamp)}
             </div>
-            <div className='flex justify-between items-center text-sm'>
-              <span className='text-gray-600'>Quantity</span>
-              <span className='font-semibold text-gray-900'>
-                {sale.quantity}
-              </span>
+          </div>
+          <div className='bg-gray-50 rounded-2xl p-5 border border-gray-200 flex flex-col justify-center'>
+            <div className='text-sm text-gray-500 mb-1'>Time</div>
+            <div className='text-base font-bold text-gray-900'>
+              {formatTime(sale.timestamp)}
             </div>
           </div>
         </div>
 
-        {/* Payment Breakdown */}
-        <div>
-          <h4 className='text-sm font-medium text-gray-700 mb-3'>
-            Payment Details
+        {/* Middle Section: Products List */}
+        <div className='space-y-3'>
+          <h4 className='text-xs font-bold text-gray-500 uppercase tracking-wider'>
+            Items Purchased
           </h4>
-          <div className='bg-blue-50 rounded-xl p-4 border border-blue-200 space-y-2 text-sm'>
-            <div className='flex justify-between text-gray-700'>
-              <span>Subtotal:</span>
-              <span>Rp {subtotal.toLocaleString()}</span>
-            </div>
-            <div className='flex justify-between text-red-600'>
-              <span>Discount:</span>
-              <span>- Rp {discount.toLocaleString()}</span>
-            </div>
-            <div className='flex justify-between text-gray-700'>
-              <span>Tax ({taxRate}%):</span>
-              <span>+ Rp {taxAmount.toLocaleString()}</span>
-            </div>
-            <div className='flex justify-between font-bold text-blue-700 text-base pt-2 border-t border-blue-300'>
-              <span>Grand Total:</span>
-              <span>Rp {grandTotal.toLocaleString()}</span>
+          <div className='bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden'>
+            <div className='divide-y divide-gray-200'>
+              {sale.products.map((product, index) => (
+                <div key={index} className='p-4 flex justify-between items-center'>
+                  <div>
+                    <div className='font-bold text-gray-900'>{product.productName}</div>
+                    <div className='text-sm text-gray-500'>
+                      Rp {product.price.toLocaleString()} x {product.quantity}
+                    </div>
+                  </div>
+                  <div className='font-bold text-gray-900'>
+                    Rp {(product.price * product.quantity).toLocaleString()}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Amount Paid & Change */}
-        <div className='grid grid-cols-2 gap-4'>
-          <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
-            <div className='text-sm text-gray-600 mb-1'>Amount Paid</div>
-            <div className='text-xl font-bold text-gray-900'>
-              Rp {amountPaid.toLocaleString()}
+        {/* Bottom Section: Financial Dashboard */}
+        <div className='space-y-3'>
+          <h4 className='text-xs font-bold text-gray-500 uppercase tracking-wider'>
+            Payment Summary
+          </h4>
+          <div className='grid grid-cols-1 gap-3'>
+            {/* Grand Total */}
+            <div className='bg-blue-600 rounded-xl p-3 text-white flex justify-between items-center'>
+              <div className='text-sm font-medium'>
+                Grand Total
+              </div>
+              <div className='text-xl font-bold'>
+                Rp {sale.totalAmount.toLocaleString()}
+              </div>
             </div>
-          </div>
-          <div className='bg-green-50 rounded-xl p-4 border border-green-200'>
-            <div className='text-sm text-green-700 mb-1'>Change</div>
-            <div className='text-xl font-bold text-green-700'>
-              Rp {change.toLocaleString()}
+
+            {/* Amount Paid */}
+            <div className='bg-white rounded-xl p-3 border border-gray-200 flex justify-between items-center'>
+              <div className='text-sm font-medium'>
+                Amount Paid
+              </div>
+              <div className='text-xl font-bold'>
+                Rp {sale.amountPaid.toLocaleString()}
+              </div>
+            </div>
+
+            {/* Change */}
+            <div className='bg-green-50 rounded-xl p-3 border border-green-200 flex justify-between items-center'>
+              <div className='text-green-700 text-sm font-medium'>
+                Change
+              </div>
+              <div className='text-xl font-bold text-green-700'>
+                Rp {sale.change.toLocaleString()}
+              </div>
             </div>
           </div>
         </div>

@@ -1,347 +1,305 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { cashierService } from '@/lib/services/cashier-service';
-import { MdHistory, MdSearch } from 'react-icons/md';
+import {
+    MdSearch,
+    MdCalendarToday,
+    MdReceipt,
+    MdArrowDropDown,
+    MdSync,
+} from 'react-icons/md';
+import { cashierService, Transaction } from '@/lib/services/cashier-service';
 import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
 
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import {
-  Select,
-  MenuItem,
-  FormControl,
-  SelectChangeEvent,
-} from '@mui/material';
-
-interface SaleRecord {
-  id: string;
-  productId: string;
-  productName: string;
-  productPrice: number;
-  quantity: number;
-  timestamp: number;
-  discount?: number;
-  taxRate?: number;
-  amountPaid?: number;
-  grandTotal?: number;
-}
-
 export default function SalesHistoryPage() {
-  const [sales, setSales] = useState<SaleRecord[]>([]);
-  const [filteredSales, setFilteredSales] = useState<SaleRecord[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('today');
-  const [selectedSale, setSelectedSale] = useState<SaleRecord | null>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+    const [sales, setSales] = useState<Transaction[]>([]);
+    const [filteredSales, setFilteredSales] = useState<Transaction[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateFilter, setDateFilter] = useState('today');
+    const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-  const loadSales = async () => {
-    setIsLoading(true);
-    try {
-      const salesData = await cashierService.getSalesHistory();
-      setSales(salesData);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const loadSales = async () => {
+        const history = await cashierService.getSalesHistory();
+        setSales(history);
+    };
 
-  const filterSales = () => {
-    let filtered = [...sales];
+    const filterSales = () => {
+        let result = [...sales];
 
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const oneWeek = 7 * oneDay;
-    const oneMonth = 30 * oneDay;
+        // Date Filter
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const thisWeek = new Date(today);
+        thisWeek.setDate(thisWeek.getDate() - 7);
+        const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    if (dateFilter === 'today') {
-      filtered = filtered.filter((sale) => now - sale.timestamp < oneDay);
-    } else if (dateFilter === 'week') {
-      filtered = filtered.filter((sale) => now - sale.timestamp < oneWeek);
-    } else if (dateFilter === 'month') {
-      filtered = filtered.filter((sale) => now - sale.timestamp < oneMonth);
-    }
+        if (dateFilter === 'today') {
+            result = result.filter((sale) => sale.timestamp >= today.getTime());
+        } else if (dateFilter === 'yesterday') {
+            result = result.filter(
+                (sale) =>
+                    sale.timestamp >= yesterday.getTime() &&
+                    sale.timestamp < today.getTime()
+            );
+        } else if (dateFilter === 'week') {
+            result = result.filter((sale) => sale.timestamp >= thisWeek.getTime());
+        } else if (dateFilter === 'month') {
+            result = result.filter((sale) => sale.timestamp >= thisMonth.getTime());
+        }
 
-    if (searchTerm) {
-      filtered = filtered.filter((sale) =>
-        sale.productName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+        // Search Filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter((sale) => {
+                // Search by Transaction ID
+                if (sale.id.toLowerCase().includes(query)) return true;
 
-    setFilteredSales(filtered);
-  };
+                // Search by Product Name or Barcode inside the transaction
+                return sale.products.some(
+                    (p) =>
+                        p.productName.toLowerCase().includes(query) ||
+                        (p.productBarcode && p.productBarcode.toLowerCase().includes(query))
+                );
+            });
+        }
 
-  useEffect(() => {
-    loadSales();
-  }, []);
+        setFilteredSales(result);
+    };
 
-  useEffect(() => {
-    filterSales();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sales, searchTerm, dateFilter]);
+    useEffect(() => {
+        loadSales();
+    }, []);
 
-  const handleRowClick = (sale: SaleRecord) => {
-    setSelectedSale(sale);
-    setShowDetailsModal(true);
-  };
+    useEffect(() => {
+        filterSales();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, dateFilter, sales]);
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
 
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+    const formatTime = (timestamp: number) => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+    };
 
-  const totalRevenue = filteredSales.reduce(
-    (sum, sale) => sum + (sale.grandTotal || 0),
-    0
-  );
+    const handleSaleClick = (sale: Transaction) => {
+        setSelectedSale(sale);
+        setIsDetailsModalOpen(true);
+    };
 
-  const totalItems = filteredSales.reduce(
-    (sum, sale) => sum + sale.quantity,
-    0
-  );
+    const handleSync = async () => {
+        setIsSyncing(true);
+        await cashierService.syncSalesWithBackend();
+        await loadSales();
+        setIsSyncing(false);
+    };
 
-  return (
-    <div className='space-y-4 lg:space-y-6'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
-            <MdHistory className='text-blue-600' size={28} />
-            <span>Sales History</span>
-          </h1>
-          <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-            View all completed transactions
-          </p>
-        </div>
-      </div>
+    // Calculate totals
+    const totalRevenue = filteredSales.reduce(
+        (sum, sale) => sum + sale.totalAmount,
+        0
+    );
+    const totalTransactions = filteredSales.length;
+    const totalItemsSold = filteredSales.reduce(
+        (sum, sale) =>
+            sum + sale.products.reduce((pSum, p) => pSum + p.quantity, 0),
+        0
+    );
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6'>
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6'>
-          <div className='text-xs lg:text-sm text-gray-600 mb-1'>
-            Total Sales
-          </div>
-          <div className='text-2xl lg:text-3xl font-bold text-gray-900'>
-            {filteredSales.length}
-          </div>
-        </div>
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6'>
-          <div className='text-xs lg:text-sm text-gray-600 mb-1'>
-            Items Sold
-          </div>
-          <div className='text-2xl lg:text-3xl font-bold text-gray-900'>
-            {totalItems}
-          </div>
-        </div>
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 sm:col-span-2 lg:col-span-1'>
-          <div className='text-xs lg:text-sm text-gray-600 mb-1'>
-            Total Revenue
-          </div>
-          <div className='text-2xl lg:text-3xl font-bold text-blue-600'>
-            Rp {totalRevenue.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6'>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4'>
-          <div className='relative'>
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-              <MdSearch className='h-5 w-5 text-gray-400' />
+    return (
+        <div className='space-y-6 pb-20 md:pb-0'>
+            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
+                <div>
+                    <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
+                        <MdReceipt className='text-blue-600' size={28} />
+                        <span>Sales History</span>
+                    </h1>
+                    <p className='text-gray-500 mt-1 text-sm lg:text-base'>
+                        View and manage your transaction history
+                    </p>
+                </div>
+                <button
+                    onClick={handleSync}
+                    disabled={isSyncing}
+                    className='flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'
+                >
+                    <MdSync size={20} className={`text-gray-500 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span>{isSyncing ? 'Syncing...' : 'Sync History'}</span>
+                </button>
             </div>
-            <input
-              type='text'
-              placeholder='Search by product name...'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm h-10'
+
+            {/* Header & Stats */}
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                <div className='bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200'>
+                    <div className='text-blue-100 text-sm font-medium mb-1'>
+                        Total Revenue
+                    </div>
+                    <div className='text-3xl font-bold'>
+                        Rp {totalRevenue.toLocaleString()}
+                    </div>
+                </div>
+                <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+                    <div className='text-gray-500 text-sm font-medium mb-1'>
+                        Transactions
+                    </div>
+                    <div className='text-3xl font-bold text-gray-900'>
+                        {totalTransactions}
+                    </div>
+                </div>
+                <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+                    <div className='text-gray-500 text-sm font-medium mb-1'>
+                        Items Sold
+                    </div>
+                    <div className='text-3xl font-bold text-gray-900'>
+                        {totalItemsSold}
+                    </div>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className='flex flex-col md:flex-row gap-4'>
+                <div className='flex-1 relative'>
+                    <MdSearch
+                        className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10'
+                        size={20}
+                    />
+                    <input
+                        type='text'
+                        placeholder='Search transaction ID, product name, or barcode...'
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className='w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm'
+                    />
+                </div>
+                <div className='flex gap-3'>
+                    <div className='relative flex-1 md:flex-none md:min-w-[140px]'>
+                        <MdCalendarToday
+                            className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10'
+                            size={18}
+                        />
+                        <select
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm text-sm font-medium text-gray-700'
+                        >
+                            <option value='today'>Today</option>
+                            <option value='yesterday'>Yesterday</option>
+                            <option value='week'>This Week</option>
+                            <option value='month'>This Month</option>
+                            <option value='all'>All Time</option>
+                        </select>
+                        <MdArrowDropDown
+                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10'
+                            size={20}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Sales List */}
+            <div className='bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden'>
+                {/* Desktop Table Header */}
+                <div className='hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider'>
+                    <div className='col-span-3'>Transaction ID</div>
+                    <div className='col-span-3'>Date & Time</div>
+                    <div className='col-span-2 text-center'>Items</div>
+                    <div className='col-span-4 text-right'>Total Amount</div>
+                </div>
+
+                {/* List Content */}
+                <div className='divide-y divide-gray-100'>
+                    {filteredSales.length === 0 ? (
+                        <div className='p-12 text-center text-gray-500'>
+                            <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                                <MdReceipt size={32} className='text-gray-400' />
+                            </div>
+                            <h3 className='text-lg font-medium text-gray-900 mb-1'>
+                                No sales found
+                            </h3>
+                            <p>Try adjusting your filters or search query</p>
+                        </div>
+                    ) : (
+                        filteredSales.map((sale) => (
+                            <div
+                                key={sale.id}
+                                onClick={() => handleSaleClick(sale)}
+                                className='group hover:bg-blue-50 transition-colors cursor-pointer'
+                            >
+                                {/* Desktop Row */}
+                                <div className='hidden md:grid grid-cols-12 gap-4 p-4 items-center'>
+                                    <div className='col-span-3 font-mono text-sm text-gray-600 truncate'>
+                                        {sale.id}
+                                    </div>
+                                    <div className='col-span-3'>
+                                        <div className='text-sm font-medium text-gray-900'>
+                                            {formatDate(sale.timestamp)}
+                                        </div>
+                                        <div className='text-xs text-gray-500'>
+                                            {formatTime(sale.timestamp)}
+                                        </div>
+                                    </div>
+                                    <div className='col-span-2 text-center'>
+                                        <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                                            {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
+                                        </span>
+                                    </div>
+                                    <div className='col-span-4 text-right'>
+                                        <span className='text-sm font-bold text-gray-900'>
+                                            Rp {sale.totalAmount.toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Card */}
+                                <div className='md:hidden p-4'>
+                                    <div className='flex justify-between items-start mb-3'>
+                                        <div>
+                                            <div className='text-xs font-mono text-gray-500 mb-1'>
+                                                {sale.id}
+                                            </div>
+                                            <div className='text-sm font-bold text-gray-900'>
+                                                {formatDate(sale.timestamp)}
+                                            </div>
+                                            <div className='text-xs text-gray-500'>
+                                                {formatTime(sale.timestamp)}
+                                            </div>
+                                        </div>
+                                        <div className='text-right'>
+                                            <div className='text-lg font-bold text-blue-600'>
+                                                Rp {sale.totalAmount.toLocaleString()}
+                                            </div>
+                                            <div className='text-xs text-gray-500 mt-1'>
+                                                {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            <SaleDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                sale={selectedSale}
             />
-          </div>
-
-          <FormControl size='small' className='w-full'>
-            <Select
-              value={dateFilter}
-              onChange={(e: SelectChangeEvent) => setDateFilter(e.target.value)}
-              displayEmpty
-              inputProps={{ 'aria-label': 'Date Filter' }}
-              sx={{
-                borderRadius: '0.5rem',
-                backgroundColor: 'white',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#d1d5db', // gray-300
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#3b82f6', // blue-500
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#3b82f6', // blue-500
-                },
-              }}
-            >
-              <MenuItem value='all'>All Time</MenuItem>
-              <MenuItem value='today'>Today</MenuItem>
-              <MenuItem value='week'>Last 7 Days</MenuItem>
-              <MenuItem value='month'>Last 30 Days</MenuItem>
-            </Select>
-          </FormControl>
         </div>
-      </div>
-
-      {isLoading ? (
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-          <LoadingSpinner size='lg' />
-          <p className='text-gray-500 mt-2'>Loading sales history...</p>
-        </div>
-      ) : filteredSales.length === 0 ? (
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-          <MdHistory size={48} className='mx-auto text-gray-300 mb-2' />
-          <p className='text-gray-500'>No sales found</p>
-        </div>
-      ) : (
-        <>
-          {/* Mobile Card Layout */}
-          <div className='lg:hidden space-y-3'>
-            {filteredSales.map((sale) => (
-              <div
-                key={sale.id}
-                onClick={() => handleRowClick(sale)}
-                className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
-              >
-                <div className='flex justify-between items-start mb-2'>
-                  <div className='flex-1'>
-                    <div className='font-semibold text-gray-900'>
-                      {sale.productName}
-                    </div>
-                    <div className='text-xs text-gray-500 mt-1'>
-                      {formatDate(sale.timestamp)} •{' '}
-                      {formatTime(sale.timestamp)}
-                    </div>
-                    <div className='text-sm font-medium mt-1 text-gray-900'>
-                      @ Rp {sale.productPrice.toLocaleString()}
-                    </div>
-                  </div>
-                  <span className='text-sm font-semibold text-gray-900 bg-gray-100 px-2 py-1 rounded'>
-                    ×{sale.quantity}
-                  </span>
-                </div>
-                <div className='flex justify-between items-center pt-2 border-t border-gray-100'>
-                  <div className='text-xs text-gray-500'>
-                    {sale.discount ? (
-                      <span className='text-red-600'>
-                        Discount: Rp {sale.discount.toLocaleString()}
-                      </span>
-                    ) : null}
-                    {sale.taxRate ? (
-                      <span className='ml-2'>Tax: {sale.taxRate}%</span>
-                    ) : null}
-                  </div>
-                  <div className='text-base font-bold text-blue-600'>
-                    Rp {(sale.grandTotal || 0).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table Layout */}
-          <div className='hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>
-            <div className='overflow-x-auto'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
-                  <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Date & Time
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Product
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Price
-                    </th>
-                    <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Quantity
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Discount
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Tax
-                    </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Grand Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
-                  {filteredSales.map((sale) => (
-                    <tr
-                      key={sale.id}
-                      onClick={() => handleRowClick(sale)}
-                      className='hover:bg-gray-50 cursor-pointer transition-colors'
-                    >
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='text-sm font-medium text-gray-900'>
-                          {formatDate(sale.timestamp)}
-                        </div>
-                        <div className='text-sm text-gray-500'>
-                          {formatTime(sale.timestamp)}
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='text-sm font-medium text-gray-900'>
-                          {sale.productName}
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900'>
-                        Rp {sale.productPrice.toLocaleString()}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-center'>
-                        <span className='text-sm font-semibold text-gray-900'>
-                          {sale.quantity}
-                        </span>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500'>
-                        {sale.discount ? (
-                          <span className='text-red-600'>
-                            - Rp {sale.discount.toLocaleString()}
-                          </span>
-                        ) : (
-                          <span className='text-gray-400'>-</span>
-                        )}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500'>
-                        {sale.taxRate ? (
-                          <span>{sale.taxRate}%</span>
-                        ) : (
-                          <span className='text-gray-400'>-</span>
-                        )}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-blue-600'>
-                        Rp {(sale.grandTotal || 0).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
-
-      <SaleDetailsModal
-        isOpen={showDetailsModal}
-        onClose={() => setShowDetailsModal(false)}
-        sale={selectedSale}
-      />
-    </div>
-  );
+    );
 }

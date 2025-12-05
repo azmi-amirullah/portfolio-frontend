@@ -1,216 +1,509 @@
-import { v4 as uuidv4 } from 'uuid';
+import { authService } from './auth-service';
+import { toast } from 'react-toastify';
 
 export interface Product {
   id: string;
   barcode: string;
   name: string;
   price: number;
+  sold?: number;
+  stock?: StockBatch[];
 }
 
 export interface StockBatch {
-  id: string;
   productId: string;
   expirationDate: string; // Format: YYYY-MM-DD
-  addedDate: string; // Format: YYYY-MM-DD
+  addedDate: string; // ISO timestamp, also serves as unique ID
   quantity: number;
   isSoldOut: boolean; // Manual override to mark batch as unavailable
 }
 
-export interface Sale {
-  id: string;
-  productId: string;
-  quantity: number;
+export interface Transaction {
+  id: string; // timestamp as string
   timestamp: number;
-  discount?: number;
-  taxRate?: number;
-  amountPaid?: number;
-  grandTotal?: number;
-  price?: number; // Price per unit at the time of sale
+  products: {
+    productId: string;
+    productName: string;
+    productBarcode: string;
+    price: number;
+    quantity: number;
+  }[];
+  totalAmount: number;
+  amountPaid: number;
+  change: number;
 }
 
-const STORAGE_KEYS = {
-  PRODUCTS: 'cashier_products',
-  STOCK: 'cashier_stock',
-  SALES: 'cashier_sales',
-};
-
-// Simulate API delay
-const delay = (ms: number = 300) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+export interface CashierData {
+  products: (Product & { stock?: StockBatch[] })[];
+  sales: Transaction[];
+}
 
 class CashierService {
-  // Helper to get data from localStorage
+  private syncPromise: Promise<boolean> | null = null;
+  private salesSyncPromise: Promise<void> | null = null;
+  private initialSyncDone = false;
+  private initialSalesSyncDone = false;
+
+  private getStorageKey(key: string): string {
+    const user = authService.getUser();
+    if (!user) return key;
+    return `cashier_${user.username}_${key}`;
+  }
+
   private get<T>(key: string): T[] {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(key);
+    const storageKey = this.getStorageKey(key);
+    const data = localStorage.getItem(storageKey);
     return data ? JSON.parse(data) : [];
   }
 
-  // Helper to set data to localStorage
   private set<T>(key: string, data: T[]) {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(key, JSON.stringify(data));
+    const storageKey = this.getStorageKey(key);
+    localStorage.setItem(storageKey, JSON.stringify(data));
   }
 
-  // --- Products ---
+  async syncWithBackend(token?: string): Promise<boolean> {
+    // If already syncing, return the existing promise
+    if (this.syncPromise) {
+      return this.syncPromise;
+    }
+
+    // Create new sync promise
+    this.syncPromise = (async () => {
+      try {
+        const jwt = token || authService.getToken();
+        if (!jwt) {
+          return false;
+        }
+
+        const user = authService.getUser();
+        if (!user) {
+          return false;
+        }
+
+        const response = await fetch(
+          `${
+            process.env.STRAPI_URL || 'http://localhost:1337'
+          }/api/frontend/getProducts`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return false;
+        }
+
+        const data: { products: (Product & { stock?: StockBatch[] })[] } =
+          await response.json();
+
+        // Store the fetched data in localStorage with username prefix
+        if (typeof window !== 'undefined') {
+          const prefix = `cashier_${user.username}_`;
+          const products = data.products || [];
+          localStorage.setItem(`${prefix}products`, JSON.stringify(products));
+        }
+
+        this.initialSyncDone = true;
+        return true;
+      } catch (error) {
+        console.error('Sync error:', error);
+        return false;
+      } finally {
+        this.syncPromise = null;
+      }
+    })();
+
+    return this.syncPromise;
+  }
+
+  hasData(): boolean {
+    if (typeof window === 'undefined') return false;
+    const user = authService.getUser();
+    if (!user) return false;
+
+    const prefix = `cashier_${user.username}_`;
+    const products = localStorage.getItem(`${prefix}products`);
+
+    return !!(products && products !== '[]');
+  }
 
   async getProducts(): Promise<Product[]> {
-    await delay();
-    return this.get<Product>(STORAGE_KEYS.PRODUCTS);
+    const products = this.get<Product>('products');
+    if (products.length === 0 && !this.initialSyncDone) {
+      await this.syncWithBackend();
+      return this.get<Product>('products');
+    }
+    return products;
   }
 
   async getProductByBarcode(barcode: string): Promise<Product | undefined> {
-    await delay();
-    const products = this.get<Product>(STORAGE_KEYS.PRODUCTS);
+    const products = await this.getProducts();
     return products.find((p) => p.barcode === barcode);
   }
 
   async saveProduct(product: Product): Promise<void> {
-    await delay();
-    const products = this.get<Product>(STORAGE_KEYS.PRODUCTS);
-    const index = products.findIndex((p) => p.id === product.id);
-    if (index >= 0) {
-      products[index] = product;
-    } else {
-      products.push(product);
+    const products = await this.getProducts();
+    const existingProduct = products.find((p) => p.id === product.id);
+
+    try {
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token');
+
+      // Ensure we preserve the 'sold' count from the existing product if it's not provided in the update
+      // This acts as a guard to prevent accidental overwrites of the sold count
+      const productToSave = {
+        ...product,
+        sold: existingProduct?.sold || product.sold || 0,
+      };
+
+      let response;
+      if (existingProduct) {
+        // Edit existing product
+        response = await fetch(
+          `${
+            process.env.STRAPI_URL || 'http://localhost:1337'
+          }/api/frontend/editProduct`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              oldName: existingProduct.name,
+              product: productToSave,
+            }),
+          }
+        );
+      } else {
+        // Add new product
+        response = await fetch(
+          `${
+            process.env.STRAPI_URL || 'http://localhost:1337'
+          }/api/frontend/addProduct`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              product: productToSave,
+            }),
+          }
+        );
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error?.message || 'Failed to save product');
+      }
+
+      // Update local storage directly instead of fetching from backend
+      const allProducts = this.get<Product>('products');
+      const productIndex = allProducts.findIndex(
+        (p) => p.id === productToSave.id
+      );
+
+      if (productIndex >= 0) {
+        // Update existing product
+        allProducts[productIndex] = productToSave;
+      } else {
+        // Add new product
+        allProducts.push(productToSave);
+      }
+
+      // If editing and name changed, also update the ID to match the new name
+      if (existingProduct && existingProduct.name !== productToSave.name) {
+        // Update the product ID to the new name for consistency
+        allProducts[
+          productIndex >= 0 ? productIndex : allProducts.length - 1
+        ].id = productToSave.name;
+      }
+
+      this.set('products', allProducts);
+      toast.success('Product saved successfully');
+    } catch (error: unknown) {
+      console.error('Save product error:', error);
+      const message =
+        error instanceof Error ? error.message : 'Failed to save product';
+      toast.error(message);
+      throw error;
     }
-    this.set(STORAGE_KEYS.PRODUCTS, products);
   }
 
-  async deleteProduct(productId: string): Promise<void> {
-    await delay();
-    const products = this.get<Product>(STORAGE_KEYS.PRODUCTS);
-    const newProducts = products.filter((p) => p.id !== productId);
-    this.set(STORAGE_KEYS.PRODUCTS, newProducts);
-  }
+  async deleteProduct(productName: string): Promise<void> {
+    try {
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token');
 
-  // --- Stock ---
+      const response = await fetch(
+        `${
+          process.env.STRAPI_URL || 'http://localhost:1337'
+        }/api/frontend/deleteProduct`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            productName: productName,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.error?.message || 'Failed to delete product'
+        );
+      }
+
+      // Update local storage directly instead of fetching from backend
+      const allProducts = this.get<Product>('products');
+      const filteredProducts = allProducts.filter(
+        (p) => p.name !== productName
+      );
+      this.set('products', filteredProducts);
+
+      toast.success('Product deleted successfully');
+    } catch (error: unknown) {
+      console.error('Delete product error:', error);
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete product';
+      toast.error(message);
+      throw error;
+    }
+  }
 
   async getStockBatches(productId: string): Promise<StockBatch[]> {
-    await delay();
-    const allStock = this.get<StockBatch>(STORAGE_KEYS.STOCK);
-    return allStock.filter((s) => s.productId === productId);
+    const product = await this.getProductById(productId);
+    return product?.stock || [];
+  }
+
+  async getProductById(productId: string): Promise<Product | undefined> {
+    const products = await this.getProducts();
+    return products.find((p) => p.id === productId);
   }
 
   async addStock(
     productId: string,
-    batch: Omit<StockBatch, 'id' | 'productId' | 'isSoldOut'>
+    batch: Omit<StockBatch, 'productId' | 'isSoldOut'>
   ): Promise<void> {
-    await delay();
-    const allStock = this.get<StockBatch>(STORAGE_KEYS.STOCK);
-    const newBatch: StockBatch = {
-      ...batch,
-      id: uuidv4(),
-      productId,
-      isSoldOut: false,
-    };
-    allStock.push(newBatch);
-    this.set(STORAGE_KEYS.STOCK, allStock);
-  }
+    const product = await this.getProductById(productId);
 
-  async updateStockBatch(batch: StockBatch): Promise<void> {
-    await delay();
-    const allStock = this.get<StockBatch>(STORAGE_KEYS.STOCK);
-    const index = allStock.findIndex((s) => s.id === batch.id);
-    if (index >= 0) {
-      allStock[index] = batch;
-      this.set(STORAGE_KEYS.STOCK, allStock);
+    if (product) {
+      const newBatch: StockBatch = {
+        ...batch,
+        productId,
+        isSoldOut: false,
+      };
+
+      const updatedProduct = {
+        ...product,
+        stock: [...(product.stock || []), newBatch],
+      };
+
+      await this.saveProduct(updatedProduct);
     }
   }
 
-  // --- Sales ---
+  async updateStockBatch(batch: StockBatch): Promise<void> {
+    const product = await this.getProductById(batch.productId);
+
+    if (product && product.stock) {
+      const updatedStock = product.stock.map((s) =>
+        s.addedDate === batch.addedDate ? batch : s
+      );
+
+      const updatedProduct = {
+        ...product,
+        stock: updatedStock,
+      };
+      await this.saveProduct(updatedProduct);
+    }
+  }
+
+  async saveSaleToBackend(transaction: Transaction): Promise<void> {
+    try {
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token');
+
+      const response = await fetch(
+        `${
+          process.env.STRAPI_URL || 'http://localhost:1337'
+        }/api/frontend/saveSale`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            transaction: transaction,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.error?.message || 'Failed to save transaction to backend'
+        );
+      }
+    } catch (error) {
+      console.error('Failed to save transaction to backend:', error);
+      const message =
+        error instanceof Error ? error.message : 'Failed to save transaction';
+      toast.error(message);
+      throw error; // Re-throw to let caller know it failed
+    }
+  }
 
   async processSale(
-    cartItems: { productId: string; quantity: number; price: number }[],
-    paymentDetails?: {
-      discount: number;
-      taxRate: number;
+    cartItems: {
+      productId: string;
+      quantity: number;
+      price: number;
+      name: string;
+      barcode: string;
+    }[],
+    paymentDetails: {
       amountPaid: number;
       grandTotal: number;
     }
   ): Promise<void> {
-    await delay();
-    const allSales = this.get<Sale>(STORAGE_KEYS.SALES);
     const timestamp = Date.now();
+    const transactionId = timestamp.toString();
 
-    cartItems.forEach((item) => {
-      const sale: Sale = {
-        id: uuidv4(),
+    const transaction: Transaction = {
+      id: transactionId,
+      timestamp,
+      products: cartItems.map((item) => ({
         productId: item.productId,
-        quantity: item.quantity,
-        timestamp,
-        discount: paymentDetails?.discount,
-        taxRate: paymentDetails?.taxRate,
-        amountPaid: paymentDetails?.amountPaid,
-        grandTotal: paymentDetails?.grandTotal,
+        productName: item.name,
+        productBarcode: item.barcode,
         price: item.price,
-      };
-      allSales.push(sale);
+        quantity: item.quantity,
+      })),
+      totalAmount: paymentDetails.grandTotal,
+      amountPaid: paymentDetails.amountPaid,
+      change: paymentDetails.amountPaid - paymentDetails.grandTotal,
+    };
+
+    // 1. Try to save to backend FIRST
+    await this.saveSaleToBackend(transaction);
+
+    // 2. If successful, update local state
+    const allSales = this.get<Transaction>('sales');
+    const products = this.get<Product>('products');
+
+    allSales.push(transaction);
+
+    // Update local product sold count
+    transaction.products.forEach((item) => {
+      const product = products.find((p) => p.id === item.productId);
+      if (product) {
+        product.sold = (product.sold || 0) + item.quantity;
+      }
     });
 
-    this.set(STORAGE_KEYS.SALES, allSales);
+    this.set('sales', allSales);
+    this.set('products', products);
   }
 
-  async getSalesHistory(): Promise<
-    (Sale & { productName: string; productPrice: number })[]
-  > {
-    await delay();
-    const allSales = this.get<Sale>(STORAGE_KEYS.SALES);
-    const products = this.get<Product>(STORAGE_KEYS.PRODUCTS);
+  async syncSalesWithBackend(): Promise<void> {
+    // If already syncing, return the existing promise
+    if (this.salesSyncPromise) {
+      return this.salesSyncPromise;
+    }
 
-    return allSales
-      .map((sale) => {
-        const product = products.find((p) => p.id === sale.productId);
-        return {
-          ...sale,
-          productName: product?.name || 'Unknown Product',
-          productPrice: sale.price || 0, // Use recorded price, fallback to 0 for old records
-        };
-      })
-      .sort((a, b) => b.timestamp - a.timestamp); // Most recent first
+    // Create new sync promise
+    this.salesSyncPromise = (async () => {
+      try {
+        const token = authService.getToken();
+        if (!token) return;
+
+        const response = await fetch(
+          `${
+            process.env.STRAPI_URL || 'http://localhost:1337'
+          }/api/frontend/getSales`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch sales history');
+        }
+
+        const data: { sales: Transaction[] } = await response.json();
+        const sales = data.sales || [];
+
+        this.set('sales', sales);
+      } catch (error) {
+        console.error('Sync sales error:', error);
+        // Don't throw, just log error so UI doesn't break
+      } finally {
+        this.salesSyncPromise = null;
+      }
+    })();
+
+    return this.salesSyncPromise;
   }
 
-  // --- Calculations ---
+  async getSalesHistory(): Promise<Transaction[]> {
+    const allSales = this.get<Transaction>('sales');
+
+    // Auto-fetch if local data is empty and not yet synced
+    if (allSales.length === 0 && !this.initialSalesSyncDone) {
+      await this.syncSalesWithBackend();
+      this.initialSalesSyncDone = true;
+      const syncedSales = this.get<Transaction>('sales');
+      return syncedSales.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    return allSales.sort((a, b) => b.timestamp - a.timestamp);
+  }
 
   async getProductStock(productId: string): Promise<number> {
-    await delay();
     const batches = await this.getStockBatches(productId);
-    const allSales = this.get<Sale>(STORAGE_KEYS.SALES);
-    const productSales = allSales.filter((s) => s.productId === productId);
+    const products = this.get<Product>('products');
+    const product = products.find((p) => p.id === productId);
 
     const totalAdded = batches.reduce((sum, batch) => sum + batch.quantity, 0);
-    const totalSold = productSales.reduce(
-      (sum, sale) => sum + sale.quantity,
-      0
-    );
+    const sold = product?.sold || 0;
 
-    return totalAdded - totalSold;
+    return totalAdded - sold;
   }
 
-  async getProductsWithStock(): Promise<
-    (Product & { stock: number; batches: StockBatch[] })[]
-  > {
-    await delay();
-    const products = this.get<Product>(STORAGE_KEYS.PRODUCTS);
-    const allStock = this.get<StockBatch>(STORAGE_KEYS.STOCK);
-    const allSales = this.get<Sale>(STORAGE_KEYS.SALES);
+  getProductsWithStock(): (Product & {
+    availableStock: number;
+    batches: StockBatch[];
+  })[] {
+    const products = this.get<Product>('products');
 
     return products.map((product) => {
-      const batches = allStock.filter((s) => s.productId === product.id);
-      const productSales = allSales.filter((s) => s.productId === product.id);
+      const batches = product.stock || [];
 
       const totalAdded = batches.reduce(
         (sum, batch) => sum + batch.quantity,
         0
       );
-      const totalSold = productSales.reduce(
-        (sum, sale) => sum + sale.quantity,
-        0
-      );
+      const sold = product.sold || 0;
 
       return {
         ...product,
-        stock: totalAdded - totalSold,
+        availableStock: totalAdded - sold,
         batches,
       };
     });
