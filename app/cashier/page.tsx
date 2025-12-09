@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/services/auth-service';
 import { Button } from '@/components/ui/Button';
+import { Turnstile } from '@/components/ui/Turnstile';
 import { toast } from 'react-toastify';
 import { MdDashboard, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 export default function CashierLoginPage() {
     const router = useRouter();
@@ -14,6 +17,7 @@ export default function CashierLoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -33,11 +37,15 @@ export default function CashierLoginPage() {
             return;
         }
 
+        if (TURNSTILE_SITE_KEY && !turnstileToken) {
+            toast.error('Please complete the security check');
+            return;
+        }
+
         setIsLoading(true);
         const success = await authService.login(identifier, password);
 
         if (success) {
-
             toast.success('Login successful');
             router.push('/cashier/pos');
         }
@@ -132,10 +140,19 @@ export default function CashierLoginPage() {
                         </div>
                     </div>
 
+                    {TURNSTILE_SITE_KEY && (
+                        <Turnstile
+                            siteKey={TURNSTILE_SITE_KEY}
+                            onVerify={setTurnstileToken}
+                            onExpire={() => setTurnstileToken(null)}
+                            theme='light'
+                        />
+                    )}
+
                     <div>
                         <Button
                             type='submit'
-                            disabled={isLoading}
+                            disabled={isLoading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
                             className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
                             {isLoading ? 'Signing in...' : 'Sign in'}
