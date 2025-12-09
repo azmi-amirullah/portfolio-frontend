@@ -141,12 +141,14 @@ export default function CashierLoginPage() {
                     </div>
 
                     {TURNSTILE_SITE_KEY && (
-                        <Turnstile
-                            siteKey={TURNSTILE_SITE_KEY}
-                            onVerify={setTurnstileToken}
-                            onExpire={() => setTurnstileToken(null)}
-                            theme='light'
-                        />
+                        <div className='mb-2'>
+                            <Turnstile
+                                siteKey={TURNSTILE_SITE_KEY}
+                                onVerify={setTurnstileToken}
+                                onExpire={() => setTurnstileToken(null)}
+                                theme='light'
+                            />
+                        </div>
                     )}
 
                     <div>
@@ -166,6 +168,12 @@ export default function CashierLoginPage() {
                         <p><span className='font-medium'>Username:</span> guest</p>
                         <p><span className='font-medium'>Password:</span> guest.password</p>
                     </div>
+                </div>
+
+                <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4'>
+                    <p className='text-xs text-amber-800'>
+                        <span className='font-medium'>⚠️ Note:</span> First login may take 30-60s due to server cold start.
+                    </p>
                 </div>
 
                 <div className='text-center'>

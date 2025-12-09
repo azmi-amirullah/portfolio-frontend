@@ -32,6 +32,9 @@ declare global {
     }
 }
 
+let scriptLoaded = false;
+let scriptLoading = false;
+
 export function Turnstile({
     siteKey,
     onVerify,
@@ -42,10 +45,10 @@ export function Turnstile({
 }: TurnstileProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const scriptLoadedRef = useRef(false);
 
     const renderWidget = useCallback(() => {
-        if (!window.turnstile || !containerRef.current || widgetIdRef.current) return;
+        if (!window.turnstile || !containerRef.current) return;
+        if (widgetIdRef.current) return;
 
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
@@ -58,33 +61,41 @@ export function Turnstile({
     }, [siteKey, onVerify, onError, onExpire, theme, size]);
 
     useEffect(() => {
-        if (scriptLoadedRef.current) {
+        if (scriptLoaded && window.turnstile) {
             renderWidget();
+            return;
+        }
+
+        if (scriptLoading) {
+            const originalCallback = window.onTurnstileLoad;
+            window.onTurnstileLoad = () => {
+                originalCallback?.();
+                renderWidget();
+            };
             return;
         }
 
         const existingScript = document.querySelector(
-            'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]'
+            'script[src*="challenges.cloudflare.com/turnstile"]'
         );
 
         if (existingScript) {
-            scriptLoadedRef.current = true;
+            scriptLoaded = true;
             if (window.turnstile) {
                 renderWidget();
-            } else {
-                window.onTurnstileLoad = renderWidget;
             }
             return;
         }
 
+        scriptLoading = true;
         window.onTurnstileLoad = () => {
-            scriptLoadedRef.current = true;
+            scriptLoaded = true;
+            scriptLoading = false;
             renderWidget();
         };
 
         const script = document.createElement('script');
-        script.src =
-            'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
         script.async = true;
         script.defer = true;
         document.head.appendChild(script);

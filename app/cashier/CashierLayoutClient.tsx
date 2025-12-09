@@ -231,7 +231,14 @@ export default function CashierLayoutClient({
             {/* Main Content */}
             <main className='flex-1 lg:ml-64 overflow-y-auto'>
                 <div className='pt-18 pb-16 p-4 lg:p-8'>
-                    <div className='max-w-7xl mx-auto'>{children}</div>
+                    <div className='max-w-7xl mx-auto'>
+                        {/* <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4 mb-4'>
+                            <p className='text-xs text-amber-800'>
+                                <span className='font-medium'>⚠️ Note:</span> First API request may take 30-60s due to server cold start.
+                            </p>
+                        </div> */}
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>
