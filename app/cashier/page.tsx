@@ -143,9 +143,9 @@ export default function CashierLoginPage() {
                     </div>
                 </form>
 
-                <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                <div className='bg-blue-50 border border-blue-200 rounded-lg py-2 px-4'>
                     <p className='text-sm font-medium text-blue-900 mb-2'>Try it out:</p>
-                    <div className='space-y-1 text-sm text-blue-700'>
+                    <div className='text-sm text-blue-700'>
                         <p><span className='font-medium'>Username:</span> guest</p>
                         <p><span className='font-medium'>Password:</span> guest.password</p>
                     </div>

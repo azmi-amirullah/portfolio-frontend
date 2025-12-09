@@ -25,13 +25,17 @@ export default function CashierLayoutClient({
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [username, setUsername] = useState('User');
 
     useEffect(() => {
-        setTimeout(() => setIsMounted(true), 0);
+        setTimeout(() => {
+            const user = authService.getUser();
+            setUsername(user?.username || 'User');
+            setIsMounted(true);
+        }, 0);
     }, []);
 
     useEffect(() => {
-        // Redirect to login if not authenticated and not on login page
         if (isMounted && !authService.isAuthenticated() && pathname !== '/cashier') {
             router.replace('/cashier');
         }
@@ -48,7 +52,6 @@ export default function CashierLayoutClient({
         checkAndFetchData();
     }, [isMounted]);
 
-    // Don't render layout elements on login page
     if (pathname === '/cashier') {
         return <>{children}</>;
     }
@@ -59,9 +62,6 @@ export default function CashierLayoutClient({
         authService.logout();
         router.replace('/cashier');
     };
-
-    const user = authService.getUser();
-    const username = user?.username || 'User';
 
     const navItems = [
         { path: '/cashier/pos', icon: MdShoppingCart, label: 'POS' },

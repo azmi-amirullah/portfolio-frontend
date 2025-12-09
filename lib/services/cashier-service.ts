@@ -1,5 +1,6 @@
 import { authService } from './auth-service';
 import { toast } from 'react-toastify';
+import { apiFetch } from '../api';
 
 export interface Product {
   id: string;
@@ -82,17 +83,10 @@ class CashierService {
           return false;
         }
 
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-          }/api/frontend/getProducts`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${jwt}`,
-            },
-          }
-        );
+        const response = await apiFetch('/api/frontend/getProducts', {
+          method: 'GET',
+          headers: jwt ? { Authorization: `Bearer ${jwt}` } : undefined,
+        });
 
         if (!response.ok) {
           return false;
@@ -164,39 +158,21 @@ class CashierService {
       let response;
       if (existingProduct) {
         // Edit existing product
-        response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-          }/api/frontend/editProduct`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              oldName: existingProduct.name,
-              product: productToSave,
-            }),
-          }
-        );
+        response = await apiFetch('/api/frontend/editProduct', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            oldName: existingProduct.name,
+            product: productToSave,
+          }),
+        });
       } else {
         // Add new product
-        response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-          }/api/frontend/addProduct`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              product: productToSave,
-            }),
-          }
-        );
+        response = await apiFetch('/api/frontend/addProduct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product: productToSave }),
+        });
       }
 
       if (!response.ok) {
@@ -242,21 +218,11 @@ class CashierService {
       const token = authService.getToken();
       if (!token) throw new Error('No authentication token');
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-        }/api/frontend/deleteProduct`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            productName: productName,
-          }),
-        }
-      );
+      const response = await apiFetch('/api/frontend/deleteProduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -335,21 +301,11 @@ class CashierService {
       const token = authService.getToken();
       if (!token) throw new Error('No authentication token');
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-        }/api/frontend/saveSale`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            transaction: transaction,
-          }),
-        }
-      );
+      const response = await apiFetch('/api/frontend/saveSale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -430,17 +386,7 @@ class CashierService {
         const token = authService.getToken();
         if (!token) return;
 
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337'
-          }/api/frontend/getSales`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await apiFetch('/api/frontend/getSales');
 
         if (!response.ok) {
           throw new Error('Failed to fetch sales history');

@@ -28,7 +28,6 @@ export default function SalesHistoryPage() {
     const filterSales = () => {
         let result = [...sales];
 
-        // Date Filter
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const yesterday = new Date(today);
@@ -51,14 +50,10 @@ export default function SalesHistoryPage() {
             result = result.filter((sale) => sale.timestamp >= thisMonth.getTime());
         }
 
-        // Search Filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             result = result.filter((sale) => {
-                // Search by Transaction ID
                 if (sale.id.toLowerCase().includes(query)) return true;
-
-                // Search by Product Name or Barcode inside the transaction
                 return sale.products.some(
                     (p) =>
                         p.productName.toLowerCase().includes(query) ||

@@ -42,16 +42,12 @@ export default function ProductForm({
     );
 
     batches.forEach((batch) => {
-      // If marked for deletion, it's definitely "unsaved" change (unless we want to treat it differently)
-      // Actually, let's handle deletion visualization separately.
       if (deletedBatchIds.has(batch.addedDate)) return;
 
       const initial = initialMap.get(batch.addedDate);
       if (!initial) {
-        // New batch
         unsaved.add(batch.addedDate);
       } else {
-        // Check if modified
         if (
           initial.quantity !== batch.quantity ||
           initial.expirationDate !== batch.expirationDate ||
@@ -67,7 +63,6 @@ export default function ProductForm({
   const handleAddBatch = (
     batch: Omit<StockBatch, 'productId' | 'isSoldOut'>
   ) => {
-    // Use product name as ID
     const productId = initialProduct?.id || name;
 
     const newBatch: StockBatch = {
@@ -98,7 +93,6 @@ export default function ProductForm({
     const isExisting = initialBatches?.some((b) => b.addedDate === batchId);
 
     if (isExisting) {
-      // Toggle deletion status for existing batches
       const newDeleted = new Set(deletedBatchIds);
       if (newDeleted.has(batchId)) {
         newDeleted.delete(batchId);
@@ -107,7 +101,6 @@ export default function ProductForm({
       }
       setDeletedBatchIds(newDeleted);
     } else {
-      // Directly remove new batches
       setBatches(batches.filter((b) => b.addedDate !== batchId));
     }
   };
@@ -116,13 +109,11 @@ export default function ProductForm({
     e.preventDefault();
     if (!barcode || !name || !price) return;
 
-    // Check for duplicate name
     const allProducts = await cashierService.getProducts();
     const duplicate = allProducts.find(
       (p) => p.name.toLowerCase() === name.toLowerCase()
     );
 
-    // If adding new product and duplicate found
     if (!initialProduct && duplicate) {
       toast.error(
         'A product with this name already exists. Please use a different name.'
@@ -130,7 +121,6 @@ export default function ProductForm({
       return;
     }
 
-    // If editing and name changed, check if new name conflicts
     if (initialProduct && name !== initialProduct.name && duplicate) {
       toast.error(
         'A product with this name already exists. Please use a different name.'
@@ -138,15 +128,14 @@ export default function ProductForm({
       return;
     }
 
-    // Filter out deleted batches
     const finalBatches = batches.filter((b) => !deletedBatchIds.has(b.addedDate));
 
     const product: Product = {
-      id: initialProduct?.id || name, // Use original ID if editing, otherwise use name
+      id: initialProduct?.id || name,
       barcode,
       name,
       price: parseFloat(price),
-      stock: finalBatches, // Include only non-deleted batches
+      stock: finalBatches,
     };
 
     await cashierService.saveProduct(product);

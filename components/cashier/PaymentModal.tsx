@@ -21,7 +21,6 @@ export default function PaymentModal({
   const [amountPaid, setAmountPaid] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus input when modal is visible
   useEffect(() => {
     if (isOpen && inputRef.current) {
       const timer = setTimeout(() => inputRef.current?.focus(), 100);
@@ -29,9 +28,7 @@ export default function PaymentModal({
     }
   }, [isOpen]);
 
-  // Reset state when modal closes
   if (!isOpen && amountPaid) {
-    // Use setTimeout to avoid synchronous setState in render
     setTimeout(() => {
       setAmountPaid('');
     }, 0);
@@ -75,7 +72,6 @@ export default function PaymentModal({
       {/* Content */}
       <div className='bg-white px-4 py-4 sm:px-6 sm:py-6'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          {/* Left Column - Total to Pay */}
           <div className='flex flex-col justify-center space-y-4'>
             <div className='bg-blue-50 rounded-2xl p-6 border-2 border-blue-100 text-center'>
               <div className='text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide'>
@@ -90,9 +86,7 @@ export default function PaymentModal({
             </p>
           </div>
 
-          {/* Right Column - Payment Input */}
           <div className='space-y-5'>
-            {/* Amount Paid Input */}
             <div>
               <label className='block text-sm font-semibold text-gray-700 mb-2'>
                 Amount Paid
@@ -114,22 +108,21 @@ export default function PaymentModal({
               </div>
             </div>
 
-            {/* Change Display */}
             <div
               className={`rounded-xl p-5 border-2 transition-all duration-200 ${amountPaid
-                  ? isValidPayment
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-red-50 border-red-200'
-                  : 'bg-gray-50 border-gray-200'
+                ? isValidPayment
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-red-50 border-red-200'
+                : 'bg-gray-50 border-gray-200'
                 }`}
             >
               <div className='flex justify-between items-center mb-1'>
                 <span
                   className={`text-sm font-semibold ${amountPaid
-                      ? isValidPayment
-                        ? 'text-green-700'
-                        : 'text-red-700'
-                      : 'text-gray-500'
+                    ? isValidPayment
+                      ? 'text-green-700'
+                      : 'text-red-700'
+                    : 'text-gray-500'
                     }`}
                 >
                   {amountPaid
@@ -141,10 +134,10 @@ export default function PaymentModal({
               </div>
               <div
                 className={`text-3xl font-bold ${amountPaid
-                    ? isValidPayment
-                      ? 'text-green-700'
-                      : 'text-red-700'
-                    : 'text-gray-400'
+                  ? isValidPayment
+                    ? 'text-green-700'
+                    : 'text-red-700'
+                  : 'text-gray-400'
                   }`}
               >
                 {amountPaid ? (
