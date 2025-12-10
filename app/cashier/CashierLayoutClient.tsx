@@ -151,7 +151,7 @@ export default function CashierLayoutClient({
             )}
 
             {/* Desktop Sidebar */}
-            <aside className='hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-20'>
+            <aside className='hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col fixed h-full'>
                 <div className='h-16 flex items-center px-6 border-b border-gray-200'>
                     <h1 className='text-xl font-bold flex items-center gap-2'>
                         <MdDashboard className='text-blue-600' />

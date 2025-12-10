@@ -8,6 +8,7 @@ import {
     MdArrowDropDown,
     MdSync,
 } from 'react-icons/md';
+import Loading from '@/components/ui/Loading';
 import { cashierService, Transaction } from '@/lib/services/cashier-service';
 import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
 import { PageHeader } from '@/components/cashier/PageHeader';
@@ -21,10 +22,16 @@ export default function SalesHistoryPage() {
     const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const loadSales = async () => {
-        const history = await cashierService.getSalesHistory();
-        setSales(history);
+        setIsLoading(true);
+        try {
+            const history = await cashierService.getSalesHistory();
+            setSales(history);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const filterSales = () => {
@@ -205,8 +212,11 @@ export default function SalesHistoryPage() {
             </div>
 
             {/* Sales List */}
-            {/* Mobile Card Layout */}
-            {filteredSales.length === 0 ? (
+            {isLoading ? (
+                <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
+                    <Loading />
+                </div>
+            ) : filteredSales.length === 0 ? (
                 <div className='md:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
                     <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
                         <MdReceipt size={32} className='text-gray-500' />
@@ -250,41 +260,43 @@ export default function SalesHistoryPage() {
                 </div>
             )}
 
-            <Table
-                columns={[
-                    { header: 'Transaction ID', key: 'id' },
-                    {
-                        header: 'Date & Time',
-                        renderRow: (sale) => (
-                            <>
-                                <div className='text-sm font-medium'>{formatDate(sale.timestamp)}</div>
-                                <div className='text-xs text-gray-500'>{formatTime(sale.timestamp)}</div>
-                            </>
-                        )
-                    },
-                    {
-                        header: 'Items',
-                        align: 'center',
-                        renderRow: (sale) => (
-                            <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
-                                {sale.products.reduce((acc: number, p: { quantity: number }) => acc + p.quantity, 0)} items
-                            </span>
-                        )
-                    },
-                    {
-                        header: 'Total Amount',
-                        align: 'right',
-                        renderRow: (sale) => <span className='text-sm font-bold'>Rp {sale.totalAmount.toLocaleString()}</span>
-                    },
-                ]}
-                data={filteredSales}
-                onRowClick={handleSaleClick}
-                emptyState={{
-                    icon: MdReceipt,
-                    title: 'No sales found',
-                    subtitle: 'Try adjusting your filters or search query',
-                }}
-            />
+            {!isLoading && (
+                <Table
+                    columns={[
+                        { header: 'Transaction ID', key: 'id' },
+                        {
+                            header: 'Date & Time',
+                            renderRow: (sale) => (
+                                <>
+                                    <div className='text-sm font-medium'>{formatDate(sale.timestamp)}</div>
+                                    <div className='text-xs text-gray-500'>{formatTime(sale.timestamp)}</div>
+                                </>
+                            )
+                        },
+                        {
+                            header: 'Items',
+                            align: 'center',
+                            renderRow: (sale) => (
+                                <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                                    {sale.products.reduce((acc: number, p: { quantity: number }) => acc + p.quantity, 0)} items
+                                </span>
+                            )
+                        },
+                        {
+                            header: 'Total Amount',
+                            align: 'right',
+                            renderRow: (sale) => <span className='text-sm font-bold'>Rp {sale.totalAmount.toLocaleString()}</span>
+                        },
+                    ]}
+                    data={filteredSales}
+                    onRowClick={handleSaleClick}
+                    emptyState={{
+                        icon: MdReceipt,
+                        title: 'No sales found',
+                        subtitle: 'Try adjusting your filters or search query',
+                    }}
+                />
+            )}
 
             <SaleDetailsModal
                 isOpen={isDetailsModalOpen}

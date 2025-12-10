@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Turnstile } from '@/components/ui/Turnstile';
 import { toast } from 'react-toastify';
 import { MdDashboard, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import Loading from '@/components/ui/Loading';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
@@ -55,12 +56,7 @@ export default function CashierLoginPage() {
     if (isCheckingAuth) {
         return (
             <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-                <div className='text-center'>
-                    <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-pulse'>
-                        <MdDashboard className='h-8 w-8 text-blue-600' />
-                    </div>
-                    <p className='text-gray-500'>Loading...</p>
-                </div>
+                <Loading />
             </div>
         );
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Product, cashierService } from '@/lib/services/cashier-service';
 import {
   MdSearch,
@@ -10,7 +10,9 @@ import {
   MdRemove,
   MdCreditCard,
   MdClose,
+  MdQrCodeScanner,
 } from 'react-icons/md';
+import { BarcodeScanner } from '@/components/cashier/BarcodeScanner';
 import { toast } from 'react-toastify';
 import PaymentModal from '@/components/cashier/PaymentModal';
 import { Button } from '@/components/ui/Button';
@@ -27,6 +29,9 @@ export default function POSPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const lastScannedRef = useRef<string | null>(null);
+  const lastScannedTimeRef = useRef<number>(0);
 
   useEffect(() => {
     cashierService.getProducts().then(setProducts);
@@ -46,7 +51,7 @@ export default function POSPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
@@ -61,7 +66,7 @@ export default function POSPage() {
     setSearchTerm('');
     setShowDropdown(false);
     searchInputRef.current?.focus();
-  };
+  }, []);
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
@@ -113,6 +118,31 @@ export default function POSPage() {
     toast.success('Payment successful!');
   };
 
+  const handleScanResult = useCallback(
+    (result: string) => {
+      const now = Date.now();
+      if (
+        result === lastScannedRef.current &&
+        now - lastScannedTimeRef.current < 2000
+      ) {
+        return;
+      }
+
+      lastScannedRef.current = result;
+      lastScannedTimeRef.current = now;
+
+      const product = products.find((p) => p.barcode === result);
+
+      if (product) {
+        addToCart(product);
+        toast.success(`Added ${product.name}`);
+      } else {
+        toast.error(`Product not found`, { autoClose: 2000 });
+      }
+    },
+    [products, addToCart]
+  );
+
   const totalAmount = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -141,22 +171,31 @@ export default function POSPage() {
             value={searchTerm}
             onChange={handleSearchChange}
             onFocus={() => setShowDropdown(!!searchTerm)}
-            className='block w-full pl-10 lg:pl-12 pr-4 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
+            className='block w-full pl-10 lg:pl-12 pr-24 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
             autoFocus
           />
-          {searchTerm && (
+          <div className='absolute inset-y-0 right-0 flex items-center pr-2'>
+            {searchTerm && (
+              <Button
+                variant='ghost'
+                onClick={() => {
+                  setSearchTerm('');
+                  setShowDropdown(false);
+                  searchInputRef.current?.focus();
+                }}
+                className='text-gray-500 hover:text-gray-900 p-2 h-auto'
+              >
+                <MdClose size={20} />
+              </Button>
+            )}
             <Button
               variant='ghost'
-              onClick={() => {
-                setSearchTerm('');
-                setShowDropdown(false);
-                searchInputRef.current?.focus();
-              }}
-              className='absolute inset-y-0 right-0 pr-3 lg:pr-4 flex items-center text-gray-500 hover:text-gray-900 h-full'
+              onClick={() => setShowScanner(true)}
+              className='text-gray-500 hover:text-blue-600 p-2 h-auto'
             >
-              <MdClose size={20} />
+              <MdQrCodeScanner size={24} />
             </Button>
-          )}
+          </div>
         </div>
 
         {/* Dropdown Results */}
@@ -383,6 +422,13 @@ export default function POSPage() {
         onConfirm={handleConfirmPayment}
         onCancel={() => setShowPaymentModal(false)}
       />
+
+      {showScanner && (
+        <BarcodeScanner
+          onResult={handleScanResult}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   );
 }

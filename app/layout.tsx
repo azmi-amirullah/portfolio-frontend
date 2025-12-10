@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ScrollToTop from '@/components/ScrollToTop';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
+import NextTopLoader from 'nextjs-toploader';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,11 +35,13 @@ export default function RootLayout({
       >
         {children}
 
+
         <ToastContainer closeOnClick autoClose={2000} />
         <ScrollToTop />
 
         <SpeedInsights />
         <Analytics />
+        <NextTopLoader color="#2563EB" showSpinner={false} />
       </body>
     </html>
   );

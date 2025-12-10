@@ -20,7 +20,7 @@ import {
 } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Loading from '@/components/ui/Loading';
 
 
 export default function InventoryPage() {
@@ -154,8 +154,7 @@ export default function InventoryPage() {
       {/* Product List */}
       {isLoading ? (
         <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-          <LoadingSpinner size='lg' />
-          <p className='text-gray-500 mt-2'>Loading products...</p>
+          <Loading />
         </div>
       ) : (
         <>
