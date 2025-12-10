@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface TurnstileProps {
     siteKey: string;
@@ -49,24 +49,21 @@ export function Turnstile({
 }: TurnstileProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const [isInteracting, setIsInteracting] = useState(false);
 
     const handleVerify = useCallback((token: string) => {
-        // Only accept the token if we're not in the middle of an interactive challenge
-        // or if the token is definitely valid (non-empty string)
+        console.log('[Turnstile] onVerify called, token:', token?.substring(0, 20) + '...');
         if (token && token.length > 0) {
-            setIsInteracting(false);
             onVerify(token);
         }
     }, [onVerify]);
 
     const handleError = useCallback(() => {
-        setIsInteracting(false);
+        console.log('[Turnstile] onError called');
         onError?.();
     }, [onError]);
 
     const handleExpire = useCallback(() => {
-        setIsInteracting(false);
+        console.log('[Turnstile] onExpire called');
         onExpire?.();
     }, [onExpire]);
 
@@ -74,18 +71,20 @@ export function Turnstile({
         if (!window.turnstile || !containerRef.current) return;
         if (widgetIdRef.current) return;
 
+        console.log('[Turnstile] Rendering widget...');
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
             callback: handleVerify,
             'error-callback': handleError,
             'expired-callback': handleExpire,
-            'before-interactive-callback': () => setIsInteracting(true),
-            'after-interactive-callback': () => setIsInteracting(false),
+            'before-interactive-callback': () => console.log('[Turnstile] before-interactive'),
+            'after-interactive-callback': () => console.log('[Turnstile] after-interactive'),
             theme,
             size,
             retry: 'auto',
             'retry-interval': 5000,
         });
+        console.log('[Turnstile] Widget rendered, id:', widgetIdRef.current);
     }, [siteKey, handleVerify, handleError, handleExpire, theme, size]);
 
     useEffect(() => {
@@ -136,14 +135,5 @@ export function Turnstile({
         };
     }, [renderWidget]);
 
-    return (
-        <div className="relative">
-            <div ref={containerRef} className="flex justify-center my-4" />
-            {isInteracting && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/50 pointer-events-none">
-                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-            )}
-        </div>
-    );
+    return <div ref={containerRef} className="flex justify-center my-4" />;
 }

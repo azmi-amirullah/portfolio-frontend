@@ -38,11 +38,6 @@ export default function CashierLoginPage() {
             return;
         }
 
-        if (TURNSTILE_SITE_KEY && !turnstileToken) {
-            toast.error('Please complete the security check');
-            return;
-        }
-
         setIsLoading(true);
         const success = await authService.login(identifier, password);
 
@@ -61,6 +56,28 @@ export default function CashierLoginPage() {
         );
     }
 
+    // Show Turnstile verification screen first
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+        return (
+            <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+                <div className='max-w-md w-full space-y-6 bg-white p-8 rounded-2xl shadow-lg text-center'>
+                    <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center'>
+                        <MdLock className='h-8 w-8 text-blue-600' />
+                    </div>
+                    <h2 className='text-2xl font-bold'>Security Check</h2>
+
+                    <Turnstile
+                        siteKey={TURNSTILE_SITE_KEY}
+                        onVerify={setTurnstileToken}
+                        onExpire={() => setTurnstileToken(null)}
+                        onError={() => setTurnstileToken(null)}
+                        theme='light'
+                    />
+                </div>
+            </div>
+        );
+    }
+    console.log(turnstileToken)
     return (
         <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
             <div className='max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg'>
@@ -136,22 +153,10 @@ export default function CashierLoginPage() {
                         </div>
                     </div>
 
-                    {TURNSTILE_SITE_KEY && (
-                        <div className='mb-2'>
-                            <Turnstile
-                                siteKey={TURNSTILE_SITE_KEY}
-                                onVerify={setTurnstileToken}
-                                onExpire={() => setTurnstileToken(null)}
-                                onError={() => setTurnstileToken(null)}
-                                theme='light'
-                            />
-                        </div>
-                    )}
-
                     <div>
                         <Button
                             type='submit'
-                            disabled={isLoading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
+                            disabled={isLoading}
                             className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
                             {isLoading ? 'Signing in...' : 'Sign in'}
