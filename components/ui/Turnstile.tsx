@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { MdLock } from 'react-icons/md';
 
 interface TurnstileProps {
     siteKey: string;
     onVerify: (token: string) => void;
     onError?: () => void;
     onExpire?: () => void;
+    title?: string;
     theme?: 'light' | 'dark' | 'auto';
     size?: 'normal' | 'compact';
 }
@@ -21,8 +24,6 @@ declare global {
                     callback: (token: string) => void;
                     'error-callback'?: () => void;
                     'expired-callback'?: () => void;
-                    'before-interactive-callback'?: () => void;
-                    'after-interactive-callback'?: () => void;
                     theme?: 'light' | 'dark' | 'auto';
                     size?: 'normal' | 'compact';
                     retry?: 'auto' | 'never';
@@ -44,26 +45,24 @@ export function Turnstile({
     onVerify,
     onError,
     onExpire,
-    theme = 'auto',
+    title = 'Security Check',
+    theme = 'light',
     size = 'normal',
 }: TurnstileProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
 
     const handleVerify = useCallback((token: string) => {
-        console.log('[Turnstile] onVerify called, token:', token?.substring(0, 20) + '...');
         if (token && token.length > 0) {
-            onVerify(token);
+            setTimeout(() => onVerify(token), 500);
         }
     }, [onVerify]);
 
     const handleError = useCallback(() => {
-        console.log('[Turnstile] onError called');
         onError?.();
     }, [onError]);
 
     const handleExpire = useCallback(() => {
-        console.log('[Turnstile] onExpire called');
         onExpire?.();
     }, [onExpire]);
 
@@ -71,20 +70,16 @@ export function Turnstile({
         if (!window.turnstile || !containerRef.current) return;
         if (widgetIdRef.current) return;
 
-        console.log('[Turnstile] Rendering widget...');
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
             callback: handleVerify,
             'error-callback': handleError,
             'expired-callback': handleExpire,
-            'before-interactive-callback': () => console.log('[Turnstile] before-interactive'),
-            'after-interactive-callback': () => console.log('[Turnstile] after-interactive'),
             theme,
             size,
             retry: 'auto',
             'retry-interval': 5000,
         });
-        console.log('[Turnstile] Widget rendered, id:', widgetIdRef.current);
     }, [siteKey, handleVerify, handleError, handleExpire, theme, size]);
 
     useEffect(() => {
@@ -135,5 +130,22 @@ export function Turnstile({
         };
     }, [renderWidget]);
 
-    return <div ref={containerRef} className="flex justify-center my-4" />;
+    return (
+        <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.5 }}
+                className='max-w-md w-full space-y-6 bg-white p-8 rounded-2xl shadow-lg text-center'
+            >
+                <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center'>
+                    <MdLock className='h-8 w-8 text-blue-600' />
+                </div>
+                <h2 className='text-2xl font-bold'>{title}</h2>
+                <div ref={containerRef} className="flex justify-center my-4" />
+            </motion.div>
+        </div>
+    );
 }
+
