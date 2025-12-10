@@ -7,6 +7,7 @@ export interface Product {
   barcode: string;
   name: string;
   price: number;
+  buyPrice: number;
   sold?: number;
   stock?: StockBatch[];
 }
@@ -27,6 +28,7 @@ export interface Transaction {
     productName: string;
     productBarcode: string;
     price: number;
+    buyPrice: number;
     quantity: number;
   }[];
   totalAmount: number;
@@ -327,6 +329,7 @@ class CashierService {
       productId: string;
       quantity: number;
       price: number;
+      buyPrice: number;
       name: string;
       barcode: string;
     }[],
@@ -346,6 +349,7 @@ class CashierService {
         productName: item.name,
         productBarcode: item.barcode,
         price: item.price,
+        buyPrice: item.buyPrice,
         quantity: item.quantity,
       })),
       totalAmount: paymentDetails.grandTotal,

@@ -97,6 +97,7 @@ export default function POSPage() {
       productId: item.id,
       quantity: item.quantity,
       price: item.price,
+      buyPrice: item.buyPrice,
       name: item.name,
       barcode: item.barcode,
     }));
@@ -131,7 +132,7 @@ export default function POSPage() {
       <div className='relative z-30'>
         <div className='relative'>
           <div className='absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none'>
-            <MdSearch className='h-5 w-5 lg:h-6 lg:w-6 text-gray-400' />
+            <MdSearch className='h-5 w-5 lg:h-6 lg:w-6 text-gray-500' />
           </div>
           <input
             ref={searchInputRef}
@@ -151,7 +152,7 @@ export default function POSPage() {
                 setShowDropdown(false);
                 searchInputRef.current?.focus();
               }}
-              className='absolute inset-y-0 right-0 pr-3 lg:pr-4 flex items-center text-gray-400 hover:text-gray-600 h-full'
+              className='absolute inset-y-0 right-0 pr-3 lg:pr-4 flex items-center text-gray-500 hover:text-gray-900 h-full'
             >
               <MdClose size={20} />
             </Button>
@@ -172,7 +173,7 @@ export default function POSPage() {
                 className='w-full text-left px-4 lg:px-6 py-3 lg:py-4 hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 last:border-0 transition-colors h-auto rounded-none'
               >
                 <div>
-                  <div className='font-semibold text-base lg:text-lg text-gray-900'>
+                  <div className='font-semibold text-base lg:text-lg '>
                     {product.name}
                   </div>
                   <div className='text-xs lg:text-sm text-gray-500'>
@@ -191,7 +192,7 @@ export default function POSPage() {
       {/* Main Cart Area */}
       <div className='flex-1 bg-white rounded-xl lg:rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden'>
         <div className='p-4 lg:p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center'>
-          <h2 className='text-lg lg:text-2xl font-bold text-gray-800 flex items-center gap-2 lg:gap-3'>
+          <h2 className='text-lg lg:text-2xl font-bold flex items-center gap-2 lg:gap-3'>
             <MdShoppingCart className='text-blue-600' size={24} />
             <span className='hidden sm:inline'>Current Order</span>
             <span className='sm:hidden'>Cart</span>
@@ -205,9 +206,9 @@ export default function POSPage() {
           {cart.length === 0 ? (
             <div className='h-full flex flex-col items-center justify-center text-center px-4'>
               <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <MdShoppingCart size={32} className='text-gray-400' />
+                <MdShoppingCart size={32} className='text-gray-500' />
               </div>
-              <h3 className='text-lg font-medium text-gray-900 mb-1'>
+              <h3 className='text-lg font-medium text-gray-500 mb-1'>
                 Cart is empty
               </h3>
               <p className='text-gray-500 text-sm'>
@@ -225,7 +226,7 @@ export default function POSPage() {
                   >
                     <div className='flex justify-between items-start mb-2'>
                       <div className='flex-1'>
-                        <div className='font-semibold text-gray-900'>
+                        <div className='font-semibold '>
                           {item.name}
                         </div>
                         <div className='text-xs text-gray-500'>
@@ -236,13 +237,13 @@ export default function POSPage() {
                         variant='ghost'
                         size='icon'
                         onClick={() => removeFromCart(item.id)}
-                        className='text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8'
+                        className='text-red-600 hover:text-red-800 h-8 w-8'
                       >
                         <MdDelete size={18} />
                       </Button>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <div className='text-sm text-gray-600'>
+                      <div className='text-sm text-gray-500'>
                         Rp {item.price.toLocaleString()}
                       </div>
                       <div className='flex items-center gap-2'>
@@ -250,7 +251,7 @@ export default function POSPage() {
                           variant='ghost'
                           size='icon'
                           onClick={() => updateQuantity(item.id, -1)}
-                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 h-8 w-8'
+                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-500 h-8 w-8'
                         >
                           <MdRemove size={16} />
                         </Button>
@@ -261,12 +262,12 @@ export default function POSPage() {
                           variant='ghost'
                           size='icon'
                           onClick={() => updateQuantity(item.id, 1)}
-                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 h-8 w-8'
+                          className='rounded-full bg-gray-200 hover:bg-gray-300 text-gray-500 h-8 w-8'
                         >
                           <MdAdd size={16} />
                         </Button>
                       </div>
-                      <div className='font-bold text-gray-900'>
+                      <div className='font-bold '>
                         Rp {(item.price * item.quantity).toLocaleString()}
                       </div>
                     </div>
@@ -300,7 +301,7 @@ export default function POSPage() {
                       className='hover:bg-gray-50 transition-colors'
                     >
                       <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='text-lg font-medium text-gray-900'>
+                        <div className='text-lg font-medium '>
                           {item.name}
                         </div>
                         <div className='text-sm text-gray-500'>
@@ -316,7 +317,7 @@ export default function POSPage() {
                             variant='ghost'
                             size='icon'
                             onClick={() => updateQuantity(item.id, -1)}
-                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 h-8 w-8'
+                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 h-8 w-8'
                           >
                             <MdRemove size={16} />
                           </Button>
@@ -327,13 +328,13 @@ export default function POSPage() {
                             variant='ghost'
                             size='icon'
                             onClick={() => updateQuantity(item.id, 1)}
-                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 h-8 w-8'
+                            className='rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 h-8 w-8'
                           >
                             <MdAdd size={16} />
                           </Button>
                         </div>
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900 text-lg'>
+                      <td className='px-6 py-4 whitespace-nowrap text-right font-bold  text-lg'>
                         Rp {(item.price * item.quantity).toLocaleString()}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-right'>
@@ -341,7 +342,7 @@ export default function POSPage() {
                           variant='ghost'
                           size='icon'
                           onClick={() => removeFromCart(item.id)}
-                          className='text-gray-400 hover:text-red-500 hover:bg-red-50'
+                          className='text-red-600 hover:text-red-800'
                         >
                           <MdDelete size={20} />
                         </Button>
@@ -357,7 +358,7 @@ export default function POSPage() {
         {/* Footer / Payment */}
         <div className='p-4 lg:p-6 border-t border-gray-200 bg-gray-50'>
           <div className='flex justify-between items-center mb-4 lg:mb-6'>
-            <span className='text-lg lg:text-2xl font-bold text-gray-600'>
+            <span className='text-lg lg:text-2xl font-bold'>
               Total Amount
             </span>
             <span className='text-2xl lg:text-4xl font-bold text-blue-600'>

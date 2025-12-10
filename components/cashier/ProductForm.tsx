@@ -28,6 +28,7 @@ export default function ProductForm({
   const [barcode, setBarcode] = useState(initialProduct?.barcode || '');
   const [name, setName] = useState(initialProduct?.name || '');
   const [price, setPrice] = useState(initialProduct?.price?.toString() || '');
+  const [buyPrice, setBuyPrice] = useState(initialProduct?.buyPrice?.toString() || '');
   const [batches, setBatches] = useState<StockBatch[]>(initialBatches || []);
 
 
@@ -107,7 +108,7 @@ export default function ProductForm({
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!barcode || !name || !price) return;
+    if (!barcode || !name || !price || !buyPrice) return;
 
     const allProducts = await cashierService.getProducts();
     const duplicate = allProducts.find(
@@ -135,6 +136,7 @@ export default function ProductForm({
       barcode,
       name,
       price: parseFloat(price),
+      buyPrice: parseFloat(buyPrice),
       stock: finalBatches,
     };
 
@@ -156,7 +158,7 @@ export default function ProductForm({
     <form onSubmit={handleFinalSubmit} className='space-y-6'>
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
         <div>
-          <label className='block text-sm font-medium text-gray-700'>
+          <label className='block text-sm font-medium'>
             Barcode
           </label>
           <input
@@ -168,7 +170,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium text-gray-700'>
+          <label className='block text-sm font-medium'>
             Product Name
           </label>
           <input
@@ -180,8 +182,8 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium text-gray-700'>
-            Price
+          <label className='block text-sm font-medium'>
+            Sell Price
           </label>
           <input
             type='number'
@@ -196,7 +198,23 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium text-gray-700'>
+          <label className='block text-sm font-medium'>
+            Buy Price (Cost)
+          </label>
+          <input
+            type='number'
+            value={buyPrice}
+            onChange={(e) => setBuyPrice(e.target.value)}
+            className={getInputClass(
+              buyPrice,
+              initialProduct?.buyPrice?.toString()
+            )}
+            required
+            min='0'
+          />
+        </div>
+        <div>
+          <label className='block text-sm font-medium'>
             Total Sold
           </label>
           <input
@@ -219,7 +237,7 @@ export default function ProductForm({
           deletedBatchIds={deletedBatchIds}
         />
         {!initialProduct && batches.length === 0 && (
-          <p className='text-xs text-yellow-600 mt-2'>
+          <p className='text-xs text-amber-600 mt-2'>
             Note: You can add stock after saving, or add it now.
           </p>
         )}

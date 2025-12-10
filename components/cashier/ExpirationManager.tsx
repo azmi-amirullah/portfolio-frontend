@@ -1,10 +1,10 @@
 
-
 import { useState } from 'react';
 import { StockBatch } from '@/lib/services/cashier-service';
-import { MdAdd, MdEdit, MdCheck, MdClose, MdDelete } from 'react-icons/md';
+import { MdAdd, MdEdit, MdCheck, MdClose, MdDelete, MdInventory } from 'react-icons/md';
 import { IoArrowUndoCircle } from 'react-icons/io5';
 import { Button } from '@/components/ui/Button';
+import { Table } from './Table';
 
 interface ExpirationManagerProps {
   batches: StockBatch[];
@@ -71,7 +71,7 @@ export default function ExpirationManager({
 
   return (
     <div className='space-y-4'>
-      <h3 className='text-sm font-medium text-gray-700'>Stock Management</h3>
+      <h3 className='text-sm font-medium'>Stock Management</h3>
 
       {/* Add New Batch */}
       <div className='flex flex-wrap gap-2 items-end bg-gray-50 p-3 rounded-md border border-gray-200'>
@@ -109,201 +109,167 @@ export default function ExpirationManager({
 
       {/* List Batches */}
       <div className='border rounded-md overflow-x-auto'>
-        <table className='min-w-full divide-y divide-gray-200'>
-          <thead className='bg-gray-50'>
-            <tr>
-              <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Exp. Date
-              </th>
-              <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Created At
-              </th>
-              <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Qty
-              </th>
-              <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Status
-              </th>
-              <th className='px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className='bg-white divide-y divide-gray-200'>
-            {batches.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className='px-3 py-4 text-center text-sm text-gray-500'
-                >
-                  No stock added yet.
-                </td>
-              </tr>
-            ) : (
-              batches.map((batch) => {
-                const isUnsaved = unsavedBatchIds?.has(batch.addedDate);
+        <Table
+          size='sm'
+          className='block max-h-60 overflow-y-auto'
+          columns={[
+            {
+              header: 'Exp. Date',
+              renderRow: (batch) => {
                 const isDeleted = deletedBatchIds?.has(batch.addedDate);
-                const rowClass = isDeleted
-                  ? 'bg-gray-500'
-                  : isUnsaved
-                    ? 'bg-yellow-100'
-                    : batch.isSoldOut
-                      ? 'bg-gray-50'
-                      : '';
-
+                if (editingBatchId === batch.addedDate) {
+                  return (
+                    <input
+                      type='date'
+                      value={editExpiration}
+                      onChange={(e) => setEditExpiration(e.target.value)}
+                      onClick={(e) => e.currentTarget.showPicker()}
+                      className='w-full px-2 py-1 border border-gray-300 rounded cursor-pointer'
+                    />
+                  );
+                }
                 return (
-                  <tr
-                    key={batch.addedDate}
-                    className={rowClass}
-                  >
-                    {editingBatchId === batch.addedDate ? (
-                      <>
-                        <td className='px-3 py-2'>
-                          <input
-                            type='date'
-                            value={editExpiration}
-                            onChange={(e) => setEditExpiration(e.target.value)}
-                            onClick={(e) => e.currentTarget.showPicker()}
-                            className='w-full px-2 py-1 text-xs border border-gray-300 rounded cursor-pointer'
-                          />
-                        </td>
-                        <td className='px-3 py-2 text-sm text-gray-500'>
-                          {new Date(batch.addedDate).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className='px-3 py-2'>
-                          <input
-                            type='number'
-                            min='0'
-                            value={editQuantity}
-                            onChange={(e) =>
-                              setEditQuantity(parseInt(e.target.value) || 0)
-                            }
-                            className='w-20 px-2 py-1 text-xs border border-gray-300 rounded'
-                          />
-                        </td>
-                        <td className='px-3 py-2 text-sm'>
-                          <label className='flex items-center space-x-2 cursor-pointer'>
-                            <input
-                              type='checkbox'
-                              checked={batch.isSoldOut}
-                              onChange={() => onToggleSoldOut(batch.addedDate)}
-                              className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
-                            />
-                            <span
-                              className={`text-xs ${batch.isSoldOut
-                                ? 'text-red-500 font-medium'
-                                : 'text-gray-500'
-                                }`}
-                            >
-                              {batch.isSoldOut ? 'Unavailable' : 'Available'}
-                            </span>
-                          </label>
-                        </td>
-                        <td className='px-3 py-2 text-right'>
-                          <div className='flex justify-end gap-2'>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => saveEditing(batch)}
-                              className='text-green-600 hover:text-green-800 hover:bg-green-50 h-6 w-6'
-                            >
-                              <MdCheck size={16} />
-                            </Button>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              onClick={cancelEditing}
-                              className='text-red-600 hover:text-red-800 hover:bg-red-50 h-6 w-6'
-                            >
-                              <MdClose size={16} />
-                            </Button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td
-                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
-                        >
-                          {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
-                        </td>
-                        <td
-                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
-                        >
-                          {new Date(batch.addedDate).toLocaleString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                          })}
-                        </td>
-                        <td
-                          className={`px-3 py-2 text-sm text-gray-900 ${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''} ${isDeleted ? 'opacity-60' : ''}`}
-                        >
-                          {batch.quantity}
-                        </td>
-                        <td className='px-3 py-2 text-sm'>
-                          <label className='flex items-center space-x-2 cursor-pointer'>
-                            <input
-                              type='checkbox'
-                              checked={batch.isSoldOut}
-                              onChange={() => onToggleSoldOut(batch.addedDate)}
-                              className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
-                            />
-                            <span
-                              className={`text-xs ${batch.isSoldOut
-                                ? 'text-red-500 font-medium'
-                                : 'text-gray-900'
-                                }`}
-                            >
-                              {batch.isSoldOut ? 'Unavailable' : 'Available'}
-                            </span>
-                          </label>
-                        </td>
-                        <td className='px-3 py-2 text-right'>
-                          <div className='flex justify-end gap-1'>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => startEditing(batch)}
-                              disabled={isDeleted}
-                              className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-6 w-6 disabled:opacity-30'
-                            >
-                              <MdEdit size={14} />
-                            </Button>
-                            {onDeleteBatch && (
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => onDeleteBatch(batch.addedDate)}
-                                className={`h-6 w-6 ${isDeleted ? 'text-green-600 hover:text-green-800 hover:bg-green-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'}`}
-                                title={isDeleted ? 'Undo Delete' : 'Delete'}
-                              >
-                                {isDeleted ? <IoArrowUndoCircle size={14} /> : <MdDelete size={14} />}
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
+                  <span className={isDeleted || batch.isSoldOut ? 'line-through' : ''}>
+                    {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
+                  </span>
                 );
-              })
-            )}
-          </tbody>
-        </table>
+              }
+            },
+            {
+              header: 'Created At',
+              renderRow: (batch) => {
+                const isDeleted = deletedBatchIds?.has(batch.addedDate);
+                return (
+                  <span className={`${isDeleted || batch.isSoldOut ? 'line-through' : ''}`}>
+                    {new Date(batch.addedDate).toLocaleString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}
+                  </span>
+                );
+              }
+            },
+            {
+              header: 'Qty',
+              renderRow: (batch) => {
+                const isDeleted = deletedBatchIds?.has(batch.addedDate);
+                if (editingBatchId === batch.addedDate) {
+                  return (
+                    <input
+                      type='number'
+                      min='0'
+                      value={editQuantity}
+                      onChange={(e) => setEditQuantity(parseInt(e.target.value) || 0)}
+                      className='w-20 px-2 py-1 border border-gray-300 rounded'
+                    />
+                  );
+                }
+                return (
+                  <span className={isDeleted || batch.isSoldOut ? 'line-through' : ''}>
+                    {batch.quantity}
+                  </span>
+                );
+              }
+            },
+            {
+              header: 'Status',
+              renderRow: (batch) => (
+                <label className='flex items-center space-x-2 cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    checked={batch.isSoldOut}
+                    onChange={() => onToggleSoldOut(batch.addedDate)}
+                    className='rounded cursor-pointer text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300'
+                  />
+                  <span
+                    className={`${batch.isSoldOut ? 'text-red-600 font-medium' : ''}`}
+                  >
+                    {batch.isSoldOut ? 'Unavailable' : 'Available'}
+                  </span>
+                </label>
+              )
+            },
+            {
+              header: 'Actions',
+              align: 'right',
+              renderRow: (batch) => {
+                const isDeleted = deletedBatchIds?.has(batch.addedDate);
+                if (editingBatchId === batch.addedDate) {
+                  return (
+                    <div className='flex justify-end gap-2'>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => saveEditing(batch)}
+                        className='text-green-600 hover:text-green-800 h-6 w-6'
+                      >
+                        <MdCheck size={16} />
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        onClick={cancelEditing}
+                        className='text-red-600 hover:text-red-800 h-6 w-6'
+                      >
+                        <MdClose size={16} />
+                      </Button>
+                    </div>
+                  );
+                }
+                return (
+                  <div className='flex justify-end gap-1'>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => startEditing(batch)}
+                      disabled={isDeleted}
+                      className='text-blue-600 hover:text-blue-800 h-6 w-6 disabled:opacity-30'
+                    >
+                      <MdEdit size={14} />
+                    </Button>
+                    {onDeleteBatch && (
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => onDeleteBatch(batch.addedDate)}
+                        className={`h-6 w-6 ${isDeleted ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'}`}
+                        title={isDeleted ? 'Undo Delete' : 'Delete'}
+                      >
+                        {isDeleted ? <IoArrowUndoCircle size={14} /> : <MdDelete size={14} />}
+                      </Button>
+                    )}
+                  </div>
+                );
+              }
+            }
+          ]}
+          data={batches}
+          rowKey={(batch) => batch.addedDate}
+          rowClassName={(batch) => {
+            const isUnsaved = unsavedBatchIds?.has(batch.addedDate);
+            const isDeleted = deletedBatchIds?.has(batch.addedDate);
+            return isDeleted
+              ? 'bg-gray-500 opacity-60'
+              : isUnsaved
+                ? 'bg-yellow-100'
+                : batch.isSoldOut
+                  ? 'bg-gray-50'
+                  : '';
+          }}
+          emptyState={{
+            icon: MdInventory, // Ignored in sm
+            title: 'No stock added yet.',
+            subtitle: '', // Ignored in sm
+          }}
+        />
       </div>
     </div>
   );

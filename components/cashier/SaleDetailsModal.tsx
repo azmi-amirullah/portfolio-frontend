@@ -48,13 +48,13 @@ export default function SaleDetailsModal({
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='bg-gray-50 rounded-2xl p-5 border border-gray-200 flex flex-col justify-center'>
             <div className='text-sm text-gray-500 mb-1'>Date</div>
-            <div className='text-base font-bold text-gray-900'>
+            <div className='text-base font-bold '>
               {formatDate(sale.timestamp)}
             </div>
           </div>
           <div className='bg-gray-50 rounded-2xl p-5 border border-gray-200 flex flex-col justify-center'>
             <div className='text-sm text-gray-500 mb-1'>Time</div>
-            <div className='text-base font-bold text-gray-900'>
+            <div className='text-base font-bold '>
               {formatTime(sale.timestamp)}
             </div>
           </div>
@@ -68,15 +68,26 @@ export default function SaleDetailsModal({
           <div className='bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden'>
             <div className='divide-y divide-gray-200'>
               {sale.products.map((product, index) => (
-                <div key={index} className='p-4 flex justify-between items-center'>
-                  <div>
+                <div key={index} className='p-4 border-b border-gray-100 last:border-0'>
+                  <div className='flex justify-between items-start mb-2'>
                     <div className='font-bold text-gray-900'>{product.productName}</div>
-                    <div className='text-sm text-gray-500'>
-                      Rp {product.price.toLocaleString()} x {product.quantity}
+                    <div className='font-bold text-gray-900'>
+                      Rp {(product.price * product.quantity).toLocaleString()}
                     </div>
                   </div>
-                  <div className='font-bold text-gray-900'>
-                    Rp {(product.price * product.quantity).toLocaleString()}
+                  <div className='grid grid-cols-2 gap-y-1 text-sm'>
+                    <div className='text-gray-500'>
+                      Price: Rp {product.price.toLocaleString()} x {product.quantity}
+                    </div>
+                    <div className='text-right text-gray-500'>
+                      Buy Price: Rp {(product.buyPrice || 0).toLocaleString()}
+                    </div>
+                    <div className='text-gray-500 col-span-2 text-right'>
+                      <span className='mr-2'>Margin:</span>
+                      <span className='text-green-600 font-medium'>
+                        Rp {((product.price - (product.buyPrice || 0)) * product.quantity).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -112,11 +123,21 @@ export default function SaleDetailsModal({
 
             {/* Change */}
             <div className='bg-green-50 rounded-xl p-3 border border-green-200 flex justify-between items-center'>
-              <div className='text-green-700 text-sm font-medium'>
+              <div className='text-green-600 text-sm font-medium'>
                 Change
               </div>
-              <div className='text-xl font-bold text-green-700'>
+              <div className='text-xl font-bold text-green-600'>
                 Rp {sale.change.toLocaleString()}
+              </div>
+            </div>
+
+            {/* Total Profit */}
+            <div className='bg-green-600 rounded-xl p-3 text-white flex justify-between items-center'>
+              <div className='text-sm font-medium'>
+                Total Profit
+              </div>
+              <div className='text-xl font-bold'>
+                Rp {sale.products.reduce((sum, p) => sum + ((p.price - (p.buyPrice || 0)) * p.quantity), 0).toLocaleString()}
               </div>
             </div>
           </div>

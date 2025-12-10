@@ -77,7 +77,7 @@ export default function PaymentModal({
               <div className='text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide'>
                 Total to Pay
               </div>
-              <div className='text-4xl sm:text-5xl font-bold text-blue-700'>
+              <div className='text-4xl sm:text-5xl font-bold text-blue-600'>
                 Rp {totalAmount.toLocaleString()}
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function PaymentModal({
 
           <div className='space-y-5'>
             <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
+              <label className='block text-sm font-semibold mb-2'>
                 Amount Paid
               </label>
               <div className='relative'>
@@ -102,7 +102,7 @@ export default function PaymentModal({
                   onChange={(e) => setAmountPaid(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder='0'
-                  className='block w-full pl-12 pr-4 py-4 text-2xl font-bold text-gray-900 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all'
+                  className='block w-full pl-12 pr-4 py-4 text-2xl font-bold  border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all'
                   min='0'
                 />
               </div>
@@ -120,8 +120,8 @@ export default function PaymentModal({
                 <span
                   className={`text-sm font-semibold ${amountPaid
                     ? isValidPayment
-                      ? 'text-green-700'
-                      : 'text-red-700'
+                      ? 'text-green-600'
+                      : 'text-red-600'
                     : 'text-gray-500'
                     }`}
                 >
@@ -135,9 +135,9 @@ export default function PaymentModal({
               <div
                 className={`text-3xl font-bold ${amountPaid
                   ? isValidPayment
-                    ? 'text-green-700'
-                    : 'text-red-700'
-                  : 'text-gray-400'
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                  : 'text-gray-500'
                   }`}
               >
                 {amountPaid ? (

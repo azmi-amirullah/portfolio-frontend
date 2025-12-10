@@ -10,6 +10,8 @@ import {
 } from 'react-icons/md';
 import { cashierService, Transaction } from '@/lib/services/cashier-service';
 import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
+import { PageHeader } from '@/components/cashier/PageHeader';
+import { Table } from '@/components/cashier/Table';
 
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<Transaction[]>([]);
@@ -118,25 +120,21 @@ export default function SalesHistoryPage() {
 
     return (
         <div className='space-y-6 pb-20 md:pb-0'>
-            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-                <div>
-                    <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
-                        <MdReceipt className='text-blue-600' size={28} />
-                        <span>Sales History</span>
-                    </h1>
-                    <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-                        View and manage your transaction history
-                    </p>
-                </div>
-                <button
-                    onClick={handleSync}
-                    disabled={isSyncing}
-                    className='flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'
-                >
-                    <MdSync size={20} className={`text-gray-500 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span>{isSyncing ? 'Syncing...' : 'Sync History'}</span>
-                </button>
-            </div>
+            <PageHeader
+                icon={MdReceipt}
+                title='Sales History'
+                subtitle='View and manage your transaction history'
+                actions={
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className='flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'
+                    >
+                        <MdSync size={20} className={`text-gray-500 ${isSyncing ? 'animate-spin' : ''}`} />
+                        <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
+                    </button>
+                }
+            />
 
             {/* Header & Stats */}
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
@@ -152,7 +150,7 @@ export default function SalesHistoryPage() {
                     <div className='text-gray-500 text-sm font-medium mb-1'>
                         Transactions
                     </div>
-                    <div className='text-3xl font-bold text-gray-900'>
+                    <div className='text-3xl font-bold '>
                         {totalTransactions}
                     </div>
                 </div>
@@ -160,7 +158,7 @@ export default function SalesHistoryPage() {
                     <div className='text-gray-500 text-sm font-medium mb-1'>
                         Items Sold
                     </div>
-                    <div className='text-3xl font-bold text-gray-900'>
+                    <div className='text-3xl font-bold '>
                         {totalItemsSold}
                     </div>
                 </div>
@@ -170,7 +168,7 @@ export default function SalesHistoryPage() {
             <div className='flex flex-col md:flex-row gap-4'>
                 <div className='flex-1 relative'>
                     <MdSearch
-                        className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10'
+                        className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 z-10'
                         size={20}
                     />
                     <input
@@ -190,7 +188,7 @@ export default function SalesHistoryPage() {
                         <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm text-sm font-medium text-gray-700'
+                            className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm text-sm font-medium'
                         >
                             <option value='today'>Today</option>
                             <option value='yesterday'>Yesterday</option>
@@ -207,88 +205,86 @@ export default function SalesHistoryPage() {
             </div>
 
             {/* Sales List */}
-            <div className='bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden'>
-                {/* Desktop Table Header */}
-                <div className='hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider'>
-                    <div className='col-span-3'>Transaction ID</div>
-                    <div className='col-span-3'>Date & Time</div>
-                    <div className='col-span-2 text-center'>Items</div>
-                    <div className='col-span-4 text-right'>Total Amount</div>
+            {/* Mobile Card Layout */}
+            {filteredSales.length === 0 ? (
+                <div className='md:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
+                    <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                        <MdReceipt size={32} className='text-gray-500' />
+                    </div>
+                    <h3 className='text-lg font-medium text-gray-500 mb-1'>
+                        No sales found
+                    </h3>
+                    <p className='text-gray-500'>Try adjusting your filters or search query</p>
                 </div>
-
-                {/* List Content */}
-                <div className='divide-y divide-gray-100'>
-                    {filteredSales.length === 0 ? (
-                        <div className='p-12 text-center text-gray-500'>
-                            <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                                <MdReceipt size={32} className='text-gray-400' />
-                            </div>
-                            <h3 className='text-lg font-medium text-gray-900 mb-1'>
-                                No sales found
-                            </h3>
-                            <p>Try adjusting your filters or search query</p>
-                        </div>
-                    ) : (
-                        filteredSales.map((sale) => (
-                            <div
-                                key={sale.id}
-                                onClick={() => handleSaleClick(sale)}
-                                className='group hover:bg-blue-50 transition-colors cursor-pointer'
-                            >
-                                {/* Desktop Row */}
-                                <div className='hidden md:grid grid-cols-12 gap-4 p-4 items-center'>
-                                    <div className='col-span-3 font-mono text-sm text-gray-600 truncate'>
+            ) : (
+                <div className='md:hidden space-y-3'>
+                    {filteredSales.map((sale) => (
+                        <div
+                            key={sale.id}
+                            onClick={() => handleSaleClick(sale)}
+                            className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
+                        >
+                            <div className='flex justify-between items-start mb-3'>
+                                <div>
+                                    <div className='text-xs font-mono text-gray-500 mb-1'>
                                         {sale.id}
                                     </div>
-                                    <div className='col-span-3'>
-                                        <div className='text-sm font-medium text-gray-900'>
-                                            {formatDate(sale.timestamp)}
-                                        </div>
-                                        <div className='text-xs text-gray-500'>
-                                            {formatTime(sale.timestamp)}
-                                        </div>
+                                    <div className='text-sm font-bold '>
+                                        {formatDate(sale.timestamp)}
                                     </div>
-                                    <div className='col-span-2 text-center'>
-                                        <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
-                                            {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
-                                        </span>
-                                    </div>
-                                    <div className='col-span-4 text-right'>
-                                        <span className='text-sm font-bold text-gray-900'>
-                                            Rp {sale.totalAmount.toLocaleString()}
-                                        </span>
+                                    <div className='text-xs text-gray-500'>
+                                        {formatTime(sale.timestamp)}
                                     </div>
                                 </div>
-
-                                {/* Mobile Card */}
-                                <div className='md:hidden p-4'>
-                                    <div className='flex justify-between items-start mb-3'>
-                                        <div>
-                                            <div className='text-xs font-mono text-gray-500 mb-1'>
-                                                {sale.id}
-                                            </div>
-                                            <div className='text-sm font-bold text-gray-900'>
-                                                {formatDate(sale.timestamp)}
-                                            </div>
-                                            <div className='text-xs text-gray-500'>
-                                                {formatTime(sale.timestamp)}
-                                            </div>
-                                        </div>
-                                        <div className='text-right'>
-                                            <div className='text-lg font-bold text-blue-600'>
-                                                Rp {sale.totalAmount.toLocaleString()}
-                                            </div>
-                                            <div className='text-xs text-gray-500 mt-1'>
-                                                {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
-                                            </div>
-                                        </div>
+                                <div className='text-right'>
+                                    <div className='text-lg font-bold text-blue-600'>
+                                        Rp {sale.totalAmount.toLocaleString()}
+                                    </div>
+                                    <div className='text-xs text-gray-500 mt-1'>
+                                        {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
                                     </div>
                                 </div>
                             </div>
-                        ))
-                    )}
+                        </div>
+                    ))}
                 </div>
-            </div>
+            )}
+
+            <Table
+                columns={[
+                    { header: 'Transaction ID', key: 'id' },
+                    {
+                        header: 'Date & Time',
+                        renderRow: (sale) => (
+                            <>
+                                <div className='text-sm font-medium'>{formatDate(sale.timestamp)}</div>
+                                <div className='text-xs text-gray-500'>{formatTime(sale.timestamp)}</div>
+                            </>
+                        )
+                    },
+                    {
+                        header: 'Items',
+                        align: 'center',
+                        renderRow: (sale) => (
+                            <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                                {sale.products.reduce((acc: number, p: { quantity: number }) => acc + p.quantity, 0)} items
+                            </span>
+                        )
+                    },
+                    {
+                        header: 'Total Amount',
+                        align: 'right',
+                        renderRow: (sale) => <span className='text-sm font-bold'>Rp {sale.totalAmount.toLocaleString()}</span>
+                    },
+                ]}
+                data={filteredSales}
+                onRowClick={handleSaleClick}
+                emptyState={{
+                    icon: MdReceipt,
+                    title: 'No sales found',
+                    subtitle: 'Try adjusting your filters or search query',
+                }}
+            />
 
             <SaleDetailsModal
                 isOpen={isDetailsModalOpen}

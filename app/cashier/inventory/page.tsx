@@ -7,6 +7,8 @@ import {
   cashierService,
 } from '@/lib/services/cashier-service';
 import ProductForm from '@/components/cashier/ProductForm';
+import { PageHeader } from '@/components/cashier/PageHeader';
+import { Table } from '@/components/cashier/Table';
 import {
   MdAdd,
   MdEdit,
@@ -20,78 +22,6 @@ import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-function ProductRow({
-  product,
-  stock,
-  onEdit,
-  onView,
-  onDelete,
-}: {
-  product: Product & { batches: StockBatch[] };
-  stock: number;
-  onEdit: (p: Product & { batches: StockBatch[] }) => void;
-  onView: (p: Product & { batches: StockBatch[] }) => void;
-  onDelete: (p: Product & { batches: StockBatch[] }) => void;
-}) {
-  return (
-    <tr
-      className='hover:bg-gray-50 cursor-pointer'
-      onClick={() => onView(product)}
-    >
-      <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-        {product.barcode}
-      </td>
-      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-        {product.name}
-      </td>
-      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-        Rp {product.price.toLocaleString()}
-      </td>
-      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-        <span
-          className={`px-2 inline-flex leading-5 font-semibold rounded-full ${stock > 0
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-            }`}
-        >
-          {stock}
-        </span>
-      </td>
-      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-        <Button
-          variant='ghost'
-          onClick={(e) => {
-            e.stopPropagation();
-            onView(product);
-          }}
-          className='text-green-600 hover:text-green-900 hover:bg-green-50 p-2 h-auto mr-2'
-        >
-          <MdVisibility size={18} />
-        </Button>
-        <Button
-          variant='ghost'
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(product);
-          }}
-          className='text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 h-auto mr-2'
-        >
-          <MdEdit size={18} />
-        </Button>
-        <Button
-          variant='ghost'
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(product);
-          }}
-          className='text-red-600 hover:text-red-900 hover:bg-red-50 p-2 h-auto'
-        >
-          <MdDelete size={18} />
-        </Button>
-      </td>
-    </tr>
-  );
-}
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<
@@ -177,44 +107,40 @@ export default function InventoryPage() {
 
   return (
     <div className='space-y-4 lg:space-y-6'>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-        <div>
-          <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 lg:gap-3'>
-            <MdInventory className='text-blue-600' size={28} />
-            <span>Inventory Management</span>
-          </h1>
-          <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-            Manage your product inventory and stock
-          </p>
-        </div>
-        <div className='flex gap-2 w-full sm:w-auto'>
-          <Button
-            onClick={async () => {
-              setIsLoading(true);
-              await cashierService.syncWithBackend();
-              refreshProducts();
-              setIsLoading(false);
-            }}
-            variant='outline'
-            className='flex items-center gap-2 w-full sm:w-auto justify-center'
-          >
-            <MdSync size={20} />
-            <span>Sync</span>
-          </Button>
-          <Button
-            onClick={handleAddClick}
-            className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
-          >
-            <MdAdd size={20} />
-            <span>Add Product</span>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={MdInventory}
+        title='Inventory Management'
+        subtitle='Manage your product inventory and stock'
+        actions={
+          <>
+            <Button
+              onClick={async () => {
+                setIsLoading(true);
+                await cashierService.syncWithBackend();
+                refreshProducts();
+                setIsLoading(false);
+              }}
+              variant='outline'
+              className='flex items-center gap-2 w-full sm:w-auto justify-center'
+            >
+              <MdSync size={20} />
+              <span>Sync</span>
+            </Button>
+            <Button
+              onClick={handleAddClick}
+              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
+            >
+              <MdAdd size={20} />
+              <span>Add Product</span>
+            </Button>
+          </>
+        }
+      />
 
       {/* Search */}
       <div className='relative'>
         <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-          <MdSearch className='h-5 w-5 text-gray-400' />
+          <MdSearch className='h-5 w-5 text-gray-500' />
         </div>
         <input
           type='text'
@@ -231,91 +157,133 @@ export default function InventoryPage() {
           <LoadingSpinner size='lg' />
           <p className='text-gray-500 mt-2'>Loading products...</p>
         </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className='bg-white rounded-lg lg:rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-          <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <MdInventory size={32} className='text-gray-400' />
-          </div>
-          <h3 className='text-lg font-medium text-gray-900 mb-1'>
-            No products found
-          </h3>
-          <p className='text-gray-500'>
-            {searchTerm ? 'Try adjusting your search query' : 'Add your first product to get started'}
-          </p>
-        </div>
       ) : (
         <>
           {/* Mobile Card Layout */}
-          <div className='lg:hidden space-y-3'>
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => handleViewClick(product)}
-                className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
-              >
-                <div className='flex justify-between items-start mb-3'>
-                  <div className='flex-1'>
-                    <div className='font-semibold text-gray-900'>
-                      {product.name}
+          {filteredProducts.length === 0 ? (
+            <div className='md:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
+              <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <MdInventory size={32} className='text-gray-500' />
+              </div>
+              <h3 className='text-lg font-medium text-gray-500 mb-1'>
+                No products found
+              </h3>
+              <p className='text-gray-500'>
+                {searchTerm ? 'Try adjusting your search query' : 'Add your first product to get started'}
+              </p>
+            </div>
+          ) : (
+            <div className='md:hidden space-y-3'>
+              {filteredProducts.map((product) => {
+                const margin = product.price - (product.buyPrice || 0);
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => handleViewClick(product)}
+                    className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
+                  >
+                    <div className='flex justify-between items-start mb-3'>
+                      <div className='flex-1'>
+                        <div className='font-semibold '>
+                          {product.name}
+                        </div>
+                        <div className='text-xs text-gray-500 mt-1'>
+                          {product.barcode}
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}
+                      >
+                        {product.availableStock}
+                      </span>
                     </div>
-                    <div className='text-xs text-gray-500 mt-1'>
-                      {product.barcode}
+                    <div className='flex justify-between items-center'>
+                      <div className='text-sm font-semibold text-blue-600'>
+                        Rp {product.price.toLocaleString()}
+                      </div>
+                      <div className={`text-sm font-semibold ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                        Margin: Rp {margin.toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                      }`}
-                  >
+                );
+              })}
+            </div>
+          )}
+
+          <Table
+            columns={[
+              { header: 'Barcode', key: 'barcode' },
+              { header: 'Name', key: 'name' },
+              {
+                header: 'Buy Price',
+                renderRow: (product) => <span className='text-sm'>Rp {(product.buyPrice || 0).toLocaleString()}</span>
+              },
+              {
+                header: 'Margin',
+                renderRow: (product) => {
+                  const margin = product.price - (product.buyPrice || 0);
+                  return (
+                    <span className={`text-sm ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : ''}`}>
+                      Rp {margin.toLocaleString()}
+                    </span>
+                  );
+                }
+              },
+              {
+                header: 'Sell Price',
+                renderRow: (product) => <span className='text-sm'>Rp {product.price.toLocaleString()}</span>
+              },
+              {
+                header: 'Stock',
+                renderRow: (product) => (
+                  <span className={`px-2 inline-flex leading-5 text-xs font-medium rounded-full ${product.availableStock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
                     {product.availableStock}
                   </span>
-                </div>
-                <div className='flex justify-between items-center'>
-                  <div className='text-sm font-semibold text-blue-600'>
-                    Rp {product.price.toLocaleString()}
+                )
+              },
+              {
+                header: 'Actions',
+                align: 'right',
+                renderRow: (product) => (
+                  <div className='flex justify-end'>
+                    <Button
+                      variant='ghost'
+                      onClick={(e) => { e.stopPropagation(); handleViewClick(product); }}
+                      className='text-green-600 hover:text-green-800 p-2 h-auto mr-2'
+                    >
+                      <MdVisibility size={18} />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      onClick={(e) => { e.stopPropagation(); handleEditClick(product); }}
+                      className='text-blue-600 hover:text-blue-800 p-2 h-auto mr-2'
+                    >
+                      <MdEdit size={18} />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      onClick={(e) => { e.stopPropagation(); handleDelete(product); }}
+                      className='text-red-600 hover:text-red-800 p-2 h-auto'
+                    >
+                      <MdDelete size={18} />
+                    </Button>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table Layout */}
-          <div className='hidden lg:block bg-white shadow overflow-hidden rounded-lg border border-gray-200'>
-            <table className='min-w-full divide-y divide-gray-200'>
-              <thead className='bg-gray-50'>
-                <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Barcode
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Name
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Price
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Total Stock
-                  </th>
-                  <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
-                {filteredProducts.map((product) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                    stock={product.availableStock}
-                    onEdit={handleEditClick}
-                    onView={handleViewClick}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+                )
+              },
+            ]}
+            data={filteredProducts}
+            onRowClick={handleViewClick}
+            emptyState={{
+              icon: MdInventory,
+              title: 'No products found',
+              subtitle: searchTerm ? 'Try adjusting your search query' : 'Add your first product to get started',
+            }}
+          />
         </>
       )}
 
@@ -326,7 +294,7 @@ export default function InventoryPage() {
           setIsModalOpen(false);
           setIsEditMode(false);
         }}
-        maxWidth='2xl'
+        maxWidth='4xl'
         title={
           !editingProduct
             ? 'Add New Product'
@@ -353,34 +321,55 @@ export default function InventoryPage() {
               {/* Product Details View - Same layout as form */}
               <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>
+                  <label className='block text-sm font-medium'>
                     Barcode
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-gray-900'>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
                     {editingProduct.barcode}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>
+                  <label className='block text-sm font-medium'>
                     Product Name
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-gray-900'>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
                     {editingProduct.name}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>
-                    Price
+                  <label className='block text-sm font-medium'>
+                    Buy Price (Cost)
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-semibold text-blue-600'>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
+                    Rp {(editingProduct.buyPrice || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium'>
+                    Sell Price
+                  </label>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-blue-600'>
                     Rp {editingProduct.price.toLocaleString()}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700'>
+                  <label className='block text-sm font-medium'>
+                    Margin (per unit)
+                  </label>
+                  {(() => {
+                    const margin = editingProduct.price - (editingProduct.buyPrice || 0);
+                    return (
+                      <div className={`mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                        Rp {margin.toLocaleString()}
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <label className='block text-sm font-medium'>
                     Total Sold
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-semibold text-gray-900'>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
                     {editingProduct.sold || 0} units
                   </div>
                 </div>
@@ -388,89 +377,67 @@ export default function InventoryPage() {
 
               {/* Stock Table - Read-only */}
               <div className='border-t border-gray-200 pt-4'>
-                <h3 className='text-sm font-medium text-gray-700 mb-3'>
+                <h3 className='text-sm font-medium mb-3'>
                   Stock Batches
                 </h3>
                 <div className='border rounded-md overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-gray-200'>
-                    <thead className='bg-gray-50'>
-                      <tr>
-                        <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                          Exp. Date
-                        </th>
-                        <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                          Created At
-                        </th>
-                        <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                          Qty
-                        </th>
-                        <th className='px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className='bg-white divide-y divide-gray-200'>
-                      {editingProduct.batches.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className='px-3 py-4 text-center text-sm text-gray-500'
+                  <Table
+                    size='sm'
+                    className='block max-h-60 overflow-y-auto'
+                    columns={[
+                      {
+                        header: 'Exp. Date',
+                        renderRow: (batch) => (
+                          <span className={batch.isSoldOut ? 'line-through text-gray-500' : ''}>
+                            {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
+                          </span>
+                        )
+                      },
+                      {
+                        header: 'Created At',
+                        renderRow: (batch) => (
+                          <span className={batch.isSoldOut ? 'line-through text-gray-500' : ''}>
+                            {new Date(batch.addedDate).toLocaleString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false,
+                            })}
+                          </span>
+                        )
+                      },
+                      {
+                        header: 'Qty',
+                        renderRow: (batch) => (
+                          <span className={batch.isSoldOut ? 'line-through text-gray-500' : ''}>
+                            {batch.quantity}
+                          </span>
+                        )
+                      },
+                      {
+                        header: 'Status',
+                        renderRow: (batch) => (
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${batch.isSoldOut
+                              ? 'bg-red-100 text-red-800 font-medium'
+                              : 'bg-green-100 text-green-800'
+                              }`}
                           >
-                            No stock batches available.
-                          </td>
-                        </tr>
-                      ) : (
-                        editingProduct.batches.map((batch) => (
-                          <tr
-                            key={batch.addedDate}
-                            className={batch.isSoldOut ? 'bg-gray-50' : ''}
-                          >
-                            <td
-                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
-                                ? 'line-through text-gray-400'
-                                : ''
-                                }`}
-                            >
-                              {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
-                            </td>
-                            <td
-                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
-                                ? 'line-through text-gray-400'
-                                : ''
-                                }`}
-                            >
-                              {new Date(batch.addedDate).toLocaleString('en-GB', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false,
-                              })}
-                            </td>
-                            <td
-                              className={`px-3 py-2 text-sm text-gray-900 ${batch.isSoldOut
-                                ? 'line-through text-gray-400'
-                                : ''
-                                }`}
-                            >
-                              {batch.quantity}
-                            </td>
-                            <td className='px-3 py-2 text-sm'>
-                              <span
-                                className={`text-xs px-2 py-1 rounded-full ${batch.isSoldOut
-                                  ? 'bg-red-100 text-red-700 font-medium'
-                                  : 'bg-green-100 text-green-700'
-                                  }`}
-                              >
-                                {batch.isSoldOut ? 'Unavailable' : 'Available'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                            {batch.isSoldOut ? 'Unavailable' : 'Available'}
+                          </span>
+                        )
+                      }
+                    ]}
+                    data={editingProduct.batches}
+                    rowKey={(batch) => batch.addedDate}
+                    emptyState={{
+                      icon: MdInventory, // Ignored in sm
+                      title: 'No stock batches available.',
+                      subtitle: '', // Ignored in sm
+                    }}
+                  />
                 </div>
               </div>
 
@@ -502,9 +469,9 @@ export default function InventoryPage() {
         maxWidth='md'
       >
         <div className='p-6'>
-          <p className='text-gray-700 mb-1'>
+          <p className='mb-1'>
             Are you sure you want to delete{' '}
-            <span className='font-semibold text-gray-900'>
+            <span className='font-semibold '>
               &quot;{productToDelete?.name}&quot;
             </span>
             ?

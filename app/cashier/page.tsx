@@ -59,7 +59,7 @@ export default function CashierLoginPage() {
                     <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-pulse'>
                         <MdDashboard className='h-8 w-8 text-blue-600' />
                     </div>
-                    <p className='text-gray-600'>Loading...</p>
+                    <p className='text-gray-500'>Loading...</p>
                 </div>
             </div>
         );
@@ -72,8 +72,8 @@ export default function CashierLoginPage() {
                     <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4'>
                         <MdDashboard className='h-8 w-8 text-blue-600' />
                     </div>
-                    <h2 className='text-3xl font-bold text-gray-900'>Welcome Back</h2>
-                    <p className='mt-2 text-sm text-gray-600'>
+                    <h2 className='text-3xl font-bold '>Welcome Back</h2>
+                    <p className='mt-2 text-sm text-gray-500'>
                         Sign in to access the cashier system
                     </p>
                 </div>
@@ -83,13 +83,13 @@ export default function CashierLoginPage() {
                         <div>
                             <label
                                 htmlFor='identifier'
-                                className='block text-sm font-medium text-gray-700'
+                                className='block text-sm font-medium'
                             >
                                 Username or Email
                             </label>
                             <div className='mt-1 relative rounded-md shadow-sm'>
                                 <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-                                    <MdPerson className='h-5 w-5 text-gray-400' />
+                                    <MdPerson className='h-5 w-5 text-gray-500' />
                                 </div>
                                 <input
                                     id='identifier'
@@ -107,13 +107,13 @@ export default function CashierLoginPage() {
                         <div>
                             <label
                                 htmlFor='password'
-                                className='block text-sm font-medium text-gray-700'
+                                className='block text-sm font-medium'
                             >
                                 Password
                             </label>
                             <div className='mt-1 relative rounded-md shadow-sm'>
                                 <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-                                    <MdLock className='h-5 w-5 text-gray-400' />
+                                    <MdLock className='h-5 w-5 text-gray-500' />
                                 </div>
                                 <input
                                     id='password'
@@ -131,9 +131,9 @@ export default function CashierLoginPage() {
                                     className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
                                 >
                                     {showPassword ? (
-                                        <MdVisibilityOff className='h-5 w-5 text-gray-400 hover:text-gray-600' />
+                                        <MdVisibilityOff className='h-5 w-5 text-gray-500 hover:text-gray-900' />
                                     ) : (
-                                        <MdVisibility className='h-5 w-5 text-gray-400 hover:text-gray-600' />
+                                        <MdVisibility className='h-5 w-5 text-gray-500 hover:text-gray-900' />
                                     )}
                                 </button>
                             </div>
@@ -164,8 +164,8 @@ export default function CashierLoginPage() {
                 </form>
 
                 <div className='bg-blue-50 border border-blue-200 rounded-lg py-2 px-4'>
-                    <p className='text-sm font-medium text-blue-900 mb-2'>Try it out:</p>
-                    <div className='text-sm text-blue-700'>
+                    <p className='text-sm font-medium text-blue-800 mb-2'>Try it out:</p>
+                    <div className='text-sm text-blue-800'>
                         <p><span className='font-medium'>Username:</span> guest</p>
                         <p><span className='font-medium'>Password:</span> guest.password</p>
                     </div>
