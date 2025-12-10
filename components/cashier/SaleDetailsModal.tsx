@@ -69,25 +69,27 @@ export default function SaleDetailsModal({
             <div className='divide-y divide-gray-200'>
               {sale.products.map((product, index) => (
                 <div key={index} className='p-4 border-b border-gray-100 last:border-0'>
-                  <div className='flex justify-between items-start mb-2'>
-                    <div className='font-bold text-gray-900'>{product.productName}</div>
+                  <div className='flex justify-between items-start mb-1'>
+                    <div className='font-bold text-gray-900'>
+                      {product.productName} <span className='text-gray-500 font-normal'>@{product.price.toLocaleString()} x{product.quantity}</span>
+                    </div>
                     <div className='font-bold text-gray-900'>
                       Rp {(product.price * product.quantity).toLocaleString()}
                     </div>
                   </div>
-                  <div className='grid grid-cols-2 gap-y-1 text-sm'>
+                  <div className='flex justify-between items-center text-sm mb-1'>
                     <div className='text-gray-500'>
-                      Price: Rp {product.price.toLocaleString()} x {product.quantity}
+                      Buy Price: {product.buyPrice ? product.buyPrice.toLocaleString() : 0} x {product.quantity}
                     </div>
-                    <div className='text-right text-gray-500'>
-                      Buy Price: Rp {(product.buyPrice || 0).toLocaleString()}
+                    <div className='text-gray-500'>
+                      Rp {((product.buyPrice || 0) * product.quantity).toLocaleString()}
                     </div>
-                    <div className='text-gray-500 col-span-2 text-right'>
-                      <span className='mr-2'>Margin:</span>
-                      <span className='text-green-600 font-medium'>
-                        Rp {((product.price - (product.buyPrice || 0)) * product.quantity).toLocaleString()}
-                      </span>
-                    </div>
+                  </div>
+                  <div className='text-right text-sm'>
+                    <span className='text-gray-500 mr-2'>Margin:</span>
+                    <span className='text-green-600 font-medium'>
+                      Rp {((product.price - (product.buyPrice || 0)) * product.quantity).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               ))}
