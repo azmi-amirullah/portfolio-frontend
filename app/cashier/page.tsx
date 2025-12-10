@@ -146,6 +146,7 @@ export default function CashierLoginPage() {
                                 siteKey={TURNSTILE_SITE_KEY}
                                 onVerify={setTurnstileToken}
                                 onExpire={() => setTurnstileToken(null)}
+                                onError={() => setTurnstileToken(null)}
                                 theme='light'
                             />
                         </div>
