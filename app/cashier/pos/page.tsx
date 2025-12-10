@@ -16,6 +16,7 @@ import { BarcodeScanner } from '@/components/cashier/BarcodeScanner';
 import { toast } from 'react-toastify';
 import PaymentModal from '@/components/cashier/PaymentModal';
 import { Button } from '@/components/ui/Button';
+import { playSuccessBeep } from '@/lib/sound-utils';
 
 interface CartItem extends Product {
   quantity: number;
@@ -135,6 +136,7 @@ export default function POSPage() {
 
       if (product) {
         addToCart(product);
+        playSuccessBeep();
         toast.success(`Added ${product.name}`);
       } else {
         toast.error(`Product not found`, { autoClose: 2000 });
