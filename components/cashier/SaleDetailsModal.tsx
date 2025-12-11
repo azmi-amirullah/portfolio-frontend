@@ -71,7 +71,7 @@ export default function SaleDetailsModal({
                 <div key={index} className='p-4 border-b border-gray-100 last:border-0'>
                   <div className='flex justify-between items-start mb-1'>
                     <div className='font-bold text-gray-900'>
-                      {product.productName} <span className='text-gray-500 font-normal'>@{product.price.toLocaleString()} x{product.quantity}</span>
+                      {product.productName} <span className='text-gray-500 font-normal'>@{product.price.toLocaleString()} x {product.quantity}</span>
                     </div>
                     <div className='font-bold text-gray-900'>
                       Rp {(product.price * product.quantity).toLocaleString()}

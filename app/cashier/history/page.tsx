@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, startTransition } from 'react';
 import {
     MdSearch,
     MdCalendarToday,
@@ -16,7 +16,6 @@ import { Table } from '@/components/cashier/Table';
 
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<Transaction[]>([]);
-    const [filteredSales, setFilteredSales] = useState<Transaction[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState('today');
     const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
@@ -24,17 +23,16 @@ export default function SalesHistoryPage() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadSales = async () => {
-        setIsLoading(true);
-        try {
-            const history = await cashierService.getSalesHistory();
-            setSales(history);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    useEffect(() => {
+        cashierService.getSalesHistory().then((data) => {
+            startTransition(() => {
+                setSales(data);
+                setIsLoading(false);
+            });
+        });
+    }, []);
 
-    const filterSales = () => {
+    const filteredSales = useMemo(() => {
         let result = [...sales];
 
         const now = new Date();
@@ -71,17 +69,8 @@ export default function SalesHistoryPage() {
             });
         }
 
-        setFilteredSales(result);
-    };
-
-    useEffect(() => {
-        loadSales();
-    }, []);
-
-    useEffect(() => {
-        filterSales();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, dateFilter, sales]);
+        return result;
+    }, [sales, searchQuery, dateFilter]);
 
     const formatDate = (timestamp: number) => {
         const date = new Date(timestamp);
@@ -104,6 +93,13 @@ export default function SalesHistoryPage() {
     const handleSaleClick = (sale: Transaction) => {
         setSelectedSale(sale);
         setIsDetailsModalOpen(true);
+    };
+
+    const loadSales = async () => {
+        const history = await cashierService.getSalesHistory();
+        startTransition(() => {
+            setSales(history);
+        });
     };
 
     const handleSync = async () => {

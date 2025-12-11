@@ -45,8 +45,10 @@ export default function CashierLoginPage() {
         if (success) {
             toast.success('Login successful');
             router.push('/cashier/pos');
+            // Keep isLoading true until navigation completes
+        } else {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     if (isCheckingAuth) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import {
   Product,
   StockBatch,
@@ -40,22 +40,19 @@ export default function InventoryPage() {
   >(null);
 
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true);
-      try {
-        const allProducts = cashierService.getProductsWithStock();
-        setProducts(allProducts);
-      } finally {
+    cashierService.getProductsWithStock().then((data) => {
+      startTransition(() => {
+        setProducts(data);
         setIsLoading(false);
-      }
-    };
-
-    loadProducts();
+      });
+    });
   }, []);
 
-  const refreshProducts = () => {
-    const allProducts = cashierService.getProductsWithStock();
-    setProducts(allProducts);
+  const refreshProducts = async () => {
+    const allProducts = await cashierService.getProductsWithStock();
+    startTransition(() => {
+      setProducts(allProducts);
+    });
   };
 
   const handleAddClick = () => {

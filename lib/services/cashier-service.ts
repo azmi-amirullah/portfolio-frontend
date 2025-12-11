@@ -436,11 +436,20 @@ class CashierService {
     return totalAdded - sold;
   }
 
-  getProductsWithStock(): (Product & {
-    availableStock: number;
-    batches: StockBatch[];
-  })[] {
-    const products = this.get<Product>('products');
+  async getProductsWithStock(): Promise<
+    (Product & {
+      availableStock: number;
+      batches: StockBatch[];
+    })[]
+  > {
+    let products = this.get<Product>('products');
+
+    // Auto-fetch if local data is empty and not yet synced
+    if (products.length === 0 && !this.initialSyncDone) {
+      await this.syncWithBackend();
+      this.initialSyncDone = true;
+      products = this.get<Product>('products');
+    }
 
     return products.map((product) => {
       const batches = product.stock || [];
