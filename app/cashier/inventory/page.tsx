@@ -150,7 +150,7 @@ export default function InventoryPage() {
           placeholder='Search by name or barcode...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm h-10'
+          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base h-10'
         />
       </div>
 
@@ -186,26 +186,26 @@ export default function InventoryPage() {
                   >
                     <div className='flex justify-between items-start'>
                       <div className='flex-1'>
-                        <div className='text-xs text-gray-500'>
+                        <div className='text-gray-500'>
                           {product.barcode}
                         </div>
-                        <div className='text-sm mt-1'>
+                        <div className='mt-1'>
                           {product.name}
                         </div>
-                        <div className='text-sm text-blue-600 mt-1'>
+                        <div className='text-blue-600 mt-1'>
                           Rp {product.price.toLocaleString()}
                         </div>
                       </div>
                       <div className='text-right'>
                         <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
+                          className={`px-2 py-1 font-medium rounded-full ${product.availableStock > 0
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                             }`}
                         >
                           {product.availableStock}
                         </span>
-                        <div className={`text-sm mt-2 ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                        <div className={`mt-2 ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
                           Margin: Rp {margin.toLocaleString()}
                         </div>
                       </div>
@@ -222,14 +222,14 @@ export default function InventoryPage() {
               { header: 'Name', key: 'name' },
               {
                 header: 'Buy Price',
-                renderRow: (product) => <span className='text-sm'>Rp {(product.buyPrice || 0).toLocaleString()}</span>
+                renderRow: (product) => <span>Rp {(product.buyPrice || 0).toLocaleString()}</span>
               },
               {
                 header: 'Margin',
                 renderRow: (product) => {
                   const margin = product.price - (product.buyPrice || 0);
                   return (
-                    <span className={`text-sm ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : ''}`}>
+                    <span className={`${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : ''}`}>
                       Rp {margin.toLocaleString()}
                     </span>
                   );
@@ -237,12 +237,12 @@ export default function InventoryPage() {
               },
               {
                 header: 'Sell Price',
-                renderRow: (product) => <span className='text-sm'>Rp {product.price.toLocaleString()}</span>
+                renderRow: (product) => <span>Rp {product.price.toLocaleString()}</span>
               },
               {
                 header: 'Stock',
                 renderRow: (product) => (
-                  <span className={`px-2 inline-flex leading-5 text-xs font-medium rounded-full ${product.availableStock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  <span className={`px-2 inline-flex leading-5 font-medium rounded-full ${product.availableStock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                     {product.availableStock}
                   </span>
@@ -323,55 +323,55 @@ export default function InventoryPage() {
               {/* Product Details View - Same layout as form */}
               <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Barcode
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md '>
                     {editingProduct.barcode}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Product Name
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md '>
                     {editingProduct.name}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Buy Price (Cost)
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md '>
                     Rp {(editingProduct.buyPrice || 0).toLocaleString()}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Sell Price
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-blue-600'>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-blue-600'>
                     Rp {editingProduct.price.toLocaleString()}
                   </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Margin (per unit)
                   </label>
                   {(() => {
                     const margin = editingProduct.price - (editingProduct.buyPrice || 0);
                     return (
-                      <div className={`mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                      <div className={`mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
                         Rp {margin.toLocaleString()}
                       </div>
                     );
                   })()}
                 </div>
                 <div>
-                  <label className='block text-sm font-medium'>
+                  <label className='block font-medium'>
                     Total Sold
                   </label>
-                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm '>
+                  <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md '>
                     {editingProduct.sold || 0} units
                   </div>
                 </div>
@@ -379,7 +379,7 @@ export default function InventoryPage() {
 
               {/* Stock Table - Read-only */}
               <div className='border-t border-gray-200 pt-4'>
-                <h3 className='text-sm font-medium mb-3'>
+                <h3 className='font-medium mb-3'>
                   Stock Batches
                 </h3>
                 <div className='border rounded-md overflow-x-auto'>
@@ -422,7 +422,7 @@ export default function InventoryPage() {
                         header: 'Status',
                         renderRow: (batch) => (
                           <span
-                            className={`text-xs px-2 py-1 rounded-full ${batch.isSoldOut
+                            className={`px-2 py-1 rounded-full ${batch.isSoldOut
                               ? 'bg-red-100 text-red-800 font-medium'
                               : 'bg-green-100 text-green-800'
                               }`}
@@ -447,7 +447,7 @@ export default function InventoryPage() {
               <div className='flex justify-end gap-3 pt-4 border-t border-gray-200'>
                 <Button
                   onClick={() => setIsEditMode(true)}
-                  className='text-sm flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
+                  className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
                 >
                   <MdEdit size={16} />
                   Edit Product
@@ -473,12 +473,12 @@ export default function InventoryPage() {
         <div className='p-6'>
           <p className='mb-1'>
             Are you sure you want to delete{' '}
-            <span className='font-semibold '>
+            <span className='font-medium '>
               &quot;{productToDelete?.name}&quot;
             </span>
             ?
           </p>
-          <p className='text-sm text-gray-500'>
+          <p className='text-gray-500'>
             ⚠️ This action cannot be undone.
           </p>
           <div className='flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200'>
@@ -488,14 +488,14 @@ export default function InventoryPage() {
                 setIsDeleteModalOpen(false);
                 setProductToDelete(null);
               }}
-              className='text-sm'
+              className=''
               type='button'
             >
               Cancel
             </Button>
             <Button
               onClick={confirmDelete}
-              className='text-sm bg-red-600 hover:bg-red-700'
+              className='bg-red-600 hover:bg-red-700'
               type='button'
             >
               Delete

@@ -147,7 +147,7 @@ export default function ProductForm({
 
   const getInputClass = (current: string, initial?: string) => {
     const baseClass =
-      'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm';
+      'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500';
     if (initial !== undefined && current !== initial) {
       return `${baseClass} border-yellow-400 bg-yellow-50`;
     }
@@ -158,7 +158,7 @@ export default function ProductForm({
     <form onSubmit={handleFinalSubmit} className='space-y-6'>
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
         <div>
-          <label className='block text-sm font-medium'>
+          <label className='block font-medium'>
             Barcode
           </label>
           <input
@@ -170,7 +170,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium'>
+          <label className='block font-medium'>
             Product Name
           </label>
           <input
@@ -182,7 +182,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium'>
+          <label className='block font-medium'>
             Sell Price
           </label>
           <input
@@ -198,7 +198,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium'>
+          <label className='block font-medium'>
             Buy Price (Cost)
           </label>
           <input
@@ -214,14 +214,14 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block text-sm font-medium'>
+          <label className='block font-medium'>
             Total Sold
           </label>
           <input
             type='text'
             value={`${initialProduct?.sold || 0} units`}
             disabled
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500 sm:text-sm'
+            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500'
           />
         </div>
       </div>
@@ -237,19 +237,19 @@ export default function ProductForm({
           deletedBatchIds={deletedBatchIds}
         />
         {!initialProduct && batches.length === 0 && (
-          <p className='text-xs text-amber-600 mt-2'>
+          <p className='text-amber-600 mt-2'>
             Note: You can add stock after saving, or add it now.
           </p>
         )}
       </div>
 
       <div className='flex justify-end gap-3 pt-4 border-t border-gray-200'>
-        <Button variant='outline' onClick={onCancel} className='text-sm' type='button'>
+        <Button variant='outline' onClick={onCancel} type='button'>
           Cancel
         </Button>
         <Button
           type='submit'
-          className='text-sm flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
+          className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
         >
           <MdSave size={16} />
           Save Product

@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: 'Personal portfolio showcasing my projects and skills.',
 };
 
+import { Inter, Outfit } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-heading' });
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className='antialiased'>
+      <body className={`${inter.variable} ${outfit.variable} antialiased`}>
         {children}
 
 

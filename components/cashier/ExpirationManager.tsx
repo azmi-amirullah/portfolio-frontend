@@ -71,12 +71,12 @@ export default function ExpirationManager({
 
   return (
     <div className='space-y-4'>
-      <h3 className='text-sm font-medium'>Stock Management</h3>
+      <h3 className='font-medium'>Stock Management</h3>
 
       {/* Add New Batch */}
       <div className='flex flex-wrap gap-2 items-end bg-gray-50 p-3 rounded-md border border-gray-200'>
         <div className='flex-1 min-w-[150px]'>
-          <label className='block text-xs text-gray-500 mb-1'>
+          <label className='block text-gray-500 mb-1'>
             Expiration Date
           </label>
           <input
@@ -84,24 +84,24 @@ export default function ExpirationManager({
             value={newExpiration}
             onChange={(e) => setNewExpiration(e.target.value)}
             onClick={(e) => e.currentTarget.showPicker()}
-            className='w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer'
+            className='w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer'
           />
         </div>
         <div className='w-24'>
-          <label className='block text-xs text-gray-500 mb-1'>Quantity</label>
+          <label className='block text-gray-500 mb-1'>Quantity</label>
           <input
             type='number'
             min='1'
             value={newQuantity}
             onChange={(e) => setNewQuantity(parseInt(e.target.value) || 0)}
-            className='w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+            className='w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
           />
         </div>
         <Button
           type='button'
           onClick={handleAdd}
           disabled={!newExpiration || newQuantity <= 0}
-          className='flex items-center gap-1 bg-blue-600 hover:bg-blue-700 h-auto py-1.5 px-3 text-sm'
+          className='flex items-center gap-1 bg-blue-600 hover:bg-blue-700 h-auto py-1.5 px-3'
         >
           <MdAdd size={16} /> Add
         </Button>

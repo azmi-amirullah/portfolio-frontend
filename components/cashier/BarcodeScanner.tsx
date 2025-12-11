@@ -35,7 +35,7 @@ export const BarcodeScanner = ({ onResult, onClose }: BarcodeScannerProps) => {
                     <MdClose size={24} />
                 </Button>
 
-                <div className="absolute bottom-8 left-0 right-0 text-center text-white/80 text-sm bg-black/50 py-2 mx-8 rounded-full">
+                <div className="absolute bottom-8 left-0 right-0 text-center text-white/80 bg-black/50 py-2 mx-8 rounded-full">
                     Point camera at a barcode
                 </div>
             </div>

@@ -214,10 +214,10 @@ export default function POSPage() {
                 className='w-full text-left px-4 lg:px-6 py-3 lg:py-4 hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 last:border-0 transition-colors h-auto rounded-none'
               >
                 <div>
-                  <div className='font-semibold text-base lg:text-lg '>
+                  <div className='font-medium text-base lg:text-lg '>
                     {product.name}
                   </div>
-                  <div className='text-xs lg:text-sm text-gray-500'>
+                  <div className='text-gray-500'>
                     Barcode: {product.barcode}
                   </div>
                 </div>
@@ -238,7 +238,7 @@ export default function POSPage() {
             <span className='hidden sm:inline'>Current Order</span>
             <span className='sm:hidden'>Cart</span>
           </h2>
-          <div className='text-xs lg:text-sm text-gray-500'>
+          <div className='text-gray-500'>
             {cart.length} items
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function POSPage() {
               <h3 className='text-lg font-medium text-gray-500 mb-1'>
                 Cart is empty
               </h3>
-              <p className='text-gray-500 text-sm'>
+              <p className='text-gray-500'>
                 Scan or search for products to add them to cart
               </p>
             </div>
@@ -267,10 +267,10 @@ export default function POSPage() {
                   >
                     <div className='flex justify-between items-start mb-2'>
                       <div className='flex-1'>
-                        <div className='font-semibold '>
+                        <div className='font-medium '>
                           {item.name}
                         </div>
-                        <div className='text-xs text-gray-500'>
+                        <div className='text-gray-500'>
                           {item.barcode}
                         </div>
                       </div>
@@ -284,7 +284,7 @@ export default function POSPage() {
                       </Button>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <div className='text-sm text-gray-500'>
+                      <div className='text-gray-500'>
                         Rp {item.price.toLocaleString()}
                       </div>
                       <div className='flex items-center gap-2'>
@@ -296,7 +296,7 @@ export default function POSPage() {
                         >
                           <MdRemove size={16} />
                         </Button>
-                        <span className='text-base font-semibold w-8 text-center'>
+                        <span className='text-base font-bold w-8 text-center'>
                           {item.quantity}
                         </span>
                         <Button
@@ -320,19 +320,19 @@ export default function POSPage() {
               <table className='hidden lg:table min-w-full divide-y divide-gray-200'>
                 <thead className='bg-white sticky top-0 z-10'>
                   <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className='px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider'>
                       Product
                     </th>
-                    <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className='px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider'>
                       Price
                     </th>
-                    <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className='px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider'>
                       Quantity
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    <th className='px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider'>
                       Total
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'></th>
+                    <th className='px-6 py-3 text-right font-medium text-gray-500 uppercase tracking-wider'></th>
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
@@ -345,7 +345,7 @@ export default function POSPage() {
                         <div className='text-lg font-medium '>
                           {item.name}
                         </div>
-                        <div className='text-sm text-gray-500'>
+                        <div className='text-gray-500'>
                           {item.barcode}
                         </div>
                       </td>
@@ -362,7 +362,7 @@ export default function POSPage() {
                           >
                             <MdRemove size={16} />
                           </Button>
-                          <span className='text-lg font-semibold w-8 text-center'>
+                          <span className='text-lg font-bold w-8 text-center'>
                             {item.quantity}
                           </span>
                           <Button

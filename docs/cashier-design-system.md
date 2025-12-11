@@ -1,4 +1,4 @@
-# Cashier Color System
+# Cashier Design System
 
 ## Text Colors
 
@@ -24,3 +24,14 @@ Hover states    → *-800 variants
 On light BG     → *-800 (e.g. text-blue-800 on bg-blue-50)
 On dark BG      → text-white or text-white/80 (secondary)
 ```
+
+## Typography
+
+### Weights
+
+- **Medium (500)**: Used for all standard UI labels, body text, and names.
+- **Bold (700)**: Used for high-emphasis data (prices, stock quantities, totals) and section headings.
+
+### Size
+
+- **Base (16px)**: The default size for all text. `text-sm` or `text-xs` should be avoided to ensure "mobile-first" readability.

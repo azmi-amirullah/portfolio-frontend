@@ -31,8 +31,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
 }
 
 :root {

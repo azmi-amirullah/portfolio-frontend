@@ -44,7 +44,7 @@ export function Table<T>({
         if (col.renderRow) return col.renderRow(item);
         if (col.key) {
             const value = item[col.key];
-            return <span className='text-sm'>{String(value)}</span>;
+            return <span>{String(value)}</span>;
         }
         return null;
     };
@@ -60,7 +60,7 @@ export function Table<T>({
                         {columns.map((col, idx) => (
                             <th
                                 key={idx}
-                                className={`${paddingClass} text-xs font-bold text-gray-500 uppercase tracking-wider ${col.align === 'center' ? 'text-center' :
+                                className={`${paddingClass} font-bold text-gray-500 uppercase tracking-wider ${col.align === 'center' ? 'text-center' :
                                     col.align === 'right' ? 'text-right' : 'text-left'
                                     }`}
                             >
@@ -72,7 +72,7 @@ export function Table<T>({
                 <tbody className='bg-white divide-y divide-gray-200'>
                     {data.length === 0 ? (
                         <tr>
-                            <td colSpan={columns.length} className={`text-center ${size === 'sm' ? 'px-3 py-4 text-sm text-gray-500' : 'px-6 py-12'}`}>
+                            <td colSpan={columns.length} className={`text-center ${size === 'sm' ? 'px-3 py-4 text-gray-500' : 'px-6 py-12'}`}>
                                 {size === 'sm' ? (
                                     emptyState.title
                                 ) : (
@@ -83,7 +83,7 @@ export function Table<T>({
                                         <h3 className='text-lg font-medium text-gray-500 mb-1'>
                                             {emptyState.title}
                                         </h3>
-                                        <p className='text-gray-500 text-sm'>{emptyState.subtitle}</p>
+                                        <p className='text-gray-500'>{emptyState.subtitle}</p>
                                     </>
                                 )}
                             </td>

@@ -18,7 +18,7 @@ export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderP
                     <Icon className='text-blue-600' size={28} />
                     <span>{title}</span>
                 </h1>
-                <p className='text-gray-500 mt-1 text-sm lg:text-base'>
+                <p className='text-gray-500 mt-1 lg:text-base'>
                     {subtitle}
                 </p>
             </div>

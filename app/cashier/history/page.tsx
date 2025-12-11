@@ -159,7 +159,7 @@ export default function SalesHistoryPage() {
             {/* Header & Stats */}
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                 <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
-                    <div className='text-gray-500 text-sm font-medium mb-1'>
+                    <div className='text-gray-500 font-medium mb-1'>
                         Transaction
                     </div>
                     <div className='text-2xl md:text-3xl font-bold'>
@@ -167,7 +167,7 @@ export default function SalesHistoryPage() {
                     </div>
                 </div>
                 <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
-                    <div className='text-gray-500 text-sm font-medium mb-1'>
+                    <div className='text-gray-500 font-medium mb-1'>
                         Sold
                     </div>
                     <div className='text-2xl md:text-3xl font-bold'>
@@ -175,7 +175,7 @@ export default function SalesHistoryPage() {
                     </div>
                 </div>
                 <div className='bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200'>
-                    <div className='text-white/80 text-sm font-medium mb-1'>
+                    <div className='text-white/80 font-medium mb-1'>
                         Revenue
                     </div>
                     <div className='text-2xl md:text-3xl font-bold'>
@@ -183,7 +183,7 @@ export default function SalesHistoryPage() {
                     </div>
                 </div>
                 <div className='bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200'>
-                    <div className='text-white/80 text-sm font-medium mb-1'>
+                    <div className='text-white/80 font-medium mb-1'>
                         Profit
                     </div>
                     <div className='text-2xl md:text-3xl font-bold'>
@@ -216,7 +216,7 @@ export default function SalesHistoryPage() {
                         <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm text-sm font-medium'
+                            className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm font-medium'
                         >
                             <option value='recent'>Recent (Last 10)</option>
                             <option value='today'>Today</option>
@@ -258,24 +258,24 @@ export default function SalesHistoryPage() {
                         >
                             <div className='flex justify-between items-start'>
                                 <div>
-                                    <div className='text-xs font-mono text-gray-500 mb-1'>
+                                    <div className='font-mono text-gray-500 mb-1'>
                                         {sale.id}
                                     </div>
-                                    <div className='text-sm font-bold '>
+                                    <div className='font-bold '>
                                         {formatDate(sale.timestamp)}
                                     </div>
-                                    <div className='text-xs text-gray-500'>
+                                    <div className='text-gray-500'>
                                         {formatTime(sale.timestamp)}
                                     </div>
                                 </div>
                                 <div className='text-right'>
-                                    <div className='text-xs text-gray-500 mb-1'>
+                                    <div className='text-gray-500 mb-1'>
                                         {sale.products.reduce((acc, p) => acc + p.quantity, 0)} item
                                     </div>
                                     <div className='text-base text-blue-600'>
                                         Rp {sale.totalAmount.toLocaleString()}
                                     </div>
-                                    <div className='text-sm text-emerald-600'>
+                                    <div className='text-emerald-600'>
                                         Profit: Rp {calculateProfit(sale).toLocaleString()}
                                     </div>
                                 </div>
@@ -293,8 +293,8 @@ export default function SalesHistoryPage() {
                             header: 'Date & Time',
                             renderRow: (sale) => (
                                 <>
-                                    <div className='text-sm font-medium'>{formatDate(sale.timestamp)}</div>
-                                    <div className='text-xs text-gray-500'>{formatTime(sale.timestamp)}</div>
+                                    <div className='font-medium'>{formatDate(sale.timestamp)}</div>
+                                    <div className='text-gray-500'>{formatTime(sale.timestamp)}</div>
                                 </>
                             )
                         },
@@ -302,7 +302,7 @@ export default function SalesHistoryPage() {
                             header: 'Items',
                             align: 'center',
                             renderRow: (sale) => (
-                                <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                                <span className='inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800'>
                                     {sale.products.reduce((acc: number, p: { quantity: number }) => acc + p.quantity, 0)} items
                                 </span>
                             )
@@ -310,13 +310,13 @@ export default function SalesHistoryPage() {
                         {
                             header: 'Total Transaction',
                             align: 'right',
-                            renderRow: (sale) => <span className='text-sm'>Rp {sale.totalAmount.toLocaleString()}</span>
+                            renderRow: (sale) => <span>Rp {sale.totalAmount.toLocaleString()}</span>
                         },
                         {
                             header: 'Profit',
                             align: 'right',
                             renderRow: (sale) => (
-                                <span className='text-sm text-emerald-600'>
+                                <span className='text-emerald-600'>
                                     Rp {calculateProfit(sale).toLocaleString()}
                                 </span>
                             )

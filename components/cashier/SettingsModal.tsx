@@ -29,12 +29,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         >
             <div className="p-6">
                 <div className="mb-6">
-                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
+                    <h3 className="font-bold text-gray-500 uppercase tracking-wider mb-4">
                         Accessibility
                     </h3>
 
                     <div>
-                        <label className="block text-sm font-medium mb-3">
+                        <label className="block font-medium mb-3">
                             Text Size
                         </label>
                         <div className="space-y-2">
@@ -56,10 +56,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     />
                                     <div className="flex-1">
                                         <div className="font-medium">{option.label}</div>
-                                        <div className="text-sm text-gray-500">{option.description}</div>
+                                        <div className="text-gray-500">{option.description}</div>
                                     </div>
                                     <div
-                                        className="text-gray-500 font-mono text-sm"
+                                        className="text-gray-500 font-mono"
                                         style={{ fontSize: TEXT_SIZE_MAP[option.value] }}
                                     >
                                         Aa
@@ -71,7 +71,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-gray-500">
                         Changes are saved automatically and will persist across sessions.
                     </p>
                 </div>

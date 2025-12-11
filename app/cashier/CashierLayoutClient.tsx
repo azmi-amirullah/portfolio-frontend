@@ -122,7 +122,7 @@ export default function CashierLayoutClient({
                                             key={item.path}
                                             href={item.path}
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${isActive(item.path)
                                                 ? 'bg-blue-50 text-blue-600'
                                                 : 'text-gray-500 hover:bg-gray-50'
                                                 }`}
@@ -141,11 +141,11 @@ export default function CashierLayoutClient({
                                     {/* User Profile */}
                                     <div className='flex items-center gap-3'>
                                         <div className='w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-sm'>
-                                            <span className='text-white font-semibold text-sm'>
+                                            <span className='text-white font-medium'>
                                                 {username.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
-                                        <p className='text-sm font-semibold text-gray-900 truncate flex-1'>{username}</p>
+                                        <p className='font-medium text-gray-900 truncate flex-1'>{username}</p>
                                     </div>
 
                                     {/* Divider */}
@@ -158,14 +158,14 @@ export default function CashierLayoutClient({
                                                 setIsMobileMenuOpen(false);
                                                 setIsSettingsOpen(true);
                                             }}
-                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
+                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
                                         >
                                             <MdSettings size={18} />
                                             Settings
                                         </button>
                                         <button
                                             onClick={handleLogout}
-                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100/60 transition-colors cursor-pointer'
+                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-red-600 hover:bg-red-100/60 transition-colors cursor-pointer'
                                         >
                                             <MdLogout size={18} />
                                             Logout
@@ -180,7 +180,7 @@ export default function CashierLayoutClient({
                                 <Link
                                     href='/'
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className='flex items-center gap-3 px-4 py-3 mt-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors'
+                                    className='flex items-center gap-3 px-4 py-3 mt-3 rounded-lg font-medium text-gray-500 hover:bg-gray-50 transition-colors'
                                 >
                                     <MdArrowBack size={18} />
                                     Back to Portfolio
@@ -205,7 +205,7 @@ export default function CashierLayoutClient({
                             <Link
                                 key={item.path}
                                 href={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
+                                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${isActive(item.path)
                                     ? 'text-blue-600'
                                     : 'text-gray-500 hover:text-gray-900'
                                     }`}
@@ -222,11 +222,11 @@ export default function CashierLayoutClient({
                             {/* User Profile */}
                             <div className='flex items-center gap-3'>
                                 <div className='w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-sm'>
-                                    <span className='text-white font-semibold text-sm'>
+                                    <span className='text-white font-medium'>
                                         {username.charAt(0).toUpperCase()}
                                     </span>
                                 </div>
-                                <p className='text-sm font-semibold text-gray-900 truncate flex-1'>{username}</p>
+                                <p className='font-medium text-gray-900 truncate flex-1'>{username}</p>
                             </div>
 
                             {/* Divider */}
@@ -236,14 +236,14 @@ export default function CashierLayoutClient({
                             <div className='space-y-1'>
                                 <button
                                     onClick={() => setIsSettingsOpen(true)}
-                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
+                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
                                 >
                                     <MdSettings size={18} />
                                     Settings
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-100/60 transition-colors cursor-pointer'
+                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-red-600 hover:bg-red-100/60 transition-colors cursor-pointer'
                                 >
                                     <MdLogout size={18} />
                                     Logout
@@ -257,7 +257,7 @@ export default function CashierLayoutClient({
                         {/* Back Link */}
                         <Link
                             href='/'
-                            className='flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors'
+                            className='flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors'
                         >
                             <MdArrowBack size={18} />
                             Back to Portfolio
@@ -285,7 +285,7 @@ export default function CashierLayoutClient({
                                     }`}
                             >
                                 <item.icon size={24} />
-                                <span className='text-xs mt-1 font-medium'>{item.label}</span>
+                                <span className='mt-1 font-medium'>{item.label}</span>
                             </Link>
                         ))}
                     </div>
@@ -296,7 +296,7 @@ export default function CashierLayoutClient({
                     <div className='pt-18 pb-16 p-4 lg:p-8'>
                         <div className='max-w-7xl mx-auto'>
                             {/* <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4 mb-4'>
-                            <p className='text-xs text-amber-800'>
+                            <p className='text-amber-800'>
                                 <span className='font-medium'>⚠️ Note:</span> First API request may take 30-60s due to server cold start.
                             </p>
                         </div> */}

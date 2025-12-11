@@ -74,21 +74,21 @@ export default function PaymentModal({
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='flex flex-col justify-center space-y-4'>
             <div className='bg-blue-50 rounded-2xl p-6 border-2 border-blue-100 text-center'>
-              <div className='text-sm font-medium text-blue-600 mb-2 uppercase tracking-wide'>
+              <div className='font-medium text-blue-600 mb-2 uppercase tracking-wide'>
                 Total to Pay
               </div>
               <div className='text-4xl sm:text-5xl font-bold text-blue-600'>
                 Rp {totalAmount.toLocaleString()}
               </div>
             </div>
-            <p className='text-center text-gray-500 text-sm'>
+            <p className='text-center text-gray-500'>
               Please ensure the customer pays the exact amount or more.
             </p>
           </div>
 
           <div className='space-y-5'>
             <div>
-              <label className='block text-sm font-semibold mb-2'>
+              <label className='block font-medium mb-2'>
                 Amount Paid
               </label>
               <div className='relative'>
@@ -118,7 +118,7 @@ export default function PaymentModal({
             >
               <div className='flex justify-between items-center mb-1'>
                 <span
-                  className={`text-sm font-semibold ${amountPaid
+                  className={`font-bold ${amountPaid
                     ? isValidPayment
                       ? 'text-green-600'
                       : 'text-red-600'
@@ -160,14 +160,14 @@ export default function PaymentModal({
         <Button
           variant='outline'
           onClick={onCancel}
-          className='flex-1 rounded-xl text-sm sm:text-base h-auto py-2.5 sm:py-3'
+          className='flex-1 rounded-xl sm:text-base h-auto py-2.5 sm:py-3'
         >
           Cancel
         </Button>
         <Button
           onClick={handleConfirm}
           disabled={!isValidPayment}
-          className='flex-1 rounded-xl text-sm sm:text-base font-bold bg-blue-600 hover:bg-blue-700 h-auto py-2.5 sm:py-3'
+          className='flex-1 rounded-xl sm:text-base font-bold bg-blue-600 hover:bg-blue-700 h-auto py-2.5 sm:py-3'
         >
           Confirm
         </Button>

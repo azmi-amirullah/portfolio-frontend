@@ -85,7 +85,7 @@ export default function CashierLoginPage() {
                                 <MdDashboard className='h-8 w-8 text-blue-600' />
                             </div>
                             <h2 className='text-3xl font-bold '>Welcome Back</h2>
-                            <p className='mt-2 text-sm text-gray-500'>
+                            <p className='mt-2 text-gray-500'>
                                 Sign in to access the cashier system
                             </p>
                         </div>
@@ -95,7 +95,7 @@ export default function CashierLoginPage() {
                                 <div>
                                     <label
                                         htmlFor='identifier'
-                                        className='block text-sm font-medium'
+                                        className='block font-medium'
                                     >
                                         Username or Email
                                     </label>
@@ -110,7 +110,7 @@ export default function CashierLoginPage() {
                                             required
                                             value={identifier}
                                             onChange={(e) => setIdentifier(e.target.value)}
-                                            className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+                                            className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                                             placeholder='Enter your username or email'
                                         />
                                     </div>
@@ -119,7 +119,7 @@ export default function CashierLoginPage() {
                                 <div>
                                     <label
                                         htmlFor='password'
-                                        className='block text-sm font-medium'
+                                        className='block font-medium'
                                     >
                                         Password
                                     </label>
@@ -134,7 +134,7 @@ export default function CashierLoginPage() {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className='block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+                                            className='block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                                             placeholder='Enter your password'
                                         />
                                         <button
@@ -156,7 +156,7 @@ export default function CashierLoginPage() {
                                 <Button
                                     type='submit'
                                     disabled={isLoading}
-                                    className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
+                                    className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                                 >
                                     {isLoading ? 'Signing in...' : 'Sign in'}
                                 </Button>
@@ -164,21 +164,21 @@ export default function CashierLoginPage() {
                         </form>
 
                         <div className='bg-blue-50 border border-blue-200 rounded-lg py-2 px-4'>
-                            <p className='text-sm font-medium text-blue-800 mb-2'>Try it out:</p>
-                            <div className='text-sm text-blue-800'>
+                            <p className='font-medium text-blue-800 mb-2'>Try it out:</p>
+                            <div className='text-blue-800'>
                                 <p><span className='font-medium'>Username:</span> guest</p>
                                 <p><span className='font-medium'>Password:</span> guest.password</p>
                             </div>
                         </div>
 
                         <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4'>
-                            <p className='text-xs text-amber-800'>
+                            <p className='text-amber-800'>
                                 <span className='font-medium'>⚠️ Note:</span> First login may take 30-60s due to server cold start.
                             </p>
                         </div>
 
                         <div className='text-center'>
-                            <p className='text-xs text-gray-500'>
+                            <p className='text-gray-500'>
                                 &copy; {new Date().getFullYear()} Mohd Azmi Amirullah A. All rights
                                 reserved.
                             </p>
