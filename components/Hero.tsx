@@ -8,7 +8,7 @@ import { Button } from './ui/Button';
 
 export default function Hero() {
   return (
-    <section className='relative min-h-screen flex items-center pt-20 overflow-hidden bg-background'>
+    <section className='relative min-h-dvh flex items-center pt-20 overflow-hidden bg-background'>
       {/* Background Image with Overlay */}
       <div className='absolute inset-0 z-0'>
         <Image

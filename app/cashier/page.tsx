@@ -53,7 +53,7 @@ export default function CashierLoginPage() {
 
     if (isCheckingAuth) {
         return (
-            <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+            <div className='min-h-dvh flex items-center justify-center bg-gray-50'>
                 <Loading />
             </div>
         );
@@ -72,7 +72,7 @@ export default function CashierLoginPage() {
                     onError={() => setTurnstileToken(null)}
                 />
             ) : (
-                <div key='login' className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+                <div key='login' className='min-h-dvh flex items-center justify-center bg-gray-50 px-4'>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}

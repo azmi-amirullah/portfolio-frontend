@@ -159,7 +159,7 @@ export default function POSPage() {
     : [];
 
   return (
-    <div className='flex flex-col h-[calc(100vh-10rem)] lg:h-[calc(100vh-4rem)] gap-4 lg:gap-6'>
+    <div className='flex flex-col h-[calc(100dvh-10rem)] lg:h-[calc(100dvh-4rem)] gap-4 lg:gap-6'>
       {/* Top Search Bar */}
       <div className='relative z-30'>
         <div className='relative'>

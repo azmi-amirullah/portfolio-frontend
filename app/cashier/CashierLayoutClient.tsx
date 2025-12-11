@@ -70,7 +70,7 @@ export default function CashierLayoutClient({
 
     if (!isMounted) {
         return (
-            <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+            <div className='min-h-dvh flex items-center justify-center bg-gray-50'>
                 <Loading />
             </div>
         );
@@ -91,7 +91,7 @@ export default function CashierLayoutClient({
 
     return (
         <TextSizeProvider>
-            <div className='flex h-screen bg-gray-50'>
+            <div className='flex h-dvh bg-gray-50'>
                 {/* Mobile Header */}
                 <div className='lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-50'>
                     <h1 className='text-lg font-bold flex items-center gap-2'>

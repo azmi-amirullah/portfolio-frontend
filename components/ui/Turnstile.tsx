@@ -131,7 +131,7 @@ export function Turnstile({
     }, [renderWidget]);
 
     return (
-        <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+        <div className='min-h-dvh flex items-center justify-center bg-gray-50 px-4'>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
