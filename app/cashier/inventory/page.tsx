@@ -38,6 +38,7 @@ export default function InventoryPage() {
   const [productToDelete, setProductToDelete] = useState<
     (Product & { batches: StockBatch[] }) | null
   >(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     cashierService.getProductsWithStock().then((data) => {
@@ -112,16 +113,22 @@ export default function InventoryPage() {
           <>
             <Button
               onClick={async () => {
+                setIsSyncing(true);
                 setIsLoading(true);
-                await cashierService.syncWithBackend();
-                refreshProducts();
-                setIsLoading(false);
+                try {
+                  await cashierService.syncWithBackend();
+                  await refreshProducts();
+                } finally {
+                  setIsSyncing(false);
+                  setIsLoading(false);
+                }
               }}
+              disabled={isSyncing}
               variant='outline'
               className='flex items-center gap-2 w-full sm:w-auto justify-center'
             >
-              <MdSync size={20} />
-              <span>Sync</span>
+              <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
             </Button>
             <Button
               onClick={handleAddClick}

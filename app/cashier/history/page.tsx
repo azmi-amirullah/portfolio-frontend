@@ -13,6 +13,7 @@ import { cashierService, Transaction } from '@/lib/services/cashier-service';
 import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
 import { PageHeader } from '@/components/cashier/PageHeader';
 import { Table } from '@/components/cashier/Table';
+import { Button } from '@/components/ui/Button';
 
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<Transaction[]>([]);
@@ -104,9 +105,14 @@ export default function SalesHistoryPage() {
 
     const handleSync = async () => {
         setIsSyncing(true);
-        await cashierService.syncSalesWithBackend();
-        await loadSales();
-        setIsSyncing(false);
+        setIsLoading(true);
+        try {
+            await cashierService.syncSalesWithBackend();
+            await loadSales();
+        } finally {
+            setIsSyncing(false);
+            setIsLoading(false);
+        }
     };
 
     // Calculate totals
@@ -128,14 +134,15 @@ export default function SalesHistoryPage() {
                 title='Sales History'
                 subtitle='View and manage your transaction history'
                 actions={
-                    <button
+                    <Button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        className='flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0'
+                        variant='outline'
+                        className='flex items-center gap-2 w-full sm:w-auto justify-center'
                     >
-                        <MdSync size={20} className={`text-gray-500 ${isSyncing ? 'animate-spin' : ''}`} />
+                        <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
                         <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
-                    </button>
+                    </Button>
                 }
             />
 
