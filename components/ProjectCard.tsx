@@ -90,7 +90,7 @@ export default function ProjectCard({
           </div>
 
           <div className='p-6 pt-2 grow flex flex-col'>
-            <p className='text-muted-foreground leading-relaxed mb-8'>
+            <p className='text-lg text-muted-foreground leading-relaxed mb-8'>
               {description}
             </p>
             <div className='flex flex-wrap gap-2 mt-auto'>

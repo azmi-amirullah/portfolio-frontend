@@ -64,7 +64,7 @@ export default function About() {
                 {skills.map((skill) => (
                   <div
                     key={skill}
-                    className='flex items-center gap-2 text-muted-foreground'
+                    className='flex items-center gap-2 text-lg text-muted-foreground'
                   >
                     <FaRegCheckCircle size={16} className='text-secondary' />
                     <span>{skill}</span>
