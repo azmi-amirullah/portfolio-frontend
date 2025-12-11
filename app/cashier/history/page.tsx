@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/Button';
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<Transaction[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [dateFilter, setDateFilter] = useState('today');
+    const [dateFilter, setDateFilter] = useState('recent');
     const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -44,7 +44,9 @@ export default function SalesHistoryPage() {
         thisWeek.setDate(thisWeek.getDate() - 7);
         const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        if (dateFilter === 'today') {
+        if (dateFilter === 'recent') {
+            result = result.slice(0, 10);
+        } else if (dateFilter === 'today') {
             result = result.filter((sale) => sale.timestamp >= today.getTime());
         } else if (dateFilter === 'yesterday') {
             result = result.filter(
@@ -200,6 +202,7 @@ export default function SalesHistoryPage() {
                             onChange={(e) => setDateFilter(e.target.value)}
                             className='w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer shadow-sm text-sm font-medium'
                         >
+                            <option value='recent'>Recent (Last 10)</option>
                             <option value='today'>Today</option>
                             <option value='yesterday'>Yesterday</option>
                             <option value='week'>This Week</option>
