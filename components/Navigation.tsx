@@ -7,11 +7,15 @@ import { Button } from './ui/Button';
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
+    handleScroll();
+    // Enable transitions only after initial state is set
+    requestAnimationFrame(() => setMounted(true));
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -33,10 +37,11 @@ export default function Navigation() {
   return (
     <>
       <nav
-        className={`fixed w-full z-50 transition-all duration-300 ${scrolled
-          ? 'bg-white/90 backdrop-blur-md shadow-sm py-4'
-          : `bg-transparent py-4`
-          } `}
+        className={`fixed w-full z-50 ${mounted ? 'opacity-100 transition-all duration-300' : 'opacity-0'
+          } ${scrolled
+            ? 'bg-white/90 backdrop-blur-md shadow-sm py-4'
+            : 'bg-transparent py-4'
+          }`}
       >
         <div className='container mx-auto px-6 md:px-12 flex justify-between items-center'>
           <a
