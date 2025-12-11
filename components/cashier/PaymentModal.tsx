@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, startTransition } from 'react';
 import { MdCreditCard } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -28,11 +28,13 @@ export default function PaymentModal({
     }
   }, [isOpen]);
 
-  if (!isOpen && amountPaid) {
-    setTimeout(() => {
-      setAmountPaid('');
-    }, 0);
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      startTransition(() => {
+        setAmountPaid('');
+      });
+    }
+  }, [isOpen]);
 
   const paidAmount = parseFloat(amountPaid) || 0;
   const changeAmount = paidAmount - totalAmount;

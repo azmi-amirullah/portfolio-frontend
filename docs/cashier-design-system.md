@@ -27,6 +27,11 @@ On dark BG      → text-white or text-white/80 (secondary)
 
 ## Typography
 
+### Font Family
+
+- **Inter (Sans)**: The default font. Used for **100% of the Cashier interface** (UI, data, buttons, inputs) for maximum readability.
+- **Outfit (Heading)**: Used **only** in the main Portfolio website (Hero, Section Titles). It is **not** used in the Cashier app to maintain a strict utilitarian focus.
+
 ### Weights
 
 - **Medium (500)**: Used for all standard UI labels, body text, and names.

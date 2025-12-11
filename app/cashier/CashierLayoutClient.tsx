@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import {
     MdArrowBack,
     MdShoppingCart,
@@ -37,6 +37,13 @@ export default function CashierLayoutClient({
             const user = authService.getUser();
             setUsername(user?.username || 'User');
             setIsMounted(true);
+        });
+    }, [pathname]);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        startTransition(() => {
+            setIsMobileMenuOpen(false);
         });
     }, [pathname]);
 
@@ -121,7 +128,6 @@ export default function CashierLayoutClient({
                                         <Link
                                             key={item.path}
                                             href={item.path}
-                                            onClick={() => setIsMobileMenuOpen(false)}
                                             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${isActive(item.path)
                                                 ? 'bg-blue-50 text-blue-600'
                                                 : 'text-gray-500 hover:bg-gray-50'
@@ -179,7 +185,6 @@ export default function CashierLayoutClient({
                                 {/* Back Link */}
                                 <Link
                                     href='/'
-                                    onClick={() => setIsMobileMenuOpen(false)}
                                     className='flex items-center gap-3 px-4 py-3 mt-3 rounded-lg font-medium text-gray-500 hover:bg-gray-50 transition-colors'
                                 >
                                     <MdArrowBack size={18} />

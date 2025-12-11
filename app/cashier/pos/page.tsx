@@ -169,11 +169,11 @@ export default function POSPage() {
           <input
             ref={searchInputRef}
             type='text'
-            placeholder='Scan barcode or search product...'
+            placeholder='Scan or search product...'
             value={searchTerm}
             onChange={handleSearchChange}
             onFocus={() => setShowDropdown(!!searchTerm)}
-            className='block w-full pl-10 lg:pl-12 pr-24 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
+            className='block w-full pl-10 lg:pl-12 pr-12 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
             autoFocus
           />
           <div className='absolute inset-y-0 right-0 flex items-center pr-2'>

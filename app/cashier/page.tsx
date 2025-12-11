@@ -78,20 +78,20 @@ export default function CashierLoginPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className='max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg'
+                        className='max-w-md w-full space-y-6 md:space-y-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg'
                     >
                         <div className='text-center'>
                             <div className='mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4'>
                                 <MdDashboard className='h-8 w-8 text-blue-600' />
                             </div>
-                            <h2 className='text-3xl font-bold '>Welcome Back</h2>
+                            <h2 className='text-2xl md:text-3xl font-bold '>Welcome Back</h2>
                             <p className='mt-2 text-gray-500'>
                                 Sign in to access the cashier system
                             </p>
                         </div>
 
-                        <form className='mt-8 space-y-6' onSubmit={handleLogin}>
-                            <div className='space-y-4'>
+                        <form className='mt-6 md:mt-8 space-y-6' onSubmit={handleLogin}>
+                            <div className='space-y-5 md:space-y-6'>
                                 <div>
                                     <label
                                         htmlFor='identifier'
@@ -141,6 +141,7 @@ export default function CashierLoginPage() {
                                             type='button'
                                             onClick={() => setShowPassword(!showPassword)}
                                             className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         >
                                             {showPassword ? (
                                                 <MdVisibilityOff className='h-5 w-5 text-gray-500 hover:text-gray-900' />
