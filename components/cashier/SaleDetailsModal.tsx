@@ -103,10 +103,10 @@ export default function SaleDetailsModal({
             Payment Summary
           </h4>
           <div className='grid grid-cols-1 gap-3'>
-            {/* Grand Total */}
+            {/* Total Transaction */}
             <div className='bg-blue-600 rounded-xl p-3 text-white flex justify-between items-center'>
               <div className='text-sm font-medium'>
-                Grand Total
+                Total Transaction
               </div>
               <div className='text-xl font-bold'>
                 Rp {sale.totalAmount.toLocaleString()}

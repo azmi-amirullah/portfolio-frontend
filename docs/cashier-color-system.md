@@ -22,4 +22,5 @@ Error/Delete    → text-red-600
 Warning         → text-amber-600
 Hover states    → *-800 variants
 On light BG     → *-800 (e.g. text-blue-800 on bg-blue-50)
+On dark BG      → text-white or text-white/80 (secondary)
 ```

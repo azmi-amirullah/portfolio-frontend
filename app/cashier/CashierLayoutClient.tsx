@@ -124,7 +124,7 @@ export default function CashierLayoutClient({
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
                                                 ? 'bg-blue-50 text-blue-600'
-                                                : 'text-gray-600 hover:bg-gray-50'
+                                                : 'text-gray-500 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <item.icon size={20} />
@@ -158,7 +158,7 @@ export default function CashierLayoutClient({
                                                 setIsMobileMenuOpen(false);
                                                 setIsSettingsOpen(true);
                                             }}
-                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-100/60 transition-colors cursor-pointer'
+                                            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
                                         >
                                             <MdSettings size={18} />
                                             Settings
@@ -236,7 +236,7 @@ export default function CashierLayoutClient({
                             <div className='space-y-1'>
                                 <button
                                     onClick={() => setIsSettingsOpen(true)}
-                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-100/60 transition-colors cursor-pointer'
+                                    className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-100/60 transition-colors cursor-pointer'
                                 >
                                     <MdSettings size={18} />
                                     Settings
@@ -265,7 +265,7 @@ export default function CashierLayoutClient({
 
                         {/* Copyright */}
                         <div className='mt-4 pt-3 border-t border-gray-100'>
-                            <p className='text-[11px] text-gray-400 text-center'>
+                            <p className='text-[11px] text-gray-500 text-center'>
                                 &copy; {new Date().getFullYear()} Mohd Azmi Amirullah A
                             </p>
                         </div>

@@ -42,8 +42,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 <label
                                     key={option.value}
                                     className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${textSize === option.value
-                                            ? 'border-blue-500 bg-blue-50'
-                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        ? 'border-blue-500 bg-blue-50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     <input
@@ -59,7 +59,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                         <div className="text-sm text-gray-500">{option.description}</div>
                                     </div>
                                     <div
-                                        className="text-gray-400 font-mono text-sm"
+                                        className="text-gray-500 font-mono text-sm"
                                         style={{ fontSize: TEXT_SIZE_MAP[option.value] }}
                                     >
                                         Aa

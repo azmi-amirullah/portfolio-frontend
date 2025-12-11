@@ -117,9 +117,18 @@ export default function SalesHistoryPage() {
         }
     };
 
+    const calculateProfit = (sale: Transaction) => {
+        const cost = sale.products.reduce((sum, p) => sum + (p.buyPrice || 0) * p.quantity, 0);
+        return sale.totalAmount - cost;
+    };
+
     // Calculate totals
     const totalRevenue = filteredSales.reduce(
         (sum, sale) => sum + sale.totalAmount,
+        0
+    );
+    const totalProfit = filteredSales.reduce(
+        (sum, sale) => sum + calculateProfit(sale),
         0
     );
     const totalTransactions = filteredSales.length;
@@ -139,8 +148,7 @@ export default function SalesHistoryPage() {
                     <Button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        variant='outline'
-                        className='flex items-center gap-2 w-full sm:w-auto justify-center'
+                        className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
                     >
                         <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
                         <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
@@ -149,29 +157,37 @@ export default function SalesHistoryPage() {
             />
 
             {/* Header & Stats */}
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200'>
-                    <div className='text-blue-100 text-sm font-medium mb-1'>
-                        Total Revenue
-                    </div>
-                    <div className='text-3xl font-bold'>
-                        Rp {totalRevenue.toLocaleString()}
-                    </div>
-                </div>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                 <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
                     <div className='text-gray-500 text-sm font-medium mb-1'>
-                        Transactions
+                        Transaction
                     </div>
-                    <div className='text-3xl font-bold '>
+                    <div className='text-2xl md:text-3xl font-bold'>
                         {totalTransactions}
                     </div>
                 </div>
                 <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
                     <div className='text-gray-500 text-sm font-medium mb-1'>
-                        Items Sold
+                        Sold
                     </div>
-                    <div className='text-3xl font-bold '>
+                    <div className='text-2xl md:text-3xl font-bold'>
                         {totalItemsSold}
+                    </div>
+                </div>
+                <div className='bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200'>
+                    <div className='text-white/80 text-sm font-medium mb-1'>
+                        Revenue
+                    </div>
+                    <div className='text-2xl md:text-3xl font-bold'>
+                        Rp {totalRevenue.toLocaleString()}
+                    </div>
+                </div>
+                <div className='bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200'>
+                    <div className='text-white/80 text-sm font-medium mb-1'>
+                        Profit
+                    </div>
+                    <div className='text-2xl md:text-3xl font-bold'>
+                        Rp {totalProfit.toLocaleString()}
                     </div>
                 </div>
             </div>
@@ -240,7 +256,7 @@ export default function SalesHistoryPage() {
                             onClick={() => handleSaleClick(sale)}
                             className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
                         >
-                            <div className='flex justify-between items-start mb-3'>
+                            <div className='flex justify-between items-start'>
                                 <div>
                                     <div className='text-xs font-mono text-gray-500 mb-1'>
                                         {sale.id}
@@ -253,11 +269,14 @@ export default function SalesHistoryPage() {
                                     </div>
                                 </div>
                                 <div className='text-right'>
-                                    <div className='text-lg font-bold text-blue-600'>
+                                    <div className='text-xs text-gray-500 mb-1'>
+                                        {sale.products.reduce((acc, p) => acc + p.quantity, 0)} item
+                                    </div>
+                                    <div className='text-base text-blue-600'>
                                         Rp {sale.totalAmount.toLocaleString()}
                                     </div>
-                                    <div className='text-xs text-gray-500 mt-1'>
-                                        {sale.products.reduce((acc, p) => acc + p.quantity, 0)} items
+                                    <div className='text-sm text-emerald-600'>
+                                        Profit: Rp {calculateProfit(sale).toLocaleString()}
                                     </div>
                                 </div>
                             </div>
@@ -289,9 +308,18 @@ export default function SalesHistoryPage() {
                             )
                         },
                         {
-                            header: 'Total Amount',
+                            header: 'Total Transaction',
                             align: 'right',
-                            renderRow: (sale) => <span className='text-sm font-bold'>Rp {sale.totalAmount.toLocaleString()}</span>
+                            renderRow: (sale) => <span className='text-sm'>Rp {sale.totalAmount.toLocaleString()}</span>
+                        },
+                        {
+                            header: 'Profit',
+                            align: 'right',
+                            renderRow: (sale) => (
+                                <span className='text-sm text-emerald-600'>
+                                    Rp {calculateProfit(sale).toLocaleString()}
+                                </span>
+                            )
                         },
                     ]}
                     data={filteredSales}

@@ -124,8 +124,7 @@ export default function InventoryPage() {
                 }
               }}
               disabled={isSyncing}
-              variant='outline'
-              className='flex items-center gap-2 w-full sm:w-auto justify-center'
+              className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
             >
               <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
               <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
@@ -185,30 +184,30 @@ export default function InventoryPage() {
                     onClick={() => handleViewClick(product)}
                     className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition-colors cursor-pointer'
                   >
-                    <div className='flex justify-between items-start mb-3'>
+                    <div className='flex justify-between items-start'>
                       <div className='flex-1'>
-                        <div className='font-semibold '>
-                          {product.name}
-                        </div>
-                        <div className='text-xs text-gray-500 mt-1'>
+                        <div className='text-xs text-gray-500'>
                           {product.barcode}
                         </div>
+                        <div className='text-sm mt-1'>
+                          {product.name}
+                        </div>
+                        <div className='text-sm text-blue-600 mt-1'>
+                          Rp {product.price.toLocaleString()}
+                        </div>
                       </div>
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                          }`}
-                      >
-                        {product.availableStock}
-                      </span>
-                    </div>
-                    <div className='flex justify-between items-center'>
-                      <div className='text-sm font-semibold text-blue-600'>
-                        Rp {product.price.toLocaleString()}
-                      </div>
-                      <div className={`text-sm font-semibold ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                        Margin: Rp {margin.toLocaleString()}
+                      <div className='text-right'>
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${product.availableStock > 0
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
+                        >
+                          {product.availableStock}
+                        </span>
+                        <div className={`text-sm mt-2 ${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                          Margin: Rp {margin.toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   </div>
