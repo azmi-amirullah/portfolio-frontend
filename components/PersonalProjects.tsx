@@ -17,7 +17,7 @@ export default function PersonalProjects() {
     {
       title: 'Mini Market Cashier System',
       description:
-        'A full-stack point-of-sale (POS) system for mini markets with inventory management, transaction-based sales tracking, stock batch management with expiration dates, backend synchronization, and comprehensive sales history with advanced search and filtering.',
+        'A full-stack point-of-sale (POS) system for mini markets with inventory management, transaction-based sales tracking, stock management with expiration dates, backend synchronization, and comprehensive sales history with advanced search and filtering.',
       tags: [
         'Next.js',
         'TypeScript',

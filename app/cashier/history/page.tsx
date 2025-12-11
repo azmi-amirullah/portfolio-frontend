@@ -139,7 +139,7 @@ export default function SalesHistoryPage() {
     );
 
     return (
-        <div className='space-y-6 pb-20 md:pb-0'>
+        <div className='space-y-6 md:pb-0'>
             <PageHeader
                 icon={MdReceipt}
                 title='Sales History'

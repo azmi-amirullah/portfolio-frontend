@@ -104,7 +104,7 @@ export default function InventoryPage() {
   );
 
   return (
-    <div className='space-y-4 lg:space-y-6 pb-20 md:pb-0'>
+    <div className='space-y-4 lg:space-y-6 md:pb-0'>
       <PageHeader
         icon={MdInventory}
         title='Inventory Management'
@@ -307,7 +307,7 @@ export default function InventoryPage() {
         headerIcon={<MdInventory size={24} />}
         headerClassName='bg-blue-600 border-blue-400 text-white'
       >
-        <div className='p-6'>
+        <div className='p-4 sm:p-6'>
           {isEditMode || !editingProduct ? (
             <ProductForm
               initialProduct={editingProduct}
@@ -379,16 +379,80 @@ export default function InventoryPage() {
 
               {/* Stock Table - Read-only */}
               <div className='border-t border-gray-200 pt-4'>
-                <h3 className='font-medium mb-3'>
-                  Stock Batches
+                <h3 className='font-bold mb-3'>
+                  Stock
                 </h3>
-                <div className='border rounded-md overflow-x-auto'>
+                <div className='border rounded-md overflow-hidden'>
+                  {/* Mobile View */}
+                  <div className='md:hidden divide-y divide-gray-200'>
+                    {editingProduct.batches.length === 0 ? (
+                      <div className='p-6 text-center bg-gray-50'>
+                        <span className='text-gray-500'>No stock available.</span>
+                      </div>
+                    ) : (
+                      editingProduct.batches.map((batch) => (
+                        <div key={batch.addedDate} className='p-4 bg-white'>
+                          <div className='grid grid-cols-2 gap-4'>
+                            {/* Row 1: Expiration Date & Quantity */}
+                            <div>
+                              <div className='font-medium text-gray-900 mb-1'>
+                                Expiration Date
+                              </div>
+                              <div className={`${batch.isSoldOut ? 'line-through text-gray-400' : 'text-gray-500'}`}>
+                                {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
+                              </div>
+                            </div>
+                            <div>
+                              <div className='font-medium text-gray-900 mb-1'>
+                                Quantity
+                              </div>
+                              <div className={`${batch.isSoldOut ? 'line-through text-gray-400' : 'text-blue-600'}`}>
+                                {batch.quantity}
+                              </div>
+                            </div>
+
+                            {/* Row 2: Created At & Status */}
+                            <div>
+                              <div className='font-medium text-gray-900 mb-1'>
+                                Created At
+                              </div>
+                              <div className={`${batch.isSoldOut ? 'line-through text-gray-400' : 'text-gray-500'}`}>
+                                {new Date(batch.addedDate).toLocaleString('en-GB', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false,
+                                })}
+                              </div>
+                            </div>
+                            <div>
+                              <div className='font-medium text-gray-900 mb-1'>
+                                Status
+                              </div>
+                              <span
+                                className={`text-base ${batch.isSoldOut
+                                  ? 'text-red-600'
+                                  : 'text-green-600'
+                                  }`}
+                              >
+                                {batch.isSoldOut ? 'Unavailable' : 'Available'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Desktop Table View */}
                   <Table
                     size='sm'
-                    className='block max-h-60 overflow-y-auto'
+                    className='hidden md:block max-h-60 overflow-y-auto'
                     columns={[
                       {
-                        header: 'Exp. Date',
+                        header: 'Expiration Date',
                         renderRow: (batch) => (
                           <span className={batch.isSoldOut ? 'line-through text-gray-500' : ''}>
                             {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
@@ -411,7 +475,7 @@ export default function InventoryPage() {
                         )
                       },
                       {
-                        header: 'Qty',
+                        header: 'Quantity',
                         renderRow: (batch) => (
                           <span className={batch.isSoldOut ? 'line-through text-gray-500' : ''}>
                             {batch.quantity}
@@ -436,7 +500,7 @@ export default function InventoryPage() {
                     rowKey={(batch) => batch.addedDate}
                     emptyState={{
                       icon: MdInventory, // Ignored in sm
-                      title: 'No stock batches available.',
+                      title: 'No stock available.',
                       subtitle: '', // Ignored in sm
                     }}
                   />
@@ -470,7 +534,7 @@ export default function InventoryPage() {
         headerClassName='bg-red-600 border-red-400 text-white'
         maxWidth='md'
       >
-        <div className='p-6'>
+        <div className='p-4 sm:p-6'>
           <p className='mb-1'>
             Are you sure you want to delete{' '}
             <span className='font-medium '>

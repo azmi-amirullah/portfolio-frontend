@@ -27,7 +27,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             headerClassName="bg-gray-700 border-gray-600 text-white"
             maxWidth="md"
         >
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
                 <div className="mb-6">
                     <h3 className="font-bold text-gray-500 uppercase tracking-wider mb-4">
                         Accessibility

@@ -43,7 +43,7 @@ export default function SaleDetailsModal({
       headerClassName='bg-blue-600 border-blue-400 text-white'
     >
       {/* Content */}
-      <div className='bg-white px-6 py-6 space-y-8'>
+      <div className='bg-white px-4 py-4 sm:px-6 sm:py-6 space-y-8'>
         {/* Top Section: Date & Time */}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <div className='bg-gray-50 rounded-2xl p-5 border border-gray-200 flex flex-col justify-center'>
@@ -68,8 +68,9 @@ export default function SaleDetailsModal({
           <div className='bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden'>
             <div className='divide-y divide-gray-200'>
               {sale.products.map((product, index) => (
-                <div key={index} className='p-4 border-b border-gray-100 last:border-0'>
-                  <div className='flex justify-between items-start mb-1'>
+                <div key={index} className='p-4 border-b border-gray-200 last:border-0'>
+                  {/* Row 1: Name & Price */}
+                  <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 sm:mb-1 gap-1 sm:gap-0'>
                     <div className='font-bold text-gray-900'>
                       {product.productName} <span className='text-gray-500 font-normal'>@{product.price.toLocaleString()} x {product.quantity}</span>
                     </div>
@@ -77,7 +78,8 @@ export default function SaleDetailsModal({
                       Rp {(product.price * product.quantity).toLocaleString()}
                     </div>
                   </div>
-                  <div className='flex justify-between items-center mb-1'>
+                  {/* Row 2: Buy Price & Total Cost */}
+                  <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 sm:mb-1 gap-1 sm:gap-0'>
                     <div className='text-gray-500'>
                       Buy Price: {product.buyPrice ? product.buyPrice.toLocaleString() : 0} x {product.quantity}
                     </div>
@@ -85,7 +87,8 @@ export default function SaleDetailsModal({
                       Rp {((product.buyPrice || 0) * product.quantity).toLocaleString()}
                     </div>
                   </div>
-                  <div className='text-right'>
+                  {/* Row 3: Margin */}
+                  <div className='text-left sm:text-right'>
                     <span className='text-gray-500 mr-2'>Margin:</span>
                     <span className='text-green-600 font-medium'>
                       Rp {((product.price - (product.buyPrice || 0)) * product.quantity).toLocaleString()}

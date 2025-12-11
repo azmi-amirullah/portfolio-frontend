@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect, startTransition } from 'react';
+import { useState, useEffect, useRef, startTransition } from 'react';
 import {
     MdArrowBack,
     MdShoppingCart,
@@ -31,6 +31,7 @@ export default function CashierLayoutClient({
     const [isMounted, setIsMounted] = useState(false);
     const [username, setUsername] = useState('User');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const mainContentRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
         queueMicrotask(() => {
@@ -40,10 +41,13 @@ export default function CashierLayoutClient({
         });
     }, [pathname]);
 
-    // Close mobile menu on route change
+    // Close mobile menu on route change & Scroll to top
     useEffect(() => {
         startTransition(() => {
             setIsMobileMenuOpen(false);
+            if (mainContentRef.current) {
+                mainContentRef.current.scrollTop = 0;
+            }
         });
     }, [pathname]);
 
@@ -297,8 +301,8 @@ export default function CashierLayoutClient({
                 </nav>
 
                 {/* Main Content */}
-                <main className='flex-1 lg:ml-64 overflow-y-auto text-gray-900'>
-                    <div className='pt-18 pb-16 p-4 lg:p-8'>
+                <main ref={mainContentRef} className='flex-1 lg:ml-64 overflow-y-auto text-gray-900'>
+                    <div className='py-18 p-4 lg:p-8'>
                         <div className='max-w-7xl mx-auto'>
                             {/* <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4 mb-4'>
                             <p className='text-amber-800'>

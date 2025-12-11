@@ -42,7 +42,7 @@ export default function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4'>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -62,7 +62,7 @@ export default function Modal({
             {/* Header */}
             {(title || showCloseButton) && (
               <div
-                className={`flex items-center justify-between px-6 py-4 border-b ${headerClassName}`}
+                className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b ${headerClassName}`}
               >
                 {title && (
                   <h3 className='text-xl font-bold wrap-break-word pr-4 flex items-center gap-3'>
@@ -88,7 +88,7 @@ export default function Modal({
 
             {/* Footer */}
             {footer && (
-              <div className='px-6 py-4 border-t border-gray-200 bg-gray-50'>
+              <div className='px-4 py-3 sm:px-6 sm:py-4 border-t border-gray-200 bg-gray-50'>
                 {footer}
               </div>
             )}
