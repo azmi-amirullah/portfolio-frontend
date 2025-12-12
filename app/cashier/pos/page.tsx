@@ -110,13 +110,18 @@ export default function POSPage() {
 
     const grandTotal = totalAmount;
 
-    await cashierService.processSale(salesData, {
-      amountPaid: paymentDetails.amountPaid,
-      grandTotal,
-    });
-    setCart([]);
-    setShowPaymentModal(false);
-    toast.success('Payment successful!');
+    try {
+      await cashierService.processSale(salesData, {
+        amountPaid: paymentDetails.amountPaid,
+        grandTotal,
+      });
+      setCart([]);
+      setShowPaymentModal(false);
+      toast.success('Payment successful!');
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+      toast.error('Payment failed. Please try again.');
+    }
   };
 
   const handleScanResult = useCallback(
