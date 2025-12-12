@@ -1,6 +1,14 @@
 'use client';
 
-import { MdAdd, MdEdit, MdSearch, MdInventory, MdVisibility, MdSync, MdDelete } from 'react-icons/md';
+import {
+  MdAdd,
+  MdEdit,
+  MdSearch,
+  MdInventory,
+  MdVisibility,
+  MdSync,
+  MdDelete,
+} from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Loading from '@/components/ui/Loading';
@@ -47,14 +55,14 @@ export default function InventoryPage() {
             <Button
               onClick={handleSync}
               disabled={isSyncing}
-              className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
+              className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
             >
               <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
               <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
             </Button>
             <Button
               onClick={handleAddClick}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center'
+              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
             >
               <MdAdd size={20} />
               <span>Add Product</span>
@@ -127,7 +135,13 @@ export default function InventoryPage() {
                   const margin = product.price - (product.buyPrice || 0);
                   return (
                     <span
-                      className={`${margin > 0 ? 'text-green-600' : margin < 0 ? 'text-red-600' : ''}`}
+                      className={`${
+                        margin > 0
+                          ? 'text-green-600'
+                          : margin < 0
+                          ? 'text-red-600'
+                          : ''
+                      }`}
                     >
                       Rp {margin.toLocaleString()}
                     </span>
@@ -144,10 +158,11 @@ export default function InventoryPage() {
                 header: 'Stock',
                 renderRow: (product) => (
                   <span
-                    className={`px-2 inline-flex leading-5 font-medium rounded-full ${product.availableStock > 0
+                    className={`px-2 inline-flex leading-5 font-medium rounded-full ${
+                      product.availableStock > 0
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                      }`}
+                    }`}
                   >
                     {product.availableStock}
                   </span>
@@ -214,8 +229,8 @@ export default function InventoryPage() {
           !editingProduct
             ? 'Add New Product'
             : isEditMode
-              ? 'Edit Product'
-              : 'Product Details'
+            ? 'Edit Product'
+            : 'Product Details'
         }
         headerIcon={<MdInventory size={24} />}
         headerClassName='bg-blue-600 border-blue-400 text-white'

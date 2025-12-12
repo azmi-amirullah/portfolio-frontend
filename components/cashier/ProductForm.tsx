@@ -1,5 +1,3 @@
-
-
 import { useState, useMemo } from 'react';
 import {
   Product,
@@ -10,7 +8,6 @@ import ExpirationManager from './ExpirationManager';
 import { MdSave } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-toastify';
-
 
 interface ProductFormProps {
   initialProduct?: Product;
@@ -28,13 +25,14 @@ export default function ProductForm({
   const [barcode, setBarcode] = useState(initialProduct?.barcode || '');
   const [name, setName] = useState(initialProduct?.name || '');
   const [price, setPrice] = useState(initialProduct?.price?.toString() || '');
-  const [buyPrice, setBuyPrice] = useState(initialProduct?.buyPrice?.toString() || '');
+  const [buyPrice, setBuyPrice] = useState(
+    initialProduct?.buyPrice?.toString() || ''
+  );
   const [batches, setBatches] = useState<StockBatch[]>(initialBatches || []);
 
-
-
-
-  const [deletedBatchIds, setDeletedBatchIds] = useState<Set<string>>(new Set());
+  const [deletedBatchIds, setDeletedBatchIds] = useState<Set<string>>(
+    new Set()
+  );
 
   const unsavedBatchIds = useMemo(() => {
     const unsaved = new Set<string>();
@@ -129,7 +127,9 @@ export default function ProductForm({
       return;
     }
 
-    const finalBatches = batches.filter((b) => !deletedBatchIds.has(b.addedDate));
+    const finalBatches = batches.filter(
+      (b) => !deletedBatchIds.has(b.addedDate)
+    );
 
     const product: Product = {
       id: initialProduct?.id || name,
@@ -158,9 +158,7 @@ export default function ProductForm({
     <form onSubmit={handleFinalSubmit} className='space-y-6'>
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
         <div>
-          <label className='block font-medium'>
-            Barcode
-          </label>
+          <label className='block font-medium'>Barcode</label>
           <input
             type='text'
             value={barcode}
@@ -170,9 +168,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block font-medium'>
-            Product Name
-          </label>
+          <label className='block font-medium'>Product Name</label>
           <input
             type='text'
             value={name}
@@ -182,25 +178,7 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block font-medium'>
-            Sell Price
-          </label>
-          <input
-            type='number'
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className={getInputClass(
-              price,
-              initialProduct?.price?.toString()
-            )}
-            required
-            min='0'
-          />
-        </div>
-        <div>
-          <label className='block font-medium'>
-            Buy Price (Cost)
-          </label>
+          <label className='block font-medium'>Buy Price (Cost)</label>
           <input
             type='number'
             value={buyPrice}
@@ -214,9 +192,18 @@ export default function ProductForm({
           />
         </div>
         <div>
-          <label className='block font-medium'>
-            Total Sold
-          </label>
+          <label className='block font-medium'>Sell Price</label>
+          <input
+            type='number'
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className={getInputClass(price, initialProduct?.price?.toString())}
+            required
+            min='0'
+          />
+        </div>
+        <div>
+          <label className='block font-medium'>Total Sold</label>
           <input
             type='text'
             value={`${initialProduct?.sold || 0} units`}
