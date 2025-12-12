@@ -317,10 +317,7 @@ class CashierService {
       }
     } catch (error) {
       console.error('Failed to save transaction to backend:', error);
-      const message =
-        error instanceof Error ? error.message : 'Failed to save transaction';
-      toast.error(message);
-      throw error; // Re-throw to let caller know it failed
+      throw error; // Re-throw to let caller handle error display
     }
   }
 
