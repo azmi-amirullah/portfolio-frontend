@@ -24,12 +24,11 @@ export const playSuccessBeep = () => {
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
     osc.stop(ctx.currentTime + 0.25);
 
-    // Cleanup
-    setTimeout(() => {
+    osc.onended = () => {
       if (ctx.state !== 'closed') {
         ctx.close();
       }
-    }, 300);
+    };
   } catch (error) {
     console.warn('Audio playback failed', error);
   }

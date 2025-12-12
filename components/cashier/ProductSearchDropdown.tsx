@@ -9,6 +9,7 @@ interface ProductSearchDropdownProps {
     products: Product[];
     searchTerm: string;
     showDropdown: boolean;
+    isLoading?: boolean;
     onSearchChange: (value: string) => void;
     onDropdownChange: (show: boolean) => void;
     onProductSelect: (product: Product) => void;
@@ -19,6 +20,7 @@ export function ProductSearchDropdown({
     products,
     searchTerm,
     showDropdown,
+    isLoading = false,
     onSearchChange,
     onDropdownChange,
     onProductSelect,
@@ -84,11 +86,12 @@ export function ProductSearchDropdown({
                 <input
                     ref={searchInputRef}
                     type='text'
-                    placeholder='Scan or search product...'
+                    placeholder={isLoading ? 'Loading products...' : 'Scan or search product...'}
                     value={searchTerm}
                     onChange={handleSearchChange}
                     onFocus={() => onDropdownChange(!!searchTerm)}
-                    className='block w-full pl-10 lg:pl-12 pr-12 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl'
+                    disabled={isLoading}
+                    className='block w-full pl-10 lg:pl-12 pr-12 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl shadow-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base lg:text-xl disabled:opacity-50 disabled:cursor-not-allowed'
                     autoFocus
                 />
                 <div className='absolute inset-y-0 right-0 flex items-center pr-2'>

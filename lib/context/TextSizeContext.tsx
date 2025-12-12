@@ -24,13 +24,17 @@ export function TextSizeProvider({ children }: { children: ReactNode }) {
     const [isReady, setIsReady] = useState(false);
 
     useLayoutEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY) as TextSize | null;
-        const size = stored && TEXT_SIZE_MAP[stored] ? stored : 'normal';
+        let isMounted = true;
+        const stored = localStorage.getItem(STORAGE_KEY);
+        const size = (stored && TEXT_SIZE_MAP[stored as TextSize]) ? stored as TextSize : 'normal';
         document.documentElement.style.fontSize = TEXT_SIZE_MAP[size];
         queueMicrotask(() => {
-            setTextSizeState(size);
-            setIsReady(true);
+            if (isMounted) {
+                setTextSizeState(size);
+                setIsReady(true);
+            }
         });
+        return () => { isMounted = false; };
     }, []);
 
     useEffect(() => {

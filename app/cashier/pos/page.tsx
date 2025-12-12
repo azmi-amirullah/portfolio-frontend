@@ -18,6 +18,8 @@ const SCAN_DEBOUNCE_MS = 2000;
 export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -34,7 +36,14 @@ export default function POSPage() {
   } = useCart();
 
   useEffect(() => {
-    cashierService.getProducts().then(setProducts);
+    setIsLoading(true);
+    cashierService.getProducts()
+      .then(setProducts)
+      .catch((error) => {
+        console.error('Failed to fetch products:', error);
+        toast.error('Failed to load products. Please refresh the page.');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const handlePayment = () => {
@@ -45,6 +54,9 @@ export default function POSPage() {
   const handleConfirmPayment = async (paymentDetails: {
     amountPaid: number;
   }) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     const salesData = cart.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
@@ -67,6 +79,8 @@ export default function POSPage() {
     } catch (error) {
       console.error('Payment processing failed:', error);
       toast.error('Payment failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -102,6 +116,7 @@ export default function POSPage() {
         products={products}
         searchTerm={searchTerm}
         showDropdown={showDropdown}
+        isLoading={isLoading}
         onSearchChange={setSearchTerm}
         onDropdownChange={setShowDropdown}
         onProductSelect={addToCart}
