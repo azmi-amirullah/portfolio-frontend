@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, startTransition } from 'react';
+import { useState, useEffect, useMemo, useCallback, startTransition } from 'react';
 import {
     MdSearch,
     MdCalendarToday,
@@ -14,6 +14,7 @@ import SaleDetailsModal from '@/components/cashier/SaleDetailsModal';
 import { PageHeader } from '@/components/cashier/PageHeader';
 import { Table } from '@/components/cashier/Table';
 import { Button } from '@/components/ui/Button';
+import { toast } from 'react-toastify';
 
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<Transaction[]>([]);
@@ -25,12 +26,18 @@ export default function SalesHistoryPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        cashierService.getSalesHistory().then((data) => {
-            startTransition(() => {
-                setSales(data);
+        cashierService.getSalesHistory()
+            .then((data) => {
+                startTransition(() => {
+                    setSales(data);
+                    setIsLoading(false);
+                });
+            })
+            .catch((error) => {
+                console.error('Failed to load sales history:', error);
+                toast.error('Failed to load sales history.');
                 setIsLoading(false);
             });
-        });
     }, []);
 
     const filteredSales = useMemo(() => {
@@ -98,29 +105,25 @@ export default function SalesHistoryPage() {
         setIsDetailsModalOpen(true);
     };
 
-    const loadSales = async () => {
-        const history = await cashierService.getSalesHistory();
-        startTransition(() => {
-            setSales(history);
-        });
-    };
-
     const handleSync = async () => {
         setIsSyncing(true);
         setIsLoading(true);
         try {
             await cashierService.syncSalesWithBackend();
-            await loadSales();
+            const history = await cashierService.getSalesHistory();
+            startTransition(() => {
+                setSales(history);
+            });
         } finally {
             setIsSyncing(false);
             setIsLoading(false);
         }
     };
 
-    const calculateProfit = (sale: Transaction) => {
+    const calculateProfit = useCallback((sale: Transaction) => {
         const cost = sale.products.reduce((sum, p) => sum + (p.buyPrice || 0) * p.quantity, 0);
         return sale.totalAmount - cost;
-    };
+    }, []);
 
     // Calculate totals
     const totalRevenue = filteredSales.reduce(

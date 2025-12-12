@@ -55,9 +55,14 @@ class CashierService {
 
   private get<T>(key: string): T[] {
     if (typeof window === 'undefined') return [];
-    const storageKey = this.getStorageKey(key);
-    const data = localStorage.getItem(storageKey);
-    return data ? JSON.parse(data) : [];
+    try {
+      const storageKey = this.getStorageKey(key);
+      const data = localStorage.getItem(storageKey);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Failed to parse localStorage data:', error);
+      return [];
+    }
   }
 
   private set<T>(key: string, data: T[]) {
@@ -108,6 +113,7 @@ class CashierService {
         return true;
       } catch (error) {
         console.error('Sync error:', error);
+        toast.error('Failed to sync products. Please try again.');
         return false;
       } finally {
         this.syncPromise = null;
@@ -400,6 +406,7 @@ class CashierService {
       } catch (error) {
         console.error('Sync sales error:', error);
         // Don't throw, just log error so UI doesn't break
+        toast.error('Failed to sync sales history.');
       } finally {
         this.salesSyncPromise = null;
       }

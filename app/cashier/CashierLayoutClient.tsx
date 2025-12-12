@@ -36,7 +36,7 @@ export default function CashierLayoutClient({
     const mainContentRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
-        queueMicrotask(() => {
+        startTransition(() => {
             const user = authService.getUser();
             setUsername(user?.username || 'User');
             setIsMounted(true);
