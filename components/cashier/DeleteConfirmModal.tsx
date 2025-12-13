@@ -36,7 +36,7 @@ export function DeleteConfirmModal({
                     </Button>
                     <Button
                         onClick={onConfirm}
-                        className='bg-red-600 hover:bg-red-700'
+                        className='bg-red-600 hover:bg-red-800'
                         type='button'
                     >
                         Delete

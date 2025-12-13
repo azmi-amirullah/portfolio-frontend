@@ -147,11 +147,11 @@ export default function ProductForm({
 
   const getInputClass = (current: string, initial?: string) => {
     const baseClass =
-      'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500';
+      'mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-600 focus:border-blue-600';
     if (initial !== undefined && current !== initial) {
       return `${baseClass} border-yellow-400 bg-yellow-50`;
     }
-    return `${baseClass} border-gray-300`;
+    return `${baseClass} border-gray-200`;
   };
 
   return (
@@ -208,7 +208,7 @@ export default function ProductForm({
             type='text'
             value={`${initialProduct?.sold || 0} units`}
             disabled
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500'
+            className='mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-500'
           />
         </div>
       </div>
@@ -236,7 +236,7 @@ export default function ProductForm({
         </Button>
         <Button
           type='submit'
-          className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
+          className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800'
         >
           <MdSave size={16} />
           Save Product

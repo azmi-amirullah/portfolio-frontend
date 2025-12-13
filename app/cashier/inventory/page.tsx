@@ -62,7 +62,7 @@ export default function InventoryPage() {
             </Button>
             <Button
               onClick={handleAddClick}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
+              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
             >
               <MdAdd size={20} />
               <span>Add Product</span>
@@ -81,7 +81,7 @@ export default function InventoryPage() {
           placeholder='Search by name or barcode...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-300 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-base h-10'
+          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-200 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 text-base h-10'
         />
       </div>
 
@@ -160,8 +160,8 @@ export default function InventoryPage() {
                   <span
                     className={`px-2 inline-flex leading-5 font-medium rounded-full ${
                       product.availableStock > 0
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-50 text-green-800'
+                        : 'bg-red-50 text-red-800'
                     }`}
                   >
                     {product.availableStock}

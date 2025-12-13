@@ -37,7 +37,8 @@ export default function POSPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    cashierService.getProducts()
+    cashierService
+      .getProducts()
       .then(setProducts)
       .catch((error) => {
         console.error('Failed to fetch products:', error);
@@ -206,7 +207,7 @@ export default function POSPage() {
           <Button
             onClick={handlePayment}
             disabled={cart.length === 0}
-            className='w-full py-4 lg:py-5 px-4 lg:px-6 bg-blue-600 text-white rounded-lg lg:rounded-xl text-base lg:text-xl font-bold hover:bg-blue-700 h-auto shadow-lg'
+            className='w-full py-4 lg:py-5 px-4 lg:px-6 bg-blue-600 text-white rounded-lg lg:rounded-xl text-base lg:text-xl font-bold hover:bg-blue-800 h-auto shadow-lg'
           >
             <MdCreditCard size={24} className='mr-2 lg:mr-3' />
             Process Payment

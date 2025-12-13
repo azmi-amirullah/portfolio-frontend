@@ -46,6 +46,8 @@ export function useAnalytics(
   const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     const loadData = async () => {
       try {
         const data = await cashierService.getSalesHistory();

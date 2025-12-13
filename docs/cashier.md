@@ -278,29 +278,26 @@ const {
 
 ## Design System
 
-### Text Colors
+### Color Palette
 
-| Color | Primary | Hover/Badge | On Colored BG |
-| ----- | ------- | ----------- | ------------- |
-| Gray  | `500`   | `900`       | -             |
-| Blue  | `600`   | `800`       | `800`         |
-| Green | `600`   | `800`       | `800`         |
-| Red   | `600`   | `800`       | `800`         |
-| Amber | `600`   | `800`       | `800`         |
+| Category                     | Gray | Blue | Green | Red | Amber |
+| ---------------------------- | ---- | ---- | ----- | --- | ----- |
+| **Hover BG (-50)**           | 50   | 50   | 50    | 50  | 50    |
+| **Border (-200)**            | 200  | 200  | 200   | 200 | 200   |
+| **Text Secondary**           | 500  | -    | -     | -   | -     |
+| **Text/Actions (-600)**      | 900  | 600  | 600   | 600 | 600   |
+| **Hover/On Light BG (-800)** | -    | 800  | 800   | 800 | 800   |
 
 ### Usage Guide
 
 ```
-Primary text    → inherits from main (gray-900)
-Secondary text  → text-gray-500
-Icons           → text-gray-500
-Prices/Links    → text-blue-600
-Success/Margin  → text-green-600
-Error/Delete    → text-red-600
-Warning         → text-amber-600
-Hover states    → *-800 variants
-On light BG     → *-800 (e.g. text-blue-800 on bg-blue-50)
-On dark BG      → text-white or text-white/80 (secondary)
+Hover backgrounds    → *-50 (gray-50, blue-50, green-50, red-50, amber-50)
+Borders              → *-200 (gray-200, blue-200, green-200, red-200, amber-200)
+Secondary text/icons → text-gray-500
+Actions/Primary      → *-600 (blue-600, green-600, red-600, amber-600)
+Hover text/badges    → *-800 (blue-800, green-800, red-800, amber-800)
+Primary text         → text-gray-900
+On dark BG           → text-white or text-white/80 (secondary)
 ```
 
 ### Typography

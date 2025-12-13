@@ -217,8 +217,8 @@ export default function DashboardPage() {
                 value={`Rp ${summary.totalProfit.toLocaleString()}`}
                 subtext={`${summary.totalMargin.toFixed(1)}% margin`}
                 icon={MdTrendingUp}
-                bgClass='bg-emerald-50'
-                textClass='text-emerald-600'
+                bgClass='bg-green-50'
+                textClass='text-green-600'
               />
               <StatCard
                 title='Items Sold'
@@ -235,8 +235,8 @@ export default function DashboardPage() {
                 ).toLocaleString()}`}
                 subtext='per transaction'
                 icon={MdShowChart}
-                bgClass='bg-purple-50'
-                textClass='text-purple-600'
+                bgClass='bg-red-50'
+                textClass='text-red-600'
               />
             </div>
 
@@ -279,12 +279,12 @@ export default function DashboardPage() {
                           >
                             <stop
                               offset='5%'
-                              stopColor='#10b981'
+                              stopColor='#d97706'
                               stopOpacity={0.1}
                             />
                             <stop
                               offset='95%'
-                              stopColor='#10b981'
+                              stopColor='#d97706'
                               stopOpacity={0}
                             />
                           </linearGradient>
@@ -292,19 +292,19 @@ export default function DashboardPage() {
                         <CartesianGrid
                           strokeDasharray='3 3'
                           vertical={false}
-                          stroke='#f3f4f6'
+                          stroke='var(--color-gray-500)'
                         />
                         <XAxis
                           dataKey='date'
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          tick={{ fill: 'var(--color-gray-500)', fontSize: 12 }}
                           dy={10}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          tick={{ fill: 'var(--color-gray-500)', fontSize: 12 }}
                           tickFormatter={yAxisFormatter}
                         />
                         <Tooltip
@@ -316,7 +316,7 @@ export default function DashboardPage() {
                           type='monotone'
                           dataKey='revenue'
                           name='Revenue'
-                          stroke='#2563eb'
+                          stroke='var(--color-blue-600)'
                           strokeWidth={2}
                           fillOpacity={1}
                           fill='url(#colorRevenue)'
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                           type='monotone'
                           dataKey='profit'
                           name='Profit'
-                          stroke='#10b981'
+                          stroke='var(--color-amber-600)'
                           strokeWidth={2}
                           fillOpacity={1}
                           fill='url(#colorProfit)'
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className='h-full flex flex-col items-center justify-center text-gray-400'>
+                    <div className='h-full flex flex-col items-center justify-center text-gray-500'>
                       <MdShowChart size={48} className='mb-2 opacity-50' />
                       <p>No data available yet</p>
                     </div>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                             {product.quantity} sold
                           </span>
                         </div>
-                        <div className='w-full bg-gray-100 rounded-full h-2 overflow-hidden'>
+                        <div className='w-full bg-gray-50 rounded-full h-2 overflow-hidden'>
                           <div
                             className='bg-blue-600 h-2 rounded-full'
                             style={{
@@ -372,13 +372,13 @@ export default function DashboardPage() {
                             }}
                           />
                         </div>
-                        <div className='text-xs text-gray-400 mt-1 text-right'>
+                        <div className='text-xs text-gray-500 mt-1 text-right'>
                           Rp {product.revenue.toLocaleString()}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className='h-[200px] flex flex-col items-center justify-center text-gray-400'>
+                    <div className='h-[200px] flex flex-col items-center justify-center text-gray-500'>
                       <MdShoppingBag size={48} className='mb-2 opacity-50' />
                       <p>No sales yet</p>
                     </div>

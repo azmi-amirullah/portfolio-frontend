@@ -53,13 +53,13 @@ export class ErrorBoundary extends Component<
           </p>
           <button
             onClick={this.handleRetry}
-            className='flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors'
+            className='flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-800 transition-colors'
           >
             <MdRefresh size={20} />
             Try Again
           </button>
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <pre className='mt-6 p-4 bg-gray-100 rounded-lg text-xs text-red-600 max-w-full overflow-auto'>
+            <pre className='mt-6 p-4 bg-gray-50 rounded-lg text-xs text-red-600 max-w-full overflow-auto'>
               {this.state.error.message}
             </pre>
           )}

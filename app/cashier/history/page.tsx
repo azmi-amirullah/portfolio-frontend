@@ -24,12 +24,17 @@ const DATE_FILTER_OPTIONS = [
   { value: 'week', label: 'This Week' },
   { value: 'month', label: 'This Month' },
   { value: 'all', label: 'All Time' },
-];
+] as const;
+
+type DateFilter = (typeof DATE_FILTER_OPTIONS)[number]['value'];
+
+const isValidDateFilter = (value: string): value is DateFilter =>
+  DATE_FILTER_OPTIONS.some((opt) => opt.value === value);
 
 export default function SalesHistoryPage() {
   const [sales, setSales] = useState<Transaction[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('recent');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('recent');
   const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -191,7 +196,7 @@ export default function SalesHistoryPage() {
             Rp {totalRevenue.toLocaleString()}
           </div>
         </div>
-        <div className='bg-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200'>
+        <div className='bg-green-600 rounded-2xl p-6 text-white shadow-lg shadow-green-200'>
           <div className='text-white/80 font-medium mb-1'>Profit</div>
           <div className='text-2xl md:text-3xl font-bold'>
             Rp {totalProfit.toLocaleString()}
@@ -211,7 +216,7 @@ export default function SalesHistoryPage() {
             placeholder='Search transaction ID, product name, or barcode...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm'
+            className='w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent shadow-sm'
           />
         </div>
         <div className='flex gap-3'>
@@ -222,7 +227,12 @@ export default function SalesHistoryPage() {
               )}
               onChange={(
                 option: SingleValue<{ value: string; label: string }>
-              ) => setDateFilter(option?.value || 'recent')}
+              ) => {
+                const value = option?.value;
+                if (value && isValidDateFilter(value)) {
+                  setDateFilter(value);
+                }
+              }}
               options={DATE_FILTER_OPTIONS}
               isSearchable={false}
             />
@@ -270,7 +280,7 @@ export default function SalesHistoryPage() {
                   <div className='text-base text-blue-600'>
                     Rp {sale.totalAmount.toLocaleString()}
                   </div>
-                  <div className='text-emerald-600'>
+                  <div className='text-green-600'>
                     Profit: Rp {calculateProfit(sale).toLocaleString()}
                   </div>
                 </div>
@@ -301,7 +311,7 @@ export default function SalesHistoryPage() {
               header: 'Items',
               align: 'center',
               renderRow: (sale) => (
-                <span className='inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800'>
+                <span className='inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-50 text-blue-800'>
                   {sale.products.reduce(
                     (acc: number, p: { quantity: number }) => acc + p.quantity,
                     0
@@ -321,7 +331,7 @@ export default function SalesHistoryPage() {
               header: 'Profit',
               align: 'right',
               renderRow: (sale) => (
-                <span className='text-emerald-600'>
+                <span className='text-green-600'>
                   Rp {calculateProfit(sale).toLocaleString()}
                 </span>
               ),

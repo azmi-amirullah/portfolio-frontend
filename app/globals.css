@@ -67,6 +67,41 @@
   --ring: hsl(207 73% 57%); /* Blue ring */
 
   --radius: 0.5rem;
+
+  /* ========================================
+   * Cashier Design System - Color Tokens
+   * Docs: .agent/rules/cashier-design-system.md
+   * ======================================== */
+
+  /* Hover Backgrounds (-50) */
+  --color-gray-50: #f9fafb;
+  --color-blue-50: #eff6ff;
+  --color-green-50: #f0fdf4;
+  --color-red-50: #fef2f2;
+  --color-amber-50: #fffbeb;
+
+  /* Borders (-200) */
+  --color-gray-200: #e5e7eb;
+  --color-blue-200: #bfdbfe;
+  --color-green-200: #bbf7d0;
+  --color-red-200: #fecaca;
+  --color-amber-200: #fde68a;
+
+  /* Text - Secondary */
+  --color-gray-500: #6b7280;
+
+  /* Text - Primary & Actions (-600) */
+  --color-gray-900: #111827;
+  --color-blue-600: #2563eb;
+  --color-green-600: #16a34a;
+  --color-red-600: #dc2626;
+  --color-amber-600: #d97706;
+
+  /* Text - Hover & On Light BG (-800) */
+  --color-blue-800: #1e40af;
+  --color-green-800: #166534;
+  --color-red-800: #991b1b;
+  --color-amber-800: #92400e;
 }
 
 /* Utility classes for typography */

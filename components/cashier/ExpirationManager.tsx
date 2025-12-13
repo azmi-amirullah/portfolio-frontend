@@ -1,16 +1,20 @@
-
 import { useState } from 'react';
 import { StockBatch } from '@/lib/services/cashier-service';
-import { MdAdd, MdEdit, MdCheck, MdClose, MdDelete, MdInventory } from 'react-icons/md';
+import {
+  MdAdd,
+  MdEdit,
+  MdCheck,
+  MdClose,
+  MdDelete,
+  MdInventory,
+} from 'react-icons/md';
 import { IoArrowUndoCircle } from 'react-icons/io5';
 import { Button } from '@/components/ui/Button';
 import { Table } from './Table';
 
 interface ExpirationManagerProps {
   batches: StockBatch[];
-  onAddBatch: (
-    batch: Omit<StockBatch, 'productId' | 'isSoldOut'>
-  ) => void;
+  onAddBatch: (batch: Omit<StockBatch, 'productId' | 'isSoldOut'>) => void;
   onUpdateBatch?: (batch: StockBatch) => void;
   onDeleteBatch?: (batchId: string) => void;
   onToggleSoldOut: (batchId: string) => void;
@@ -76,15 +80,13 @@ export default function ExpirationManager({
       {/* Add New Batch */}
       <div className='flex flex-wrap gap-2 items-end bg-gray-50 p-3 rounded-md border border-gray-200'>
         <div className='flex-1 min-w-[150px]'>
-          <label className='block mb-1'>
-            Expiration Date
-          </label>
+          <label className='block mb-1'>Expiration Date</label>
           <input
             type='date'
             value={newExpiration}
             onChange={(e) => setNewExpiration(e.target.value)}
             onClick={(e) => e.currentTarget.showPicker()}
-            className='w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer'
+            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer'
           />
         </div>
         <div className='w-24'>
@@ -94,14 +96,14 @@ export default function ExpirationManager({
             min='1'
             value={newQuantity}
             onChange={(e) => setNewQuantity(parseInt(e.target.value) || 0)}
-            className='w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600'
           />
         </div>
         <Button
           type='button'
           onClick={handleAdd}
           disabled={!newExpiration || newQuantity <= 0}
-          className='flex items-center gap-1 bg-blue-600 hover:bg-blue-700 h-auto py-1.5 px-3'
+          className='flex items-center gap-1 bg-blue-600 hover:bg-blue-800 h-auto py-1.5 px-3'
         >
           <MdAdd size={16} /> Add
         </Button>
@@ -126,14 +128,15 @@ export default function ExpirationManager({
               return (
                 <div
                   key={batch.addedDate}
-                  className={`p-4 space-y-3 ${isDeleted
-                    ? 'bg-gray-50 opacity-60'
-                    : isUnsaved
+                  className={`p-4 space-y-3 ${
+                    isDeleted
+                      ? 'bg-gray-50 opacity-60'
+                      : isUnsaved
                       ? 'bg-yellow-50'
                       : batch.isSoldOut
-                        ? 'bg-gray-50'
-                        : 'bg-white'
-                    }`}
+                      ? 'bg-gray-50'
+                      : 'bg-white'
+                  }`}
                 >
                   {isEditing ? (
                     // Edit Mode Card
@@ -150,7 +153,7 @@ export default function ExpirationManager({
                             value={editExpiration}
                             onChange={(e) => setEditExpiration(e.target.value)}
                             onClick={(e) => e.currentTarget.showPicker()}
-                            className='w-full px-2 py-1.5 border border-gray-300 rounded'
+                            className='w-full px-2 py-1.5 border border-gray-200 rounded'
                           />
                         </div>
                         {/* 2. Quantity */}
@@ -162,8 +165,10 @@ export default function ExpirationManager({
                             type='number'
                             min='0'
                             value={editQuantity}
-                            onChange={(e) => setEditQuantity(parseInt(e.target.value) || 0)}
-                            className='w-full px-2 py-1.5 border border-gray-300 rounded'
+                            onChange={(e) =>
+                              setEditQuantity(parseInt(e.target.value) || 0)
+                            }
+                            className='w-full px-2 py-1.5 border border-gray-200 rounded'
                           />
                         </div>
                         {/* 3. Created At */}
@@ -194,17 +199,26 @@ export default function ExpirationManager({
                               onChange={() => onToggleSoldOut(batch.addedDate)}
                               className='hidden'
                             />
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center ${batch.isSoldOut
-                              ? 'border-red-600 bg-red-50'
-                              : 'border-green-600 bg-green-50'
-                              }`}>
+                            <div
+                              className={`w-5 h-5 rounded border flex items-center justify-center ${
+                                batch.isSoldOut
+                                  ? 'border-red-600 bg-red-50'
+                                  : 'border-green-600 bg-green-50'
+                              }`}
+                            >
                               {batch.isSoldOut ? (
                                 <MdClose size={14} className='text-red-600' />
                               ) : (
                                 <MdCheck size={14} className='text-green-600' />
                               )}
                             </div>
-                            <span className={`${batch.isSoldOut ? 'text-red-600' : 'text-green-600'}`}>
+                            <span
+                              className={`${
+                                batch.isSoldOut
+                                  ? 'text-red-600'
+                                  : 'text-green-600'
+                              }`}
+                            >
                               {batch.isSoldOut ? 'Unavailable' : 'Available'}
                             </span>
                           </label>
@@ -212,7 +226,7 @@ export default function ExpirationManager({
                       </div>
 
                       {/* Actions Column */}
-                      <div className='flex flex-col gap-4 justify-center border-l border-gray-100 pl-3'>
+                      <div className='flex flex-col gap-4 justify-center border-l border-gray-200 pl-3'>
                         <Button
                           type='button'
                           variant='ghost'
@@ -243,8 +257,16 @@ export default function ExpirationManager({
                           <div className='font-medium text-gray-900 mb-1'>
                             Expiration Date
                           </div>
-                          <div className={`${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : 'text-gray-500'}`}>
-                            {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
+                          <div
+                            className={`${
+                              isDeleted || batch.isSoldOut
+                                ? 'line-through text-gray-500'
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {new Date(batch.expirationDate).toLocaleDateString(
+                              'en-GB'
+                            )}
                           </div>
                         </div>
                         {/* 2. Quantity */}
@@ -252,7 +274,13 @@ export default function ExpirationManager({
                           <div className='font-medium text-gray-900 mb-1'>
                             Quantity
                           </div>
-                          <div className={`${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : 'text-blue-600'}`}>
+                          <div
+                            className={`${
+                              isDeleted || batch.isSoldOut
+                                ? 'line-through text-gray-500'
+                                : 'text-blue-600'
+                            }`}
+                          >
                             {batch.quantity}
                           </div>
                         </div>
@@ -261,7 +289,13 @@ export default function ExpirationManager({
                           <div className='font-medium text-gray-900 mb-1'>
                             Created At
                           </div>
-                          <div className={`${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : 'text-gray-500'}`}>
+                          <div
+                            className={`${
+                              isDeleted || batch.isSoldOut
+                                ? 'line-through text-gray-500'
+                                : 'text-gray-500'
+                            }`}
+                          >
                             {new Date(batch.addedDate).toLocaleString('en-GB', {
                               day: 'numeric',
                               month: 'short',
@@ -277,14 +311,20 @@ export default function ExpirationManager({
                           <div className='font-medium text-gray-900 mb-1'>
                             Status
                           </div>
-                          <span className={`${batch.isSoldOut ? 'text-red-600' : 'text-green-600'}`}>
+                          <span
+                            className={`${
+                              batch.isSoldOut
+                                ? 'text-red-600'
+                                : 'text-green-600'
+                            }`}
+                          >
                             {batch.isSoldOut ? 'Unavailable' : 'Available'}
                           </span>
                         </div>
                       </div>
 
                       {/* Actions Column */}
-                      <div className='flex flex-col gap-4 justify-center border-l border-gray-100 pl-3'>
+                      <div className='flex flex-col gap-4 justify-center border-l border-gray-200 pl-3'>
                         <Button
                           type='button'
                           variant='ghost'
@@ -301,9 +341,17 @@ export default function ExpirationManager({
                             variant='ghost'
                             size='icon'
                             onClick={() => onDeleteBatch(batch.addedDate)}
-                            className={`h-8 w-8 ${isDeleted ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'}`}
+                            className={`h-8 w-8 ${
+                              isDeleted
+                                ? 'text-green-600 hover:text-green-800'
+                                : 'text-red-600 hover:text-red-800'
+                            }`}
                           >
-                            {isDeleted ? <IoArrowUndoCircle size={20} /> : <MdDelete size={20} />}
+                            {isDeleted ? (
+                              <IoArrowUndoCircle size={20} />
+                            ) : (
+                              <MdDelete size={20} />
+                            )}
                           </Button>
                         )}
                       </div>
@@ -331,23 +379,35 @@ export default function ExpirationManager({
                       value={editExpiration}
                       onChange={(e) => setEditExpiration(e.target.value)}
                       onClick={(e) => e.currentTarget.showPicker()}
-                      className='w-full px-2 py-1 border border-gray-300 rounded cursor-pointer'
+                      className='w-full px-2 py-1 border border-gray-200 rounded cursor-pointer'
                     />
                   );
                 }
                 return (
-                  <span className={isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''}>
+                  <span
+                    className={
+                      isDeleted || batch.isSoldOut
+                        ? 'line-through text-gray-500'
+                        : ''
+                    }
+                  >
                     {new Date(batch.expirationDate).toLocaleDateString('en-GB')}
                   </span>
                 );
-              }
+              },
             },
             {
               header: 'Created At',
               renderRow: (batch) => {
                 const isDeleted = deletedBatchIds?.has(batch.addedDate);
                 return (
-                  <span className={isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : ''}>
+                  <span
+                    className={
+                      isDeleted || batch.isSoldOut
+                        ? 'line-through text-gray-500'
+                        : ''
+                    }
+                  >
                     {new Date(batch.addedDate).toLocaleString('en-GB', {
                       day: 'numeric',
                       month: 'short',
@@ -358,7 +418,7 @@ export default function ExpirationManager({
                     })}
                   </span>
                 );
-              }
+              },
             },
             {
               header: 'Quantity',
@@ -370,17 +430,25 @@ export default function ExpirationManager({
                       type='number'
                       min='0'
                       value={editQuantity}
-                      onChange={(e) => setEditQuantity(parseInt(e.target.value) || 0)}
-                      className='w-20 px-2 py-1 border border-gray-300 rounded'
+                      onChange={(e) =>
+                        setEditQuantity(parseInt(e.target.value) || 0)
+                      }
+                      className='w-20 px-2 py-1 border border-gray-200 rounded'
                     />
                   );
                 }
                 return (
-                  <span className={`${isDeleted || batch.isSoldOut ? 'line-through text-gray-400' : 'text-blue-600'}`}>
+                  <span
+                    className={`${
+                      isDeleted || batch.isSoldOut
+                        ? 'line-through text-gray-500'
+                        : 'text-blue-600'
+                    }`}
+                  >
                     {batch.quantity}
                   </span>
                 );
-              }
+              },
             },
             {
               header: 'Status',
@@ -395,17 +463,24 @@ export default function ExpirationManager({
                           onChange={() => onToggleSoldOut(batch.addedDate)}
                           className='hidden'
                         />
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${batch.isSoldOut
-                          ? 'border-red-600 bg-red-50'
-                          : 'border-green-600 bg-green-50'
-                          }`}>
+                        <div
+                          className={`w-5 h-5 rounded border flex items-center justify-center ${
+                            batch.isSoldOut
+                              ? 'border-red-600 bg-red-50'
+                              : 'border-green-600 bg-green-50'
+                          }`}
+                        >
                           {batch.isSoldOut ? (
                             <MdClose size={14} className='text-red-600' />
                           ) : (
                             <MdCheck size={14} className='text-green-600' />
                           )}
                         </div>
-                        <span className={`${batch.isSoldOut ? 'text-red-600' : 'text-green-600'}`}>
+                        <span
+                          className={`${
+                            batch.isSoldOut ? 'text-red-600' : 'text-green-600'
+                          }`}
+                        >
                           {batch.isSoldOut ? 'Unavailable' : 'Available'}
                         </span>
                       </label>
@@ -413,11 +488,15 @@ export default function ExpirationManager({
                   );
                 }
                 return (
-                  <span className={`${batch.isSoldOut ? 'text-red-600' : 'text-green-600'}`}>
+                  <span
+                    className={`${
+                      batch.isSoldOut ? 'text-red-600' : 'text-green-600'
+                    }`}
+                  >
                     {batch.isSoldOut ? 'Unavailable' : 'Available'}
                   </span>
                 );
-              }
+              },
             },
             {
               header: 'Actions',
@@ -466,16 +545,24 @@ export default function ExpirationManager({
                         variant='ghost'
                         size='icon'
                         onClick={() => onDeleteBatch(batch.addedDate)}
-                        className={`h-6 w-6 ${isDeleted ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'}`}
+                        className={`h-6 w-6 ${
+                          isDeleted
+                            ? 'text-green-600 hover:text-green-800'
+                            : 'text-red-600 hover:text-red-800'
+                        }`}
                         title={isDeleted ? 'Undo Delete' : 'Delete'}
                       >
-                        {isDeleted ? <IoArrowUndoCircle size={20} /> : <MdDelete size={20} />}
+                        {isDeleted ? (
+                          <IoArrowUndoCircle size={20} />
+                        ) : (
+                          <MdDelete size={20} />
+                        )}
                       </Button>
                     )}
                   </div>
                 );
-              }
-            }
+              },
+            },
           ]}
           data={batches}
           rowKey={(batch) => batch.addedDate}
@@ -485,10 +572,10 @@ export default function ExpirationManager({
             return isDeleted
               ? 'bg-gray-500 opacity-60'
               : isUnsaved
-                ? 'bg-yellow-100'
-                : batch.isSoldOut
-                  ? 'bg-gray-50'
-                  : '';
+              ? 'bg-yellow-100'
+              : batch.isSoldOut
+              ? 'bg-gray-50'
+              : '';
           }}
           emptyState={{
             icon: MdInventory, // Ignored in sm

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import ReactSelect, { Props as SelectProps, GroupBase } from 'react-select';
 
 export function Select<
@@ -5,8 +6,12 @@ export function Select<
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>
 >(props: SelectProps<Option, IsMulti, Group>) {
+  const instanceId = useId();
+
   return (
     <ReactSelect
+      instanceId={instanceId}
+      aria-label={props['aria-label'] || 'Select an option'}
       {...props}
       styles={{
         control: (base, state) => ({
@@ -15,12 +20,14 @@ export function Select<
           height: '50px',
           borderRadius: '0.75rem',
           backgroundColor: 'white',
-          borderColor: state.isFocused ? 'transparent' : '#e5e7eb',
+          borderColor: state.isFocused
+            ? 'var(--color-blue-600)'
+            : 'var(--color-gray-200)',
           boxShadow: state.isFocused
-            ? '0 0 0 2px #3b82f6'
+            ? '0 0 0 2px var(--color-blue-600)'
             : '0 1px 2px 0 rgb(0 0 0 / 0.05)',
           '&:hover': {
-            borderColor: state.isFocused ? 'transparent' : '#d1d5db',
+            borderColor: 'var(--color-blue-600)',
           },
           ...props.styles?.control?.(base, state),
         }),
@@ -48,13 +55,18 @@ export function Select<
           borderRadius: '0.5rem',
           cursor: 'pointer',
           backgroundColor: state.isSelected
-            ? '#2563eb'
+            ? 'var(--color-blue-600)'
             : state.isFocused
-            ? '#f9fafb'
+            ? 'var(--color-blue-50)'
             : 'transparent',
-          color: state.isSelected ? 'white' : '#111827',
+          color: state.isSelected
+            ? 'white'
+            : state.isFocused
+            ? 'var(--color-blue-800)'
+            : 'var(--color-gray-900)',
           ':active': {
-            backgroundColor: state.isSelected ? '#2563eb' : '#f3f4f6',
+            backgroundColor: 'var(--color-blue-600)',
+            color: 'white',
           },
         }),
         ...props.styles,
