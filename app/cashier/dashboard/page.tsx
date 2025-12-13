@@ -24,6 +24,7 @@ import Loading from '@/components/ui/Loading';
 import { useAnalytics, DateRange } from '@/lib/hooks/useAnalytics';
 import { ElementType, memo, useState, useCallback, useMemo } from 'react';
 import { Select, SingleValue } from '@/components/ui/Select';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 const StatCard = memo(
   ({
@@ -72,7 +73,10 @@ const DATE_RANGE_OPTIONS = [
   { value: 'last7', label: 'Last 7 Days' },
   { value: 'last30', label: 'Last 30 Days' },
   { value: 'all', label: 'All Time' },
-];
+] as const;
+
+const isValidDateRange = (value: string): value is DateRange =>
+  DATE_RANGE_OPTIONS.some((opt) => opt.value === value);
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<DateRange>('last7');
@@ -129,254 +133,262 @@ export default function DashboardPage() {
   const yAxisFormatter = useCallback((value: number) => `${value / 1000}k`, []);
 
   return (
-    <div className='space-y-6 md:pb-0'>
-      <PageHeader
-        icon={MdDashboard}
-        title='Dashboard'
-        subtitle='Overview of your business performance'
-        actions={
-          <Button
-            onClick={refresh}
-            disabled={isRefreshing || isLoading}
-            className='bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
-          >
-            <MdRefresh
-              size={20}
-              className={`mr-2 ${
-                isRefreshing || isLoading ? 'animate-spin' : ''
-              }`}
-            />
-            {isRefreshing || isLoading ? 'Syncing...' : 'Sync'}
-          </Button>
-        }
-      />
+    <ErrorBoundary>
+      <div className='space-y-6 md:pb-0'>
+        <PageHeader
+          icon={MdDashboard}
+          title='Dashboard'
+          subtitle='Overview of your business performance'
+          actions={
+            <Button
+              onClick={refresh}
+              disabled={isRefreshing || isLoading}
+              className='bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
+            >
+              <MdRefresh
+                size={20}
+                className={`mr-2 ${
+                  isRefreshing || isLoading ? 'animate-spin' : ''
+                }`}
+              />
+              {isRefreshing || isLoading ? 'Syncing...' : 'Sync'}
+            </Button>
+          }
+        />
 
-      {/* Filters */}
-      {!isLoading && (
-        <div className='flex flex-col sm:flex-row justify-end gap-3'>
-          <div className='w-full sm:w-64'>
-            <Select
-              value={
-                productOptions.find((opt) => opt.value === productId) ||
-                productOptions[0]
-              }
-              onChange={(
-                option: SingleValue<{ value: string; label: string }>
-              ) => setProductId(option?.value || 'all')}
-              options={productOptions}
-              className='text-gray-900 basic-single'
-              placeholder='Search product...'
-              isSearchable
-            />
+        {/* Filters */}
+        {!isLoading && (
+          <div className='flex flex-col sm:flex-row justify-end gap-3'>
+            <div className='w-full sm:w-64'>
+              <Select
+                value={
+                  productOptions.find((opt) => opt.value === productId) ||
+                  productOptions[0]
+                }
+                onChange={(
+                  option: SingleValue<{ value: string; label: string }>
+                ) => setProductId(option?.value || 'all')}
+                options={productOptions}
+                className='text-gray-900 basic-single'
+                placeholder='Search product...'
+                isSearchable
+              />
+            </div>
+            <div className='w-full sm:w-48'>
+              <Select
+                value={
+                  DATE_RANGE_OPTIONS.find((opt) => opt.value === dateRange) ||
+                  DATE_RANGE_OPTIONS[1]
+                }
+                onChange={(
+                  option: SingleValue<{ value: string; label: string }>
+                ) => {
+                  const value = option?.value;
+                  if (value && isValidDateRange(value)) {
+                    setDateRange(value);
+                  }
+                }}
+                options={DATE_RANGE_OPTIONS}
+                className='text-gray-900 basic-single'
+                isSearchable={false}
+              />
+            </div>
           </div>
-          <div className='w-full sm:w-48'>
-            <Select
-              value={
-                DATE_RANGE_OPTIONS.find((opt) => opt.value === dateRange) ||
-                DATE_RANGE_OPTIONS[1]
-              }
-              onChange={(
-                option: SingleValue<{ value: string; label: string }>
-              ) => setDateRange((option?.value as DateRange) || 'last7')}
-              options={DATE_RANGE_OPTIONS}
-              className='text-gray-900 basic-single'
-              isSearchable={false}
-            />
-          </div>
-        </div>
-      )}
+        )}
 
-      {isLoading || isRefreshing ? (
-        <div className='min-h-[60vh] flex items-center justify-center bg-white/50 rounded-2xl border-2 border-dashed border-gray-200'>
-          <Loading />
-        </div>
-      ) : (
-        <>
-          {/* Summary Stats */}
-          <div className='grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4'>
-            <StatCard
-              title='Total Revenue'
-              value={`Rp ${summary.totalRevenue.toLocaleString()}`}
-              subtext={`${summary.totalTransactions} transactions`}
-              icon={MdAttachMoney}
-              bgClass='bg-blue-50'
-              textClass='text-blue-600'
-            />
-            <StatCard
-              title='Total Profit'
-              value={`Rp ${summary.totalProfit.toLocaleString()}`}
-              subtext={`${summary.totalMargin.toFixed(1)}% margin`}
-              icon={MdTrendingUp}
-              bgClass='bg-emerald-50'
-              textClass='text-emerald-600'
-            />
-            <StatCard
-              title='Items Sold'
-              value={summary.itemsSold}
-              subtext='across all products'
-              icon={MdShoppingBag}
-              bgClass='bg-amber-50'
-              textClass='text-amber-600'
-            />
-            <StatCard
-              title='Avg Order'
-              value={`Rp ${Math.round(
-                summary.averageOrderValue
-              ).toLocaleString()}`}
-              subtext='per transaction'
-              icon={MdShowChart}
-              bgClass='bg-purple-50'
-              textClass='text-purple-600'
-            />
+        {isLoading || isRefreshing ? (
+          <div className='min-h-[60vh] flex items-center justify-center bg-white/50 rounded-2xl border-2 border-dashed border-gray-200'>
+            <Loading />
           </div>
-
-          {/* Charts Section */}
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-            {/* Sales Trend Chart */}
-            <div className='lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
-              <h3 className='text-lg font-bold text-gray-900 mb-6'>
-                Sales Trend
-              </h3>
-              <div className='h-[300px] w-full'>
-                {salesTrend.length > 0 ? (
-                  <ResponsiveContainer width='100%' height='100%'>
-                    <AreaChart data={salesTrend}>
-                      <defs>
-                        <linearGradient
-                          id='colorRevenue'
-                          x1='0'
-                          y1='0'
-                          x2='0'
-                          y2='1'
-                        >
-                          <stop
-                            offset='5%'
-                            stopColor='#2563eb'
-                            stopOpacity={0.1}
-                          />
-                          <stop
-                            offset='95%'
-                            stopColor='#2563eb'
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                        <linearGradient
-                          id='colorProfit'
-                          x1='0'
-                          y1='0'
-                          x2='0'
-                          y2='1'
-                        >
-                          <stop
-                            offset='5%'
-                            stopColor='#10b981'
-                            stopOpacity={0.1}
-                          />
-                          <stop
-                            offset='95%'
-                            stopColor='#10b981'
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray='3 3'
-                        vertical={false}
-                        stroke='#f3f4f6'
-                      />
-                      <XAxis
-                        dataKey='date'
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
-                        dy={10}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#6b7280', fontSize: 12 }}
-                        tickFormatter={yAxisFormatter}
-                      />
-                      <Tooltip
-                        contentStyle={TOOLTIP_STYLE}
-                        formatter={tooltipFormatter}
-                      />
-                      <Legend />
-                      <Area
-                        type='monotone'
-                        dataKey='revenue'
-                        name='Revenue'
-                        stroke='#2563eb'
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill='url(#colorRevenue)'
-                      />
-                      <Area
-                        type='monotone'
-                        dataKey='profit'
-                        name='Profit'
-                        stroke='#10b981'
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill='url(#colorProfit)'
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className='h-full flex flex-col items-center justify-center text-gray-400'>
-                    <MdShowChart size={48} className='mb-2 opacity-50' />
-                    <p>No data available yet</p>
-                  </div>
-                )}
-              </div>
+        ) : (
+          <>
+            {/* Summary Stats */}
+            <div className='grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4'>
+              <StatCard
+                title='Total Revenue'
+                value={`Rp ${summary.totalRevenue.toLocaleString()}`}
+                subtext={`${summary.totalTransactions} transactions`}
+                icon={MdAttachMoney}
+                bgClass='bg-blue-50'
+                textClass='text-blue-600'
+              />
+              <StatCard
+                title='Total Profit'
+                value={`Rp ${summary.totalProfit.toLocaleString()}`}
+                subtext={`${summary.totalMargin.toFixed(1)}% margin`}
+                icon={MdTrendingUp}
+                bgClass='bg-emerald-50'
+                textClass='text-emerald-600'
+              />
+              <StatCard
+                title='Items Sold'
+                value={summary.itemsSold}
+                subtext='across all products'
+                icon={MdShoppingBag}
+                bgClass='bg-amber-50'
+                textClass='text-amber-600'
+              />
+              <StatCard
+                title='Avg Order'
+                value={`Rp ${Math.round(
+                  summary.averageOrderValue
+                ).toLocaleString()}`}
+                subtext='per transaction'
+                icon={MdShowChart}
+                bgClass='bg-purple-50'
+                textClass='text-purple-600'
+              />
             </div>
 
-            {/* Top Products */}
-            <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
-              <h3 className='text-lg font-bold text-gray-900 mb-6'>
-                Top Products
-              </h3>
-              <div className='space-y-6'>
-                {topProducts.length > 0 ? (
-                  topProducts.map((product, index) => (
-                    <div key={product.id} className='relative'>
-                      <div className='flex justify-between items-center mb-1 relative z-10'>
-                        <span className='font-medium text-gray-900 truncate max-w-[60%]'>
-                          {index + 1}. {product.name}
-                        </span>
-                        <span className='text-sm text-gray-500'>
-                          {product.quantity} sold
-                        </span>
-                      </div>
-                      <div className='w-full bg-gray-100 rounded-full h-2 overflow-hidden'>
-                        <div
-                          className='bg-blue-600 h-2 rounded-full'
-                          style={{
-                            width: `${
-                              topProducts[0]?.quantity
-                                ? (product.quantity / topProducts[0].quantity) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
+            {/* Charts Section */}
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+              {/* Sales Trend Chart */}
+              <div className='lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+                <h3 className='text-lg font-bold text-gray-900 mb-6'>
+                  Sales Trend
+                </h3>
+                <div className='h-[300px] w-full'>
+                  {salesTrend.length > 0 ? (
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <AreaChart data={salesTrend}>
+                        <defs>
+                          <linearGradient
+                            id='colorRevenue'
+                            x1='0'
+                            y1='0'
+                            x2='0'
+                            y2='1'
+                          >
+                            <stop
+                              offset='5%'
+                              stopColor='#2563eb'
+                              stopOpacity={0.1}
+                            />
+                            <stop
+                              offset='95%'
+                              stopColor='#2563eb'
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id='colorProfit'
+                            x1='0'
+                            y1='0'
+                            x2='0'
+                            y2='1'
+                          >
+                            <stop
+                              offset='5%'
+                              stopColor='#10b981'
+                              stopOpacity={0.1}
+                            />
+                            <stop
+                              offset='95%'
+                              stopColor='#10b981'
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='#f3f4f6'
                         />
-                      </div>
-                      <div className='text-xs text-gray-400 mt-1 text-right'>
-                        Rp {product.revenue.toLocaleString()}
-                      </div>
+                        <XAxis
+                          dataKey='date'
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          dy={10}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          tickFormatter={yAxisFormatter}
+                        />
+                        <Tooltip
+                          contentStyle={TOOLTIP_STYLE}
+                          formatter={tooltipFormatter}
+                        />
+                        <Legend />
+                        <Area
+                          type='monotone'
+                          dataKey='revenue'
+                          name='Revenue'
+                          stroke='#2563eb'
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill='url(#colorRevenue)'
+                        />
+                        <Area
+                          type='monotone'
+                          dataKey='profit'
+                          name='Profit'
+                          stroke='#10b981'
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill='url(#colorProfit)'
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className='h-full flex flex-col items-center justify-center text-gray-400'>
+                      <MdShowChart size={48} className='mb-2 opacity-50' />
+                      <p>No data available yet</p>
                     </div>
-                  ))
-                ) : (
-                  <div className='h-[200px] flex flex-col items-center justify-center text-gray-400'>
-                    <MdShoppingBag size={48} className='mb-2 opacity-50' />
-                    <p>No sales yet</p>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+
+              {/* Top Products */}
+              <div className='bg-white rounded-2xl p-6 border border-gray-200 shadow-sm'>
+                <h3 className='text-lg font-bold text-gray-900 mb-6'>
+                  Top Products
+                </h3>
+                <div className='space-y-6'>
+                  {topProducts.length > 0 ? (
+                    topProducts.map((product, index) => (
+                      <div key={product.id} className='relative'>
+                        <div className='flex justify-between items-center mb-1 relative z-10'>
+                          <span className='font-medium text-gray-900 truncate max-w-[60%]'>
+                            {index + 1}. {product.name}
+                          </span>
+                          <span className='text-sm text-gray-500'>
+                            {product.quantity} sold
+                          </span>
+                        </div>
+                        <div className='w-full bg-gray-100 rounded-full h-2 overflow-hidden'>
+                          <div
+                            className='bg-blue-600 h-2 rounded-full'
+                            style={{
+                              width: `${
+                                topProducts[0]?.quantity
+                                  ? (product.quantity /
+                                      topProducts[0].quantity) *
+                                    100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <div className='text-xs text-gray-400 mt-1 text-right'>
+                          Rp {product.revenue.toLocaleString()}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='h-[200px] flex flex-col items-center justify-center text-gray-400'>
+                      <MdShoppingBag size={48} className='mb-2 opacity-50' />
+                      <p>No sales yet</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

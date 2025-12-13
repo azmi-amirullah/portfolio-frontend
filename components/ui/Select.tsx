@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactSelect, { Props as SelectProps, GroupBase } from 'react-select';
 
 export function Select<
@@ -65,6 +64,8 @@ export function Select<
     />
   );
 }
+
+Select.displayName = 'Select';
 
 // Re-export common types for convenience
 export type { SingleValue, MultiValue, ActionMeta } from 'react-select';

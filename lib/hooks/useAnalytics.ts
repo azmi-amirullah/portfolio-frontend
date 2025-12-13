@@ -1,7 +1,12 @@
-import { useState, useEffect, useMemo, startTransition } from 'react';
+import { useState, useEffect, useMemo, startTransition, useRef } from 'react';
 import { cashierService, Transaction } from '@/lib/services/cashier-service';
 
 export type DateRange = 'today' | 'last7' | 'last30' | 'all';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const DAYS_LAST_7 = 7;
+const DAYS_LAST_30 = 30;
+const TOP_PRODUCTS_LIMIT = 5;
 
 export interface DailySales {
   date: string; // "Mon", "Tue" or "Dec 12"
@@ -38,24 +43,30 @@ export function useAnalytics(
 ) {
   const [sales, setSales] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const data = await cashierService.getSalesHistory();
 
-        startTransition(() => {
-          setSales(data);
-          setIsLoading(false);
-        });
+        if (isMountedRef.current) {
+          startTransition(() => {
+            setSales(data);
+            setIsLoading(false);
+          });
+        }
       } catch (error) {
         console.error('Failed to load analytics data:', error);
-        setIsLoading(false);
+        if (isMountedRef.current) setIsLoading(false);
       }
     };
 
     loadData();
-    loadData();
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   // Extract unique products for filter dropdown
@@ -95,10 +106,10 @@ export function useAnalytics(
           cutoffDate = today;
           break;
         case 'last7':
-          cutoffDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          cutoffDate = new Date(today.getTime() - DAYS_LAST_7 * MS_PER_DAY);
           break;
         case 'last30':
-          cutoffDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+          cutoffDate = new Date(today.getTime() - DAYS_LAST_30 * MS_PER_DAY);
           break;
         default:
           cutoffDate = new Date(0); // Should not happen given 'all' check
@@ -201,7 +212,7 @@ export function useAnalytics(
 
     const topProducts = Array.from(productStats.values())
       .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 5)
+      .slice(0, TOP_PRODUCTS_LIMIT)
       .map((p, index) => ({
         id: String(index),
         ...p,
@@ -232,13 +243,15 @@ export function useAnalytics(
       await cashierService.syncSalesWithBackend();
       const data = await cashierService.getSalesHistory();
 
-      startTransition(() => {
-        setSales(data);
-        setIsRefreshing(false);
-      });
+      if (isMountedRef.current) {
+        startTransition(() => {
+          setSales(data);
+          setIsRefreshing(false);
+        });
+      }
     } catch (error) {
       console.error('Failed to sync analytics data:', error);
-      setIsRefreshing(false);
+      if (isMountedRef.current) setIsRefreshing(false);
     }
   };
 
