@@ -65,7 +65,7 @@ export default function InventoryPage() {
               className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
             >
               <MdAdd size={20} />
-              <span>Add Product</span>
+              <span>New</span>
             </Button>
           </>
         }
@@ -227,7 +227,7 @@ export default function InventoryPage() {
         maxWidth='4xl'
         title={
           !editingProduct
-            ? 'Add New Product'
+            ? 'New Product'
             : isEditMode
             ? 'Edit Product'
             : 'Product Details'

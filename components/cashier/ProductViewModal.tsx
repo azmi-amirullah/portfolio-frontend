@@ -225,7 +225,7 @@ export function ProductViewModal({ product, onEdit }: ProductViewModalProps) {
           className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800'
         >
           <MdEdit size={16} />
-          Edit Product
+          Edit
         </Button>
       </div>
     </div>

@@ -239,7 +239,7 @@ export default function ProductForm({
           className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800'
         >
           <MdSave size={16} />
-          Save Product
+          Save
         </Button>
       </div>
     </form>
