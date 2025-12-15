@@ -106,7 +106,7 @@ export default function ProductForm({
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!barcode || !name || !price || !buyPrice) return;
+    if (!name || !price) return;
 
     const allProducts = await cashierService.getProducts();
     const duplicate = allProducts.find(
@@ -133,10 +133,10 @@ export default function ProductForm({
 
     const product: Product = {
       id: initialProduct?.id || name,
-      barcode,
+      barcode: barcode || '',
       name,
       price: parseFloat(price),
-      buyPrice: parseFloat(buyPrice),
+      buyPrice: buyPrice ? parseFloat(buyPrice) : 0,
       stock: finalBatches,
     };
 
@@ -164,11 +164,12 @@ export default function ProductForm({
             value={barcode}
             onChange={(e) => setBarcode(e.target.value)}
             className={getInputClass(barcode, initialProduct?.barcode)}
-            required
           />
         </div>
         <div>
-          <label className='block font-medium'>Product Name</label>
+          <label className='block font-medium'>
+            Product Name <span className='text-red-600'>*</span>
+          </label>
           <input
             type='text'
             value={name}
@@ -187,12 +188,13 @@ export default function ProductForm({
               buyPrice,
               initialProduct?.buyPrice?.toString()
             )}
-            required
             min='0'
           />
         </div>
         <div>
-          <label className='block font-medium'>Sell Price</label>
+          <label className='block font-medium'>
+            Sell Price <span className='text-red-600'>*</span>
+          </label>
           <input
             type='number'
             value={price}

@@ -11,6 +11,7 @@ import {
 import { IoArrowUndoCircle } from 'react-icons/io5';
 import { Button } from '@/components/ui/Button';
 import { Table } from './Table';
+import { toast } from 'react-toastify';
 
 interface ExpirationManagerProps {
   batches: StockBatch[];
@@ -32,43 +33,49 @@ export default function ExpirationManager({
   deletedBatchIds,
 }: ExpirationManagerProps) {
   const [newExpiration, setNewExpiration] = useState('');
-  const [newQuantity, setNewQuantity] = useState<number>(1);
+  const [newQuantity, setNewQuantity] = useState<string>('1');
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
   const [editExpiration, setEditExpiration] = useState('');
-  const [editQuantity, setEditQuantity] = useState<number>(0);
+  const [editQuantity, setEditQuantity] = useState<string>('0');
 
   const handleAdd = () => {
-    if (!newExpiration || newQuantity <= 0) return;
+    const qty = parseInt(newQuantity) || 0;
+    if (!newExpiration) return;
+    if (newQuantity === '' || qty <= 0) {
+      toast.error('Quantity must be greater than 0');
+      return;
+    }
 
     onAddBatch({
       expirationDate: newExpiration,
       addedDate: new Date().toISOString(),
-      quantity: newQuantity,
+      quantity: qty,
     });
 
     setNewExpiration('');
-    setNewQuantity(1);
+    setNewQuantity('1');
   };
 
   const startEditing = (batch: StockBatch) => {
     setEditingBatchId(batch.addedDate);
     setEditExpiration(batch.expirationDate);
-    setEditQuantity(batch.quantity);
+    setEditQuantity(batch.quantity.toString());
   };
 
   const cancelEditing = () => {
     setEditingBatchId(null);
     setEditExpiration('');
-    setEditQuantity(0);
+    setEditQuantity('0');
   };
 
   const saveEditing = (batch: StockBatch) => {
     if (!onUpdateBatch) return;
+    const qty = editQuantity === '' ? 0 : parseInt(editQuantity) || 0;
 
     onUpdateBatch({
       ...batch,
       expirationDate: editExpiration,
-      quantity: editQuantity,
+      quantity: qty,
     });
     setEditingBatchId(null);
   };
@@ -86,7 +93,7 @@ export default function ExpirationManager({
             value={newExpiration}
             onChange={(e) => setNewExpiration(e.target.value)}
             onClick={(e) => e.currentTarget.showPicker()}
-            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer'
+            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer bg-white'
           />
         </div>
         <div className='w-24'>
@@ -95,14 +102,14 @@ export default function ExpirationManager({
             type='number'
             min='1'
             value={newQuantity}
-            onChange={(e) => setNewQuantity(parseInt(e.target.value) || 0)}
-            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600'
+            onChange={(e) => setNewQuantity(e.target.value)}
+            className='w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white'
           />
         </div>
         <Button
           type='button'
           onClick={handleAdd}
-          disabled={!newExpiration || newQuantity <= 0}
+          disabled={!newExpiration}
           className='flex items-center gap-1 bg-blue-600 hover:bg-blue-800 h-auto py-1.5 px-3'
         >
           <MdAdd size={16} /> Add
@@ -165,9 +172,7 @@ export default function ExpirationManager({
                             type='number'
                             min='0'
                             value={editQuantity}
-                            onChange={(e) =>
-                              setEditQuantity(parseInt(e.target.value) || 0)
-                            }
+                            onChange={(e) => setEditQuantity(e.target.value)}
                             className='w-full px-2 py-1.5 border border-gray-200 rounded'
                           />
                         </div>
@@ -430,9 +435,7 @@ export default function ExpirationManager({
                       type='number'
                       min='0'
                       value={editQuantity}
-                      onChange={(e) =>
-                        setEditQuantity(parseInt(e.target.value) || 0)
-                      }
+                      onChange={(e) => setEditQuantity(e.target.value)}
                       className='w-20 px-2 py-1 border border-gray-200 rounded'
                     />
                   );
