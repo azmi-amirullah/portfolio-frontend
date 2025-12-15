@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LuArrowUp } from 'react-icons/lu';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
 
 export default function ScrollToTop() {
@@ -28,16 +29,24 @@ export default function ScrollToTop() {
   }, []);
 
   return (
-    <>
+    <AnimatePresence>
       {isVisible && (
-        <Button
-          onClick={scrollToTop}
-          className='fixed bottom-8 right-8 rounded-full p-3 h-auto shadow-lg hover:shadow-xl z-40 border border-white'
-          aria-label='Scroll to top'
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
+          className='fixed bottom-8 right-8 z-40'
         >
-          <LuArrowUp size={20} />
-        </Button>
+          <Button
+            onClick={scrollToTop}
+            className='rounded-full p-3 h-auto shadow-lg hover:shadow-xl border border-white'
+            aria-label='Scroll to top'
+          >
+            <LuArrowUp size={20} />
+          </Button>
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   );
 }

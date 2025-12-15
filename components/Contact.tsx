@@ -17,7 +17,9 @@ export default function Contact() {
     const newErrors: Record<string, string> = {};
     if (formData.name.length < 2)
       newErrors.name = 'Name must be at least 2 characters.';
-    if (!/\S+@\S+\.\S+/.test(formData.email))
+    if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+    )
       newErrors.email = 'Please enter a valid email address.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

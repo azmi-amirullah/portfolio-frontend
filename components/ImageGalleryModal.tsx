@@ -77,6 +77,21 @@ export default function ImageGalleryModal({
     }
   }, [currentIndex, isOpen]);
 
+  // Preload adjacent images for smoother navigation
+  useEffect(() => {
+    if (!isOpen || images.length <= 1) return;
+
+    const imagesToPreload = [
+      images[currentIndex - 1],
+      images[currentIndex + 1],
+    ].filter(Boolean);
+
+    imagesToPreload.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [currentIndex, images, isOpen]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -97,10 +112,11 @@ export default function ImageGalleryModal({
                   variant='ghost'
                   data-index={idx}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`relative w-20 h-14 p-0 rounded-md overflow-hidden border-2 transition-all shrink-0 hover:bg-transparent ${currentIndex === idx
-                    ? 'border-primary ring-2 ring-primary/20'
-                    : 'border-transparent opacity-40 hover:opacity-100'
-                    }`}
+                  className={`relative w-20 h-14 p-0 rounded-md overflow-hidden border-2 transition-all shrink-0 hover:bg-transparent ${
+                    currentIndex === idx
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-transparent opacity-40 hover:opacity-100'
+                  }`}
                 >
                   <Image
                     src={img}
@@ -134,7 +150,6 @@ export default function ImageGalleryModal({
                   fill
                   className='object-contain'
                   priority
-                  unoptimized={true}
                 />
               </div>
             </motion.div>
@@ -150,10 +165,11 @@ export default function ImageGalleryModal({
               variant='ghost'
               onClick={prevImage}
               disabled={currentIndex === 0}
-              className={`absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${currentIndex === 0
-                ? 'opacity-0 pointer-events-none'
-                : 'opacity-100'
-                }`}
+              className={`absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${
+                currentIndex === 0
+                  ? 'opacity-0 pointer-events-none'
+                  : 'opacity-100'
+              }`}
             >
               <LuChevronLeft size={24} />
             </Button>
@@ -161,10 +177,11 @@ export default function ImageGalleryModal({
               variant='ghost'
               onClick={nextImage}
               disabled={currentIndex === images.length - 1}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${currentIndex === images.length - 1
-                ? 'opacity-0 pointer-events-none'
-                : 'opacity-100'
-                }`}
+              className={`absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${
+                currentIndex === images.length - 1
+                  ? 'opacity-0 pointer-events-none'
+                  : 'opacity-100'
+              }`}
             >
               <LuChevronRight size={24} />
             </Button>

@@ -64,6 +64,8 @@ export default function Hero() {
             <div className='mt-12 flex items-center gap-6 text-muted-foreground'>
               <a
                 href='https://github.com/azmi-amirullah'
+                target='_blank'
+                rel='noopener noreferrer'
                 className='hover:text-secondary transition-colors'
                 aria-label='GitHub'
               >
@@ -71,6 +73,8 @@ export default function Hero() {
               </a>
               <a
                 href='https://www.linkedin.com/in/azmi-amirullah/'
+                target='_blank'
+                rel='noopener noreferrer'
                 className='hover:text-secondary transition-colors'
                 aria-label='LinkedIn'
               >

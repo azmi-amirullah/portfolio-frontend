@@ -28,7 +28,7 @@ export default function About() {
             <div className='absolute -top-4 -left-4 w-24 h-24 bg-secondary/10 rounded-full blur-xl'></div>
             <div className='absolute -bottom-4 -right-4 w-32 h-32 bg-accent/10 rounded-full blur-xl'></div>
             <Image
-              src={Img.src}
+              src={Img}
               alt='img of me'
               width={800}
               height={450}

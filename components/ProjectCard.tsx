@@ -3,18 +3,11 @@
 import { motion } from 'framer-motion';
 import { LuExternalLink } from 'react-icons/lu';
 import Image from 'next/image';
-
 import { useState } from 'react';
 import ImageGalleryModal from './ImageGalleryModal';
+import { Project } from '@/lib/types/project';
 
-interface ProjectCardProps {
-  title: string;
-  description: string;
-  tags: string[];
-  images?: string[];
-  webUrl: string;
-  repoUrl: string;
-}
+type ProjectCardProps = Project;
 
 export default function ProjectCard({
   title,
@@ -38,8 +31,9 @@ export default function ProjectCard({
       >
         <div className='group overflow-hidden border border-border rounded-lg hover:border-secondary/50 transition-all duration-300 hover:shadow-lg bg-white h-full flex flex-col'>
           <div
-            className={`relative overflow-hidden aspect-video ${galleryImages.length > 0 ? 'cursor-pointer' : ''
-              }`}
+            className={`relative overflow-hidden aspect-video ${
+              galleryImages.length > 0 ? 'cursor-pointer' : ''
+            }`}
             onClick={() => galleryImages.length > 0 && setIsGalleryOpen(true)}
           >
             <div className='absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors duration-300 z-10 mix-blend-multiply'></div>
