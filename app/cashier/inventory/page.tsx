@@ -180,6 +180,7 @@ export default function InventoryPage() {
                         handleViewClick(product);
                       }}
                       className='text-green-600 hover:text-green-800 p-2 h-auto mr-2'
+                      aria-label='View product'
                     >
                       <MdVisibility size={18} />
                     </Button>
@@ -190,6 +191,7 @@ export default function InventoryPage() {
                         handleEditClick(product);
                       }}
                       className='text-blue-600 hover:text-blue-800 p-2 h-auto mr-2'
+                      aria-label='Edit product'
                     >
                       <MdEdit size={18} />
                     </Button>
@@ -200,6 +202,7 @@ export default function InventoryPage() {
                         handleDeleteClick(product);
                       }}
                       className='text-red-600 hover:text-red-800 p-2 h-auto'
+                      aria-label='Delete product'
                     >
                       <MdDelete size={18} />
                     </Button>
