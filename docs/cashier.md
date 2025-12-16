@@ -1,6 +1,6 @@
 # Cashier Module - Technical Documentation
 
-**Last Updated:** 2025-12-12  
+**Last Updated:** 2025-12-15  
 **Tech Stack:** Next.js 15, React 19, TypeScript, Tailwind CSS
 
 ---
@@ -25,6 +25,7 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 - **Sales Processing** - Barcode scanning, cart management, payment processing
 - **Inventory Management** - Product CRUD, stock batches with expiration tracking
 - **Sales History** - Transaction logs with profit calculation
+- **Analytics Dashboard** - Revenue, profit, and sales trend visualization
 - **Local Caching** - localStorage cache to reduce API calls
 
 ---
@@ -40,17 +41,19 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 │  ├─ layout.tsx + CashierLayoutClient.tsx                     │
 │  ├─ /pos/page.tsx                                            │
 │  ├─ /inventory/page.tsx                                      │
-│  └─ /history/page.tsx                                        │
+│  ├─ /history/page.tsx                                        │
+│  └─ /dashboard/page.tsx                                      │
 ├─────────────────────────────────────────────────────────────┤
 │                     Component Layer                          │
 │  ├─ Layout: MobileHeader, DesktopSidebar, BottomNav          │
 │  ├─ POS: ProductSearchDropdown, PaymentModal, BarcodeScanner │
 │  ├─ Inventory: ProductForm, ExpirationManager, Table         │
-│  └─ Shared: Modal, Button, Loading                           │
+│  └─ Shared: Modal, Button, Loading, Select, ErrorBoundary    │
 ├─────────────────────────────────────────────────────────────┤
 │                       Hooks Layer                            │
 │  ├─ useCart (cart state management)                          │
-│  └─ useInventory (product list + CRUD state)                 │
+│  ├─ useInventory (product list + CRUD state)                 │
+│  └─ useAnalytics (dashboard data + filtering)                │
 ├─────────────────────────────────────────────────────────────┤
 │                      Service Layer                           │
 │  ├─ cashierService (data operations + sync)                  │
@@ -181,6 +184,7 @@ Manages inventory page state including modals.
 ```typescript
 const {
   // Data
+  products,
   filteredProducts,
   isLoading,
   searchTerm,
@@ -191,14 +195,45 @@ const {
   editingProduct,
   isEditMode,
   isDeleteModalOpen,
+  productToDelete,
 
   // Actions
+  setSearchTerm,
+  setIsEditMode,
   handleSync,
   handleAddClick,
+  handleViewClick,
   handleEditClick,
   handleSave,
+  handleCloseModal,
+  handleDeleteClick,
   confirmDelete,
+  handleCloseDeleteModal,
 } = useInventory();
+```
+
+### useAnalytics
+
+**Location:** `lib/hooks/useAnalytics.ts`
+
+Manages analytics dashboard data with date range and product filtering.
+
+```typescript
+const {
+  // Computed analytics
+  summary, // { totalRevenue, totalProfit, totalMargin, totalTransactions, averageOrderValue, itemsSold }
+  salesTrend, // DailySales[] for chart
+  topProducts, // TopProduct[] ranked by quantity
+  uniqueProducts, // ProductOption[] for filter dropdown
+
+  // State
+  isLoading,
+  isRefreshing,
+  isEmpty,
+
+  // Actions
+  refresh, // () => Promise<void>
+} = useAnalytics(dateRange, filterProductId);
 ```
 
 ---
@@ -228,9 +263,17 @@ const {
 
 ### History (`/cashier/history`)
 
-- Transaction list with filters (Today, Week, Month, All)
+- Transaction list with filters (Recent 10, Today, Yesterday, This Week, This Month, All Time)
 - Revenue and profit calculation
 - Sale details modal
+
+### Dashboard (`/cashier/dashboard`)
+
+- Analytics cards (revenue, profit, margin, transactions)
+- Sales trend chart with Recharts
+- Top products by quantity
+- Date range filter (Today, Last 7 Days, Last 30 Days, All Time)
+- Product filter dropdown
 
 ---
 
@@ -266,6 +309,24 @@ const {
 | `MobileProductCard`  | Product card (mobile)     |
 | `Table`              | Generic data table        |
 | `DeleteConfirmModal` | Deletion confirmation     |
+
+### History Components
+
+| Component          | Purpose                           |
+| ------------------ | --------------------------------- |
+| `SaleDetailsModal` | Transaction details popup         |
+| `PageHeader`       | Reusable page header with actions |
+
+### Shared UI Components (`components/ui`)
+
+| Component       | Purpose                     |
+| --------------- | --------------------------- |
+| `Modal`         | Base modal wrapper          |
+| `Button`        | Styled button component     |
+| `Loading`       | Loading spinner             |
+| `Select`        | Styled react-select wrapper |
+| `Turnstile`     | Cloudflare Turnstile widget |
+| `ErrorBoundary` | React error boundary        |
 
 ### Settings
 
@@ -322,13 +383,14 @@ On dark BG           → text-white or text-white/80 (secondary)
 
 The frontend communicates with Strapi backend via:
 
-| Endpoint                      | Method | Purpose               |
-| ----------------------------- | ------ | --------------------- |
-| `/api/frontend/getProducts`   | GET    | Fetch all products    |
-| `/api/frontend/saveProduct`   | POST   | Create/update product |
-| `/api/frontend/deleteProduct` | POST   | Delete product        |
-| `/api/frontend/getSales`      | GET    | Fetch sales history   |
-| `/api/frontend/processSale`   | POST   | Record new sale       |
+| Endpoint                      | Method | Purpose                 |
+| ----------------------------- | ------ | ----------------------- |
+| `/api/frontend/getProducts`   | GET    | Fetch all products      |
+| `/api/frontend/addProduct`    | POST   | Create new product      |
+| `/api/frontend/editProduct`   | POST   | Update existing product |
+| `/api/frontend/deleteProduct` | POST   | Delete product          |
+| `/api/frontend/getSales`      | GET    | Fetch sales history     |
+| `/api/frontend/saveSale`      | POST   | Record new sale         |
 
 All endpoints require JWT authentication via `Authorization: Bearer <token>` header.
 
@@ -339,4 +401,4 @@ All endpoints require JWT authentication via `Authorization: Bearer <token>` hea
 | Variable                         | Purpose                     |
 | -------------------------------- | --------------------------- |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile widget |
-| `NEXT_PUBLIC_API_URL`            | Backend API base URL        |
+| `NEXT_PUBLIC_STRAPI_URL`         | Backend API base URL        |
