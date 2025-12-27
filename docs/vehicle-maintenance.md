@@ -1,6 +1,6 @@
 # Garage (Vehicle Maintenance) Module - Technical Documentation
 
-**Last Updated:** 2025-12-16
+**Last Updated:** 2025-12-27
 **Tech Stack:** Next.js 15, React 19, Tailwind CSS, Strapi v5
 
 ---
@@ -20,80 +20,153 @@ The **Garage** module is a digital service book designed to help users track mai
 
 ## 2. Architecture
 
-We will extend the existing architecture used in the Cashier module.
+Following the Cashier module pattern:
 
 - **Frontend**: Next.js App Router (`/garage` base route).
-- **Backend**: Existing Strapi instance.
-- **State**: `garage-service.ts` (Singleton pattern) handling data fetching and optimistic UI.
+- **Backend**: Existing Strapi instance with single JSON-blob collection.
+- **State**: `garage-service.ts` (Singleton pattern) handling data fetching and caching.
 - **Auth**: Reuses `auth-service.ts` JWT token.
+
+### Caching Strategy: Cache-First with Backend Sync
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Data Flow                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   READ (Page Load)                                           │
+│   ─────────────────                                          │
+│   1. Check localStorage                                      │
+│   2. If empty → fetch from backend → save to localStorage    │
+│   3. If exists → use cached data (no fetch)                  │
+│                                                              │
+│   WRITE (Add/Edit/Delete)                                    │
+│   ────────────────────────                                   │
+│   1. Send to backend FIRST                                   │
+│   2. If success → update localStorage                        │
+│   3. If fail → show error, localStorage unchanged            │
+│                                                              │
+│   SYNC (Manual Button)                                       │
+│   ────────────────────                                       │
+│   1. Force fetch from backend                                │
+│   2. Overwrite localStorage with fresh data                  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Operation    | Backend  | localStorage | Notes                                |
+| ------------ | -------- | ------------ | ------------------------------------ |
+| Page Load    | ❌ Skip  | ✅ Read      | Only fetch if cache empty            |
+| Add/Edit/Del | ✅ First | ✅ After     | Backend = source of truth            |
+| Sync Button  | ✅ Force | ✅ Overwrite | Manual refresh for multi-device sync |
+| Menu Change  | ❌ Skip  | ✅ Read      | No re-fetch when switching pages     |
+
+> [!IMPORTANT] > **Backend = Source of Truth**: All writes go to backend first. localStorage is just a cache to reduce API calls and enable fast page transitions.
+
+### User Data Isolation
+
+Each user can only see their own vehicles.
+
+| Layer      | Implementation                                         |
+| ---------- | ------------------------------------------------------ |
+| **Strapi** | `user` relation (oneToOne) - filter queries by user ID |
+| **Cache**  | localStorage key scoped: `garage_{username}_data`      |
+
+> [!WARNING] > **Backend must enforce**: Filter all queries by `user = ctx.state.user.id`.
+> Frontend filtering alone is NOT secure.
 
 ---
 
-## 3. Data Models (Strapi + Frontend Types)
+## 3. Data Models
 
-### 3.1. Vehicle (`Vehicle`)
+### Storage Pattern
 
-_The top-level container._
+All data is stored in a **single Strapi collection** with a JSON field containing the entire data structure per user.
+
+> [!IMPORTANT] > **Strapi Collection**: `vehicle-maintenance`
+>
+> | Field  | Type     | Description                            |
+> | ------ | -------- | -------------------------------------- |
+> | `name` | string   | User identifier                        |
+> | `data` | JSON     | Contains all vehicles with nested data |
+> | `user` | relation | oneToOne with User                     |
 
 ```typescript
-interface Vehicle {
-  id: string;
-  userId: string; // Relation to User
-  type: 'car' | 'motorcycle';
-  name: string; // e.g., "Daily Driver"
-  brand: string; // e.g., "Honda" (Renamed from 'make' for clarity)
-  model: string; // e.g., "Civic"
-  year: number;
-  plateNumber: string;
-  // image removed for MVP
-  currentOdometer: number; // Updated automatically by latest Service Log
+// Root structure stored in Strapi 'data' JSON field
+interface VehicleMaintenanceData {
+  vehicles: Vehicle[];
 }
 ```
 
-### 3.2. Maintenance Schedule (`MaintenanceItem`)
+---
 
-_The "rules" for maintenance. Can be a template or custom user entry._
+### 3.1. Vehicle
+
+_The top-level container. Each vehicle contains its own maintenance rules and service history._
+
+```typescript
+interface Vehicle {
+  id: string; // UUID or timestamp-based
+  type: 'car' | 'motorcycle';
+  name: string; // e.g., "Daily Driver"
+  brand: string; // e.g., "Honda"
+  model: string; // e.g., "Beat", "Civic"
+  year: number;
+  plateNumber: string;
+  currentOdometer: number; // Updated by latest Service Log
+
+  // Embedded arrays (no separate collections needed)
+  maintenanceItems: MaintenanceItem[];
+  serviceLogs: ServiceLog[];
+}
+```
+
+---
+
+### 3.2. Maintenance Item (Embedded)
+
+_The "rules" for maintenance. Embedded inside each Vehicle._
+
+> [!NOTE]
+> No `vehicleId` needed - items are already nested inside their parent Vehicle.
+> This allows different intervals per vehicle (motorcycle 2000km vs car 5000km).
 
 ```typescript
 interface MaintenanceItem {
   id: string;
-  vehicleId: string;
   name: string; // e.g., "Engine Oil Change"
 
-  // The Rule
-  intervalKm: number; // e.g., 4000
-  intervalMonths: number; // e.g., 6
+  // The Rule (at least one required)
+  intervalKm?: number; // e.g., 2000 for motorcycle, 5000 for car
+  intervalMonths?: number; // e.g., 3 for motorcycle, 6 for car
 
-  // The State (Calculated)
+  // The State (updated when service logged)
   lastPerformedDate?: string; // ISO Date
   lastPerformedOdometer?: number;
-
-  // Derived Status (Frontend specific)
-  // status: 'ok' | 'due_soon' | 'overdue'
 }
 ```
 
-### 3.3. Service Log (`ServiceLog`)
+---
 
-_The content of a "Maintenance Record" input._
+### 3.3. Service Log (Embedded)
+
+_Records of completed maintenance. Embedded inside each Vehicle._
 
 ```typescript
 interface ServiceLog {
   id: string;
-  vehicleId: string;
   date: string; // ISO Date of service
-  odometer: number; // The odometer reading AT THE TIME of service
-  garageName?: string; // Optional: "Official Dealer", "Self"
-  cost: number;
+  odometer: number; // Odometer reading at time of service
+  garageName?: string; // e.g., "Official Dealer", "Self"
   notes?: string;
 
   // What was done?
-  items: ServiceLogItem[]; // Array of tasks performed
+  items: ServiceLogItem[];
 }
 
 interface ServiceLogItem {
-  maintenanceItemId: string; // Link to the Schedule rule (e.g., linked to "Oil Change")
-  name: string; // Snapshot of the name
+  maintenanceItemId: string; // Reference to MaintenanceItem.id within same vehicle
+  cost?: number; // Cost for this specific item
 }
 ```
 
@@ -105,83 +178,111 @@ interface ServiceLogItem {
 
 To determine if a maintenance item is due, check both **Distance** and **Time**:
 
-1.  **Distance Due**: `LastPerformedOdometer + IntervalKm`
-2.  **Date Due**: `LastPerformedDate + IntervalMonths`
-3.  **Current Status**:
-    - Compare `Vehicle.currentOdometer` vs `Distance Due`.
-    - Compare `Today` vs `Date Due`.
-    - **Worst case wins**: If distance is okay but date is passed, it is **Overdue**.
+1. **Distance Due**: `LastPerformedOdometer + IntervalKm`
+2. **Date Due**: `LastPerformedDate + IntervalMonths`
+3. **Current Status**:
+   - Compare `Vehicle.currentOdometer` vs `Distance Due`.
+   - Compare `Today` vs `Date Due`.
+   - **Worst case wins**: If distance is okay but date is passed, it is **Overdue**.
 
-### Adding a Service Log (The Workflow)
+### Adding a Service Log (Workflow)
 
-When a user submits a standardized "Service Log":
+When a user submits a "Service Log":
 
-1.  **User Input**:
-    - Current Odometer (e.g., 15,000 km)
-    - Services done (Checklist: [x] Oil, [x] Filter)
-2.  **Action**:
-    - Save `ServiceLog` to backend.
-    - **Update Vehicle**: Set `Vehicle.currentOdometer` to the new 15,000 km.
-    - **Update Schedules**: For every checked item (Oil, Filter), update their `lastPerformedOdometer` (15,000) and `lastPerformedDate` (today).
+1. **User Input**:
+   - Current Odometer (e.g., 15,000 km)
+   - Services done (Checklist: [x] Oil, [x] Filter)
+   - Cost per item (optional)
+2. **Action**:
+   - Update the vehicle's `serviceLogs` array.
+   - **Update Odometer**: Set `Vehicle.currentOdometer` **ONLY IF** new value > current.
+   - **Update Schedules**: For each checked item, update `lastPerformedOdometer` and `lastPerformedDate`.
+   - Save entire `data` JSON back to Strapi.
+
+> [!CAUTION] > **Odometer Guard**: Only update if `ServiceLog.odometer > Vehicle.currentOdometer`.
+> This allows backdated service logs without corrupting current odometer.
 
 ---
 
-## 5. API Endpoints (Planned)
+## 5. API Endpoints
 
-All endpoints prefixed with `/api/garage`:
+Single collection approach - minimal endpoints:
 
-- `GET /vehicles`: List all user vehicles.
-- `POST /vehicles`: Add a new vehicle.
-- `GET /vehicles/:id`: Get details + schedules + logs.
-- `POST /service-logs`: Create a log (Atomically updates Vehicle + Schedules).
-- `POST /maintenance-items`: Add a custom tracking rule.
+| Endpoint                         | Method | Description                |
+| -------------------------------- | ------ | -------------------------- |
+| `/api/vehicle-maintenances`      | GET    | Get user's data (vehicles) |
+| `/api/vehicle-maintenances`      | POST   | Create initial record      |
+| `/api/vehicle-maintenances/{id}` | PUT    | Update entire data JSON    |
 
 ---
 
 ## 6. UI Structure (Mobile First)
 
-**1. Dashboard (`/garage`)**
+### Navigation Menu
 
-- List of Vehicle Cards.
-- Each card shows: Name, Plate, Status Badge (Green/Yellow/Red).
-- Floating Action Button: `+ Add Vehicle`.
+Three main menu items (same pattern as Cashier with `/pos`, `/inventory`, `/history`):
 
-**2. Vehicle Detail (`/garage/[id]`)**
+| Route          | Menu Label  | Purpose                       |
+| -------------- | ----------- | ----------------------------- |
+| `/garage`      | Garage      | Vehicle list + CRUD           |
+| `/maintenance` | Maintenance | Maintenance items per vehicle |
+| `/service`     | Service Log | Service history + add new log |
 
-- **Header**: Large Odometer display (Editable).
-- **Tab 1: Maintenance (Status)**
-  - List of items with Progress Bars.
-  - Example: "Oil Change: 80% life left (1,500km)".
-  - Click item -> Log just this service.
-- **Tab 2: History**
-  - Vertical timeline of Service Logs.
-- **FAB**: `+ Service` (Opens "New Entry" form).
+> [!IMPORTANT] > **Vehicle Selection**: `/maintenance` and `/service` pages require selecting a vehicle first.
+>
+> - **Methods**: Dropdown, URL query param (e.g. `?vehicleId=123`), or localStorage preference.
 
-**3. New Entry Form**
+---
 
-- Input: Date (Default today).
-- Input: Current Odometer.
-- Section: "What did you do?"
-  - List of known Maintenance Items as Toggle/Checkbox.
-  - "Other" text field.
-- Input: Cost.
-- Input: Location/Notes.
+### Pages
+
+**1. Garage (`/garage`)**
+
+- List of Vehicle Cards
+- Each card: Name, Brand/Model, Plate, Status Badge (Green/Yellow/Red)
+- Actions: Add, Edit, Delete vehicle
+- **Quick Actions**:
+  - `Maintenance` icon → Navigates to `/maintenance` with this vehicle selected
+  - `Service` icon → Navigates to `/service` with this vehicle selected
+
+**2. Maintenance (`/maintenance`)**
+
+- Vehicle selector dropdown (required)
+- List of maintenance items for selected vehicle
+- Each item: Name, Interval (km/months), Status progress bar
+- Actions: Add, Edit, Delete maintenance rules
+
+**3. Service Log (`/service`)**
+
+- Vehicle selector dropdown (required)
+- Timeline of service logs for selected vehicle
+- Each log: Date, Odometer, Items performed, Total cost
+- FAB: `+ Log Service` (opens form)
+
+**4. Add Service Form (Modal or `/service/new`)**
+
+- Date (Default: today)
+- Current Odometer
+- Checklist of Maintenance Items from selected vehicle
+- Cost per item (optional)
+- Garage name / Notes
 
 ---
 
 ## 7. Implementation Plan
 
-### Phase 1: Backend Setup
+### Phase 1: Backend
 
-1. Create `Vehicle`, `MaintenanceItem`, `ServiceLog` content types in Strapi.
-2. Set up relations and permissions.
+1. ~~Create `vehicle-maintenance` collection in Strapi~~ ✅
+2. Set up permissions for authenticated users.
 
-### Phase 2: Frontend Setup
+### Phase 2: Frontend
 
-1. Create `lib/services/garage-service.ts`.
-2. Scaffold `/garage` pages.
+1. Create `lib/services/garage-service.ts`
+2. Scaffold `/garage` pages with vehicle selection flow.
 
 ### Phase 3: Core Logic
 
-1. Implement "Add Service" flow.
-2. Implement "Status Calculation" logic.
+1. Implement "Add Vehicle" flow.
+2. Implement "Add Service Log" with status updates.
+3. Implement status calculation (ok/due_soon/overdue).
