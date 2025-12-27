@@ -2,6 +2,7 @@ import { MdInventory, MdEdit } from 'react-icons/md';
 import { Product, StockBatch } from '@/lib/services/cashier-service';
 import { Button } from '@/components/ui/Button';
 import { Table } from '@/components/cashier/Table';
+import { formatDate } from '@/lib/utils/date';
 
 interface ProductViewModalProps {
   product: Product & { batches: StockBatch[] };
@@ -59,6 +60,22 @@ export function ProductViewModal({ product, onEdit }: ProductViewModalProps) {
             {product.sold || 0} units
           </div>
         </div>
+        {product.createdAt && (
+          <div>
+            <label className='block font-medium'>Created At</label>
+            <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md'>
+              {formatDate(product.createdAt, { includeTime: true })}
+            </div>
+          </div>
+        )}
+        {product.lastEditAt && (
+          <div>
+            <label className='block font-medium'>Last Edit At</label>
+            <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md'>
+              {formatDate(product.lastEditAt, { includeTime: true })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stock Table */}

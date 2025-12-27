@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback, startTransition } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  startTransition,
+  useMemo,
+} from 'react';
 import {
   Product,
   StockBatch,
@@ -10,11 +16,20 @@ export type ProductWithStock = Product & {
   batches: StockBatch[];
 };
 
+export type SortField = 'name' | 'price' | 'stock' | 'createdAt' | 'lastEditAt';
+export type SortOrder = 'asc' | 'desc';
+
+const DEFAULT_PAGE_SIZE = 25;
+
 export function useInventory() {
   const [products, setProducts] = useState<ProductWithStock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [sortBy, setSortBy] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -117,19 +132,77 @@ export function useInventory() {
     setProductToDelete(null);
   }, []);
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.barcode.includes(searchTerm)
+  const filteredProducts = useMemo(() => {
+    const filtered = products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.barcode.includes(searchTerm)
+    );
+
+    return [...filtered].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'price':
+          comparison = a.price - b.price;
+          break;
+        case 'stock':
+          comparison = a.availableStock - b.availableStock;
+          break;
+        case 'createdAt':
+          const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          comparison = aCreated - bCreated;
+          break;
+        case 'lastEditAt':
+          const aEdit = a.lastEditAt ? new Date(a.lastEditAt).getTime() : 0;
+          const bEdit = b.lastEditAt ? new Date(b.lastEditAt).getTime() : 0;
+          comparison = aEdit - bEdit;
+          break;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [products, searchTerm, sortBy, sortOrder]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(startIndex, startIndex + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, sortOrder]);
+
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(Math.max(1, Math.min(page, totalPages || 1)));
+    },
+    [totalPages]
   );
 
   return {
     // Data
     products,
     filteredProducts,
+    paginatedProducts,
     isLoading,
     searchTerm,
     isSyncing,
+    sortBy,
+    sortOrder,
+
+    // Pagination
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems: filteredProducts.length,
 
     // Modal state
     isModalOpen,
@@ -141,6 +214,10 @@ export function useInventory() {
     // Actions
     setSearchTerm,
     setIsEditMode,
+    setSortBy,
+    setSortOrder,
+    setPageSize,
+    goToPage,
     handleSync,
     handleAddClick,
     handleViewClick,

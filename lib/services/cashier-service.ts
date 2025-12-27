@@ -10,6 +10,8 @@ export interface Product {
   buyPrice: number;
   sold?: number;
   stock?: StockBatch[];
+  createdAt?: string; // ISO timestamp
+  lastEditAt?: string; // ISO timestamp
 }
 
 export interface StockBatch {
@@ -188,26 +190,40 @@ class CashierService {
         throw new Error(errorData?.error?.message || 'Failed to save product');
       }
 
-      // Update local storage directly instead of fetching from backend
+      // Parse response to get product with backend-generated timestamps
+      const responseData = await response.json();
+      const savedProduct = responseData.product;
+
+      // Update local storage with backend response (includes createdAt/lastEditAt)
       const allProducts = this.get<Product>('products');
       const productIndex = allProducts.findIndex(
-        (p) => p.id === productToSave.id
+        (p) => p.id === productToSave.id || p.name === existingProduct?.name
       );
 
+      // Build the product object with all fields from backend response
+      const productWithTimestamps: Product = {
+        id: product.name, // id is always the product name
+        name: product.name,
+        barcode: product.barcode,
+        price: product.price,
+        buyPrice: product.buyPrice,
+        sold: savedProduct?.sold ?? productToSave.sold,
+        stock: product.stock,
+        createdAt: savedProduct?.createdAt,
+        lastEditAt: savedProduct?.lastEditAt,
+      };
+
       if (productIndex >= 0) {
-        // Update existing product
-        allProducts[productIndex] = productToSave;
+        // Update existing product - remove old entry if name changed
+        if (existingProduct && existingProduct.name !== product.name) {
+          allProducts.splice(productIndex, 1);
+          allProducts.push(productWithTimestamps);
+        } else {
+          allProducts[productIndex] = productWithTimestamps;
+        }
       } else {
         // Add new product
-        allProducts.push(productToSave);
-      }
-
-      // If editing and name changed, also update the ID to match the new name
-      if (existingProduct && existingProduct.name !== productToSave.name) {
-        // Update the product ID to the new name for consistency
-        allProducts[
-          productIndex >= 0 ? productIndex : allProducts.length - 1
-        ].id = productToSave.name;
+        allProducts.push(productWithTimestamps);
       }
 
       this.set('products', allProducts);

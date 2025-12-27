@@ -1,4 +1,5 @@
 import { Product } from '@/lib/services/cashier-service';
+import { formatDateCompact } from '@/lib/utils/date';
 
 interface MobileProductCardProps {
   product: Product & { availableStock: number };
@@ -46,6 +47,10 @@ export function MobileProductCard({
             Margin: Rp {margin.toLocaleString()}
           </div>
         </div>
+      </div>
+      <div className='flex justify-between mt-3 pt-3 border-t border-gray-200 text-gray-500'>
+        <span>Created: {formatDateCompact(product.createdAt)}</span>
+        <span>Edited: {formatDateCompact(product.lastEditAt)}</span>
       </div>
     </div>
   );

@@ -79,7 +79,7 @@ const isValidDateRange = (value: string): value is DateRange =>
   DATE_RANGE_OPTIONS.some((opt) => opt.value === value);
 
 export default function DashboardPage() {
-  const [dateRange, setDateRange] = useState<DateRange>('last7');
+  const [dateRange, setDateRange] = useState<DateRange>('last30');
   const [productId, setProductId] = useState<string>('all');
 
   const {

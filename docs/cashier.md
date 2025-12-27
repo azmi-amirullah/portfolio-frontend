@@ -90,6 +90,8 @@ interface Product {
   buyPrice: number; // Cost price
   sold?: number; // Total units sold
   stock?: StockBatch[];
+  createdAt?: string; // ISO timestamp - when product was created
+  lastEditAt?: string; // ISO timestamp - when product was last modified
 }
 ```
 
@@ -179,16 +181,27 @@ const {
 
 **Location:** `lib/hooks/useInventory.ts`
 
-Manages inventory page state including modals.
+Manages inventory page state including sorting, pagination, and modals.
 
 ```typescript
 const {
   // Data
   products,
   filteredProducts,
+  paginatedProducts,
   isLoading,
   searchTerm,
   isSyncing,
+
+  // Sorting
+  sortBy, // 'name' | 'price' | 'stock' | 'createdAt' | 'lastEditAt'
+  sortOrder, // 'asc' | 'desc'
+
+  // Pagination
+  currentPage,
+  pageSize, // Default: 25
+  totalPages,
+  totalItems,
 
   // Modal state
   isModalOpen,
@@ -200,6 +213,10 @@ const {
   // Actions
   setSearchTerm,
   setIsEditMode,
+  setSortBy,
+  setSortOrder,
+  setPageSize,
+  goToPage,
   handleSync,
   handleAddClick,
   handleViewClick,
@@ -319,14 +336,22 @@ const {
 
 ### Shared UI Components (`components/ui`)
 
-| Component       | Purpose                     |
-| --------------- | --------------------------- |
-| `Modal`         | Base modal wrapper          |
-| `Button`        | Styled button component     |
-| `Loading`       | Loading spinner             |
-| `Select`        | Styled react-select wrapper |
-| `Turnstile`     | Cloudflare Turnstile widget |
-| `ErrorBoundary` | React error boundary        |
+| Component       | Purpose                                   |
+| --------------- | ----------------------------------------- |
+| `Modal`         | Base modal wrapper                        |
+| `Button`        | Styled button component                   |
+| `Loading`       | Loading spinner                           |
+| `Select`        | Styled react-select wrapper               |
+| `Pagination`    | Page size selector + prev/next navigation |
+| `Turnstile`     | Cloudflare Turnstile widget               |
+| `ErrorBoundary` | React error boundary                      |
+
+### Utilities (`lib/utils`)
+
+| Utility               | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `formatDate()`        | Format ISO date with optional time |
+| `formatDateCompact()` | Format date as "27 Dec" for mobile |
 
 ### Settings
 

@@ -8,6 +8,8 @@ import {
   MdVisibility,
   MdSync,
   MdDelete,
+  MdArrowUpward,
+  MdArrowDownward,
 } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -15,14 +17,17 @@ import Loading from '@/components/ui/Loading';
 import ProductForm from '@/components/cashier/ProductForm';
 import { PageHeader } from '@/components/cashier/PageHeader';
 import { Table } from '@/components/cashier/Table';
-import { useInventory } from '@/lib/hooks/useInventory';
+import { useInventory, SortField } from '@/lib/hooks/useInventory';
 import { MobileProductCard } from '@/components/cashier/MobileProductCard';
 import { DeleteConfirmModal } from '@/components/cashier/DeleteConfirmModal';
 import { ProductViewModal } from '@/components/cashier/ProductViewModal';
+import { Select } from '@/components/ui/Select';
+import { Pagination } from '@/components/ui/Pagination';
+import { formatDate } from '@/lib/utils/date';
 
 export default function InventoryPage() {
   const {
-    filteredProducts,
+    paginatedProducts,
     isLoading,
     searchTerm,
     isSyncing,
@@ -31,8 +36,18 @@ export default function InventoryPage() {
     isEditMode,
     isDeleteModalOpen,
     productToDelete,
+    sortBy,
+    sortOrder,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
     setSearchTerm,
     setIsEditMode,
+    setSortBy,
+    setSortOrder,
+    setPageSize,
+    goToPage,
     handleSync,
     handleAddClick,
     handleViewClick,
@@ -43,6 +58,14 @@ export default function InventoryPage() {
     confirmDelete,
     handleCloseDeleteModal,
   } = useInventory();
+
+  const sortOptions: { value: SortField; label: string }[] = [
+    { value: 'name', label: 'Name' },
+    { value: 'price', label: 'Price' },
+    { value: 'stock', label: 'Stock' },
+    { value: 'createdAt', label: 'Created' },
+    { value: 'lastEditAt', label: 'Last Edit' },
+  ];
 
   return (
     <div className='space-y-4 lg:space-y-6 md:pb-0'>
@@ -71,18 +94,58 @@ export default function InventoryPage() {
         }
       />
 
-      {/* Search */}
-      <div className='relative'>
-        <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-          <MdSearch className='h-5 w-5 text-gray-500' />
+      {/* Search and Sort */}
+      <div className='flex flex-col sm:flex-row gap-3'>
+        <div className='relative flex-1'>
+          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+            <MdSearch className='h-5 w-5 text-gray-500' />
+          </div>
+          <input
+            type='text'
+            placeholder='Search by name or barcode...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-200 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 text-base h-[50px]'
+          />
         </div>
-        <input
-          type='text'
-          placeholder='Search by name or barcode...'
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className='block w-full pl-10 pr-3 py-3 lg:py-2 border border-gray-200 rounded-lg lg:rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 text-base h-10'
-        />
+        <div className='flex gap-2'>
+          <Select
+            aria-label='Sort by'
+            options={sortOptions}
+            value={sortOptions.find((o) => o.value === sortBy)}
+            onChange={(option) => option && setSortBy(option.value)}
+            isSearchable={false}
+            className='w-36 sm:w-40'
+            styles={{
+              control: (base, state) => ({
+                ...base,
+                minHeight: '50px',
+                height: '50px',
+                borderRadius: '0.5rem',
+                backgroundColor: 'white',
+                borderColor: state.isFocused
+                  ? 'var(--color-blue-600)'
+                  : 'var(--color-gray-200)',
+                boxShadow: state.isFocused
+                  ? '0 0 0 1px var(--color-blue-600)'
+                  : 'none',
+              }),
+            }}
+          />
+          <Button
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className='flex items-center justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm h-[50px] w-[50px] p-0'
+            aria-label={
+              sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'
+            }
+          >
+            {sortOrder === 'asc' ? (
+              <MdArrowUpward size={20} />
+            ) : (
+              <MdArrowDownward size={20} />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Product List */}
@@ -93,7 +156,7 @@ export default function InventoryPage() {
       ) : (
         <>
           {/* Mobile Card Layout */}
-          {filteredProducts.length === 0 ? (
+          {totalItems === 0 ? (
             <div className='md:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
               <div className='bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
                 <MdInventory size={32} className='text-gray-500' />
@@ -109,7 +172,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className='md:hidden space-y-3'>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <MobileProductCard
                   key={product.id}
                   product={product}
@@ -169,6 +232,22 @@ export default function InventoryPage() {
                 ),
               },
               {
+                header: 'Created',
+                renderRow: (product) => (
+                  <span className='text-gray-500'>
+                    {formatDate(product.createdAt)}
+                  </span>
+                ),
+              },
+              {
+                header: 'Last Edit',
+                renderRow: (product) => (
+                  <span className='text-gray-500'>
+                    {formatDate(product.lastEditAt)}
+                  </span>
+                ),
+              },
+              {
                 header: 'Actions',
                 align: 'right',
                 renderRow: (product) => (
@@ -210,7 +289,7 @@ export default function InventoryPage() {
                 ),
               },
             ]}
-            data={filteredProducts}
+            data={paginatedProducts}
             onRowClick={handleViewClick}
             emptyState={{
               icon: MdInventory,
@@ -219,6 +298,16 @@ export default function InventoryPage() {
                 ? 'Try adjusting your search query'
                 : 'Add your first product to get started',
             }}
+          />
+
+          {/* Pagination Controls */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={goToPage}
+            onPageSizeChange={setPageSize}
           />
         </>
       )}

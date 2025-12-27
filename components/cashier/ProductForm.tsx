@@ -8,6 +8,7 @@ import ExpirationManager from './ExpirationManager';
 import { MdSave } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-toastify';
+import { formatDate } from '@/lib/utils/date';
 
 interface ProductFormProps {
   initialProduct?: Product;
@@ -213,6 +214,32 @@ export default function ProductForm({
             className='mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-500'
           />
         </div>
+        {initialProduct?.createdAt && (
+          <div>
+            <label className='block font-medium'>Created At</label>
+            <input
+              type='text'
+              value={formatDate(initialProduct.createdAt, {
+                includeTime: true,
+              })}
+              disabled
+              className='mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-500'
+            />
+          </div>
+        )}
+        {initialProduct?.lastEditAt && (
+          <div>
+            <label className='block font-medium'>Last Edit At</label>
+            <input
+              type='text'
+              value={formatDate(initialProduct.lastEditAt, {
+                includeTime: true,
+              })}
+              disabled
+              className='mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-500'
+            />
+          </div>
+        )}
       </div>
 
       <div className='border-t border-gray-200 pt-4'>
