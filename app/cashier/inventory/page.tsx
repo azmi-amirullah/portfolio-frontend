@@ -36,6 +36,7 @@ export default function InventoryPage() {
     isEditMode,
     isDeleteModalOpen,
     productToDelete,
+    isDeleting,
     sortBy,
     sortOrder,
     currentPage,
@@ -177,6 +178,8 @@ export default function InventoryPage() {
                   key={product.id}
                   product={product}
                   onClick={() => handleViewClick(product)}
+                  onEdit={() => handleEditClick(product)}
+                  onDelete={() => handleDeleteClick(product)}
                 />
               ))}
             </div>
@@ -350,6 +353,7 @@ export default function InventoryPage() {
         itemName={productToDelete?.name || ''}
         onConfirm={confirmDelete}
         onCancel={handleCloseDeleteModal}
+        isDeleting={isDeleting}
       />
     </div>
   );

@@ -43,6 +43,7 @@ export function useInventory() {
   const [productToDelete, setProductToDelete] = useState<
     (Product & { batches: StockBatch[] }) | null
   >(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     cashierService.getProductsWithStock().then((data) => {
@@ -115,17 +116,20 @@ export function useInventory() {
   );
 
   const confirmDelete = useCallback(async () => {
-    if (!productToDelete) return;
+    if (!productToDelete || isDeleting) return;
 
+    setIsDeleting(true);
     try {
       await cashierService.deleteProduct(productToDelete.name);
+      setIsDeleting(false);
       setIsDeleteModalOpen(false);
       setProductToDelete(null);
       refreshProducts();
     } catch (error) {
       console.error('Failed to delete product:', error);
+      setIsDeleting(false);
     }
-  }, [productToDelete, refreshProducts]);
+  }, [productToDelete, refreshProducts, isDeleting]);
 
   const handleCloseDeleteModal = useCallback(() => {
     setIsDeleteModalOpen(false);
@@ -210,6 +214,7 @@ export function useInventory() {
     isEditMode,
     isDeleteModalOpen,
     productToDelete,
+    isDeleting,
 
     // Actions
     setSearchTerm,

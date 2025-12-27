@@ -1,14 +1,20 @@
 import { Product } from '@/lib/services/cashier-service';
 import { formatDateCompact } from '@/lib/utils/date';
+import { MdEdit, MdDelete } from 'react-icons/md';
+import { Button } from '@/components/ui/Button';
 
 interface MobileProductCardProps {
   product: Product & { availableStock: number };
   onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 export function MobileProductCard({
   product,
   onClick,
+  onEdit,
+  onDelete,
 }: MobileProductCardProps) {
   const margin = product.price - (product.buyPrice || 0);
 
@@ -48,9 +54,35 @@ export function MobileProductCard({
           </div>
         </div>
       </div>
-      <div className='flex justify-between mt-3 pt-3 border-t border-gray-200 text-gray-500'>
-        <span>Created: {formatDateCompact(product.createdAt)}</span>
-        <span>Edited: {formatDateCompact(product.lastEditAt)}</span>
+      <div className='flex justify-between items-center mt-3 pt-3 border-t border-gray-200'>
+        <div className='text-gray-500 text-sm'>
+          <div>Created: {formatDateCompact(product.createdAt)}</div>
+          <div>Edited: {formatDateCompact(product.lastEditAt)}</div>
+        </div>
+        <div className='flex gap-2'>
+          <Button
+            variant='ghost'
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 h-auto'
+            aria-label='Edit product'
+          >
+            <MdEdit size={20} />
+          </Button>
+          <Button
+            variant='ghost'
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className='text-red-600 hover:text-red-800 hover:bg-red-50 p-2 h-auto'
+            aria-label='Delete product'
+          >
+            <MdDelete size={20} />
+          </Button>
+        </div>
       </div>
     </div>
   );

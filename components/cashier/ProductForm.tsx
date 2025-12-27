@@ -34,6 +34,7 @@ export default function ProductForm({
   const [deletedBatchIds, setDeletedBatchIds] = useState<Set<string>>(
     new Set()
   );
+  const [isSaving, setIsSaving] = useState(false);
 
   const unsavedBatchIds = useMemo(() => {
     const unsaved = new Set<string>();
@@ -107,7 +108,9 @@ export default function ProductForm({
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price) return;
+    if (!name || !price || isSaving) return;
+
+    setIsSaving(true);
 
     const allProducts = await cashierService.getProducts();
     const duplicate = allProducts.find(
@@ -118,6 +121,7 @@ export default function ProductForm({
       toast.error(
         'A product with this name already exists. Please use a different name.'
       );
+      setIsSaving(false);
       return;
     }
 
@@ -125,6 +129,7 @@ export default function ProductForm({
       toast.error(
         'A product with this name already exists. Please use a different name.'
       );
+      setIsSaving(false);
       return;
     }
 
@@ -266,9 +271,10 @@ export default function ProductForm({
         <Button
           type='submit'
           className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800'
+          disabled={isSaving}
         >
           <MdSave size={16} />
-          Save
+          {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </div>
     </form>
