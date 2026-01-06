@@ -75,7 +75,8 @@ export function Pagination({
         <Button
           onClick={goToPrevPage}
           disabled={currentPage === 1}
-          className='flex items-center justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed h-10 w-10 p-0'
+          size='icon-lg'
+          className='bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
           aria-label='Previous page'
         >
           <MdChevronLeft size={24} />
@@ -86,7 +87,8 @@ export function Pagination({
         <Button
           onClick={goToNextPage}
           disabled={currentPage >= totalPages}
-          className='flex items-center justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed h-10 w-10 p-0'
+          size='icon-lg'
+          className='bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'
           aria-label='Next page'
         >
           <MdChevronRight size={24} />

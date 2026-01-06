@@ -162,7 +162,7 @@ export default function CashierLoginPage() {
                 <Button
                   type='submit'
                   disabled={isLoading}
-                  className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm font-medium text-white bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='w-full py-3 px-4 border border-transparent rounded-lg shadow-sm font-medium text-white bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600'
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>

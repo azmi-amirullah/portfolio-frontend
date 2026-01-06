@@ -30,7 +30,8 @@ export const BarcodeScanner = ({ onResult, onClose }: BarcodeScannerProps) => {
         <Button
           onClick={onClose}
           variant='ghost'
-          className='absolute top-0 right-0 text-white hover:text-white/80 hover:bg-transparent rounded-full p-2 h-10 w-10 flex items-center justify-center'
+          size='icon-lg'
+          className='absolute top-0 right-0 text-white hover:text-white/80 hover:bg-transparent rounded-full'
         >
           <MdClose size={24} />
         </Button>

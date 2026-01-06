@@ -1,5 +1,3 @@
-
-
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdClose } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
@@ -73,9 +71,9 @@ export default function Modal({
                 {showCloseButton && (
                   <Button
                     variant='ghost'
-                    size='icon'
+                    size='icon-sm'
                     onClick={onClose}
-                    className='hover:bg-gray-200 h-8 w-8 ml-auto'
+                    className='hover:bg-gray-200 ml-auto'
                   >
                     <MdClose size={24} />
                   </Button>

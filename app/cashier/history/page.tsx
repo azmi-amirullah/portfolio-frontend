@@ -170,7 +170,7 @@ export default function SalesHistoryPage() {
           <Button
             onClick={handleSync}
             disabled={isSyncing}
-            className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
+            className='w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
           >
             <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
             <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>

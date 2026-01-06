@@ -145,7 +145,7 @@ export default function Contact() {
                 )}
               </div>
 
-              <Button type='submit' className='w-full h-12'>
+              <Button type='submit' size='xl' className='w-full'>
                 Send Message
               </Button>
             </form>

@@ -45,7 +45,8 @@ export default function Hero() {
             <div className='flex flex-col sm:flex-row gap-4'>
               <Button
                 href='#projects'
-                className='px-8 py-4 h-auto text-base shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all'
+                size='xl'
+                className='shadow-lg shadow-primary/20 hover:-translate-y-0.5'
                 data-testid='hero-cta-primary'
               >
                 View My Work
@@ -54,7 +55,8 @@ export default function Hero() {
               <Button
                 href='#contact'
                 variant='outline'
-                className='px-8 py-4 h-auto text-base hover:bg-gray-50 hover:border-secondary/50 transition-all'
+                size='xl'
+                className='hover:bg-gray-50 hover:border-secondary/50'
                 data-testid='hero-cta-secondary'
               >
                 Contact Me

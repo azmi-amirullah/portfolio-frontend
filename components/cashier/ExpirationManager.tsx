@@ -235,18 +235,18 @@ export default function ExpirationManager({
                         <Button
                           type='button'
                           variant='ghost'
-                          size='icon'
+                          size='icon-sm'
                           onClick={() => saveEditing(batch)}
-                          className='text-green-600 hover:text-green-800 h-8 w-8'
+                          className='text-green-600 hover:text-green-800'
                         >
                           <MdCheck size={22} />
                         </Button>
                         <Button
                           type='button'
                           variant='ghost'
-                          size='icon'
+                          size='icon-sm'
                           onClick={cancelEditing}
-                          className='text-red-600 hover:text-red-800 h-8 w-8'
+                          className='text-red-600 hover:text-red-800'
                         >
                           <MdClose size={22} />
                         </Button>
@@ -333,10 +333,10 @@ export default function ExpirationManager({
                         <Button
                           type='button'
                           variant='ghost'
-                          size='icon'
+                          size='icon-sm'
                           onClick={() => startEditing(batch)}
                           disabled={isDeleted}
-                          className='text-blue-600 hover:text-blue-800 h-8 w-8 disabled:opacity-30'
+                          className='text-blue-600 hover:text-blue-800 disabled:opacity-30'
                         >
                           <MdEdit size={20} />
                         </Button>
@@ -344,9 +344,9 @@ export default function ExpirationManager({
                           <Button
                             type='button'
                             variant='ghost'
-                            size='icon'
+                            size='icon-sm'
                             onClick={() => onDeleteBatch(batch.addedDate)}
-                            className={`h-8 w-8 ${
+                            className={`${
                               isDeleted
                                 ? 'text-green-600 hover:text-green-800'
                                 : 'text-red-600 hover:text-red-800'
@@ -512,18 +512,18 @@ export default function ExpirationManager({
                       <Button
                         type='button'
                         variant='ghost'
-                        size='icon'
+                        size='icon-xs'
                         onClick={() => saveEditing(batch)}
-                        className='text-green-600 hover:text-green-800 h-6 w-6'
+                        className='text-green-600 hover:text-green-800'
                       >
                         <MdCheck size={22} />
                       </Button>
                       <Button
                         type='button'
                         variant='ghost'
-                        size='icon'
+                        size='icon-xs'
                         onClick={cancelEditing}
-                        className='text-red-600 hover:text-red-800 h-6 w-6'
+                        className='text-red-600 hover:text-red-800'
                       >
                         <MdClose size={22} />
                       </Button>
@@ -535,10 +535,10 @@ export default function ExpirationManager({
                     <Button
                       type='button'
                       variant='ghost'
-                      size='icon'
+                      size='icon-xs'
                       onClick={() => startEditing(batch)}
                       disabled={isDeleted}
-                      className='text-blue-600 hover:text-blue-800 h-6 w-6 disabled:opacity-30'
+                      className='text-blue-600 hover:text-blue-800 disabled:opacity-30'
                     >
                       <MdEdit size={20} />
                     </Button>
@@ -546,9 +546,9 @@ export default function ExpirationManager({
                       <Button
                         type='button'
                         variant='ghost'
-                        size='icon'
+                        size='icon-xs'
                         onClick={() => onDeleteBatch(batch.addedDate)}
-                        className={`h-6 w-6 ${
+                        className={`${
                           isDeleted
                             ? 'text-green-600 hover:text-green-800'
                             : 'text-red-600 hover:text-red-800'

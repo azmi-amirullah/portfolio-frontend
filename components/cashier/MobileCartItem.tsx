@@ -22,9 +22,9 @@ export function MobileCartItem({
         </div>
         <Button
           variant='ghost'
-          size='icon'
+          size='icon-sm'
           onClick={() => onRemove(item.id)}
-          className='text-red-600 hover:text-red-800 h-8 w-8'
+          className='text-red-600 hover:text-red-800'
         >
           <MdDelete size={18} />
         </Button>
@@ -34,9 +34,9 @@ export function MobileCartItem({
         <div className='flex items-center gap-2'>
           <Button
             variant='ghost'
-            size='icon'
+            size='icon-sm'
             onClick={() => onUpdateQuantity(item.id, -1)}
-            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 h-8 w-8'
+            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500'
           >
             <MdRemove size={16} />
           </Button>
@@ -45,9 +45,9 @@ export function MobileCartItem({
           </span>
           <Button
             variant='ghost'
-            size='icon'
+            size='icon-sm'
             onClick={() => onUpdateQuantity(item.id, 1)}
-            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 h-8 w-8'
+            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500'
           >
             <MdAdd size={16} />
           </Button>

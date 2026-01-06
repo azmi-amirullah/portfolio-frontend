@@ -165,7 +165,8 @@ export default function ImageGalleryModal({
               variant='ghost'
               onClick={prevImage}
               disabled={currentIndex === 0}
-              className={`absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${
+              size='icon-xl'
+              className={`absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white transition-opacity ${
                 currentIndex === 0
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100'
@@ -177,7 +178,8 @@ export default function ImageGalleryModal({
               variant='ghost'
               onClick={nextImage}
               disabled={currentIndex === images.length - 1}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white h-12 w-12 p-0 transition-opacity ${
+              size='icon-xl'
+              className={`absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/25 text-white hover:bg-black/50 hover:text-white transition-opacity ${
                 currentIndex === images.length - 1
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100'

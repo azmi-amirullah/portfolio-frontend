@@ -26,9 +26,9 @@ export function DesktopCartRow({
         <div className='flex justify-center items-center gap-3'>
           <Button
             variant='ghost'
-            size='icon'
+            size='icon-sm'
             onClick={() => onUpdateQuantity(item.id, -1)}
-            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 h-8 w-8'
+            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500'
           >
             <MdRemove size={16} />
           </Button>
@@ -37,9 +37,9 @@ export function DesktopCartRow({
           </span>
           <Button
             variant='ghost'
-            size='icon'
+            size='icon-sm'
             onClick={() => onUpdateQuantity(item.id, 1)}
-            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500 h-8 w-8'
+            className='rounded-full bg-gray-50 hover:bg-gray-200 text-gray-500'
           >
             <MdAdd size={16} />
           </Button>

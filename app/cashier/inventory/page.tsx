@@ -79,14 +79,14 @@ export default function InventoryPage() {
             <Button
               onClick={handleSync}
               disabled={isSyncing}
-              className='flex items-center gap-2 w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
+              className='w-full sm:w-auto justify-center bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 shadow-sm'
             >
               <MdSync size={20} className={isSyncing ? 'animate-spin' : ''} />
               <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
             </Button>
             <Button
               onClick={handleAddClick}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-800 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
+              className='bg-blue-600 hover:bg-blue-800 w-full sm:w-auto justify-center shadow-sm shadow-blue-200'
             >
               <MdAdd size={20} />
               <span>New</span>
