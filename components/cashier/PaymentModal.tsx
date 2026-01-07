@@ -17,6 +17,7 @@ export default function PaymentModal({
   onCancel,
 }: PaymentModalProps) {
   const [amountPaid, setAmountPaid] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function PaymentModal({
     if (!isOpen) {
       startTransition(() => {
         setAmountPaid('');
+        setIsSubmitting(false);
       });
     }
   }, [isOpen]);
@@ -39,7 +41,8 @@ export default function PaymentModal({
   const isValidPayment = paidAmount >= totalAmount && totalAmount > 0;
 
   const handleConfirm = () => {
-    if (isValidPayment) {
+    if (isValidPayment && !isSubmitting) {
+      setIsSubmitting(true);
       onConfirm({
         amountPaid: paidAmount,
       });
@@ -167,10 +170,10 @@ export default function PaymentModal({
         </Button>
         <Button
           onClick={handleConfirm}
-          disabled={!isValidPayment}
+          disabled={!isValidPayment || isSubmitting}
           className='flex-1 rounded-xl sm:text-base font-bold bg-blue-600 hover:bg-blue-800 h-auto py-2.5 sm:py-3'
         >
-          Confirm
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </Modal>

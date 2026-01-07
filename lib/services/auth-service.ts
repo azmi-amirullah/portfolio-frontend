@@ -1,50 +1,39 @@
 import { toast } from 'react-toastify';
-import { API_URL } from '../api';
+import { createClient } from '../supabase/client';
 
 export interface User {
-  id: number;
-  username: string;
+  id: string;
   email: string;
-  provider: string;
-  confirmed: boolean;
-  blocked: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LoginResponse {
-  jwt: string;
-  user: User;
+  username?: string;
 }
 
 class AuthService {
-  private tokenKey = 'cashier_jwt';
-  private userKey = 'cashier_user';
+  private supabase = createClient();
 
   async login(identifier: string, password: string): Promise<boolean> {
     try {
-      const response = await fetch(`${API_URL}/api/auth/local`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier,
-          password,
-        }),
+      // Convert username to email (only for @guest.local domain)
+      const email = identifier.includes('@')
+        ? identifier
+        : `${identifier}@guest.local`;
+
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.jwt) {
-        this.setSession(data.jwt, data.user);
-
-        return true;
-      } else {
-        console.error('Login failed:', data);
-        toast.error(data.error?.message || 'Login failed');
+      if (error) {
+        console.error('Login failed:', error);
+        toast.error(error.message || 'Login failed');
         return false;
       }
+
+      if (data.user) {
+        return true;
+      }
+
+      toast.error('Login failed');
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast.error('An error occurred during login');
@@ -52,37 +41,37 @@ class AuthService {
     }
   }
 
-  logout() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.tokenKey);
-      localStorage.removeItem(this.userKey);
+  async logout(): Promise<void> {
+    const { error } = await this.supabase.auth.signOut();
+    if (error) {
+      console.error('Logout error:', error);
+      toast.error('Error during logout');
     }
   }
 
-  getToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(this.tokenKey);
-    }
-    return null;
+  async getUser(): Promise<User | null> {
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      username: user.user_metadata?.username || user.email?.split('@')[0],
+    };
   }
 
-  getUser(): User | null {
-    if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem(this.userKey);
-      return userStr ? JSON.parse(userStr) : null;
-    }
-    return null;
+  async isAuthenticated(): Promise<boolean> {
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
+    return !!session;
   }
 
-  isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
-
-  private setSession(token: string, user: User) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.tokenKey, token);
-      localStorage.setItem(this.userKey, JSON.stringify(user));
-    }
+  getSupabaseClient() {
+    return this.supabase;
   }
 }
 

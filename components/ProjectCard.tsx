@@ -55,7 +55,7 @@ export default function ProjectCard({
 
             {/* Gallery Indicator */}
             {galleryImages.length > 1 && (
-              <div className='absolute bottom-3 right-3 z-20 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity'>
+              <div className='absolute bottom-3 right-3 z-20 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm'>
                 {galleryImages.length} images
               </div>
             )}

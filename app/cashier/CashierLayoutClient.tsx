@@ -37,15 +37,26 @@ export default function CashierLayoutClient({
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('User');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    startTransition(() => {
-      const user = authService.getUser();
-      setUsername(user?.username || 'User');
+    const checkAuth = async () => {
+      const authenticated = await authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+
+      if (authenticated) {
+        const user = await authService.getUser();
+        setUsername(user?.username || user?.email?.split('@')[0] || 'User');
+      }
+
       setIsMounted(true);
+    };
+
+    startTransition(() => {
+      checkAuth();
     });
   }, [pathname]);
 
@@ -60,25 +71,16 @@ export default function CashierLayoutClient({
   }, [pathname]);
 
   useEffect(() => {
-    if (
-      isMounted &&
-      !authService.isAuthenticated() &&
-      pathname !== '/cashier'
-    ) {
-      router.replace('/cashier');
-    }
-  }, [isMounted, pathname, router]);
-
-  useEffect(() => {
     const checkAndFetchData = async () => {
-      if (isMounted && authService.isAuthenticated()) {
-        if (!cashierService.hasData()) {
+      if (isMounted && isAuthenticated) {
+        const hasData = await cashierService.hasData();
+        if (!hasData) {
           await cashierService.syncWithBackend();
         }
       }
     };
     checkAndFetchData();
-  }, [isMounted]);
+  }, [isMounted, isAuthenticated]);
 
   // Login page - render children only
   if (pathname === '/cashier') {
@@ -94,8 +96,8 @@ export default function CashierLayoutClient({
     );
   }
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     router.replace('/cashier');
   };
 

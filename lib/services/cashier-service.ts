@@ -1,6 +1,6 @@
 import { authService } from './auth-service';
 import { toast } from 'react-toastify';
-import { apiFetch } from '../api';
+import { createClient } from '../supabase/client';
 
 export interface Product {
   id: string;
@@ -10,20 +10,20 @@ export interface Product {
   buyPrice: number;
   sold?: number;
   stock?: StockBatch[];
-  createdAt?: string; // ISO timestamp
-  lastEditAt?: string; // ISO timestamp
+  createdAt?: string;
+  lastEditAt?: string;
 }
 
 export interface StockBatch {
   productId: string;
-  expirationDate: string; // Format: YYYY-MM-DD
-  addedDate: string; // ISO timestamp, also serves as unique ID
+  expirationDate: string;
+  addedDate: string;
   quantity: number;
-  isSoldOut: boolean; // Manual override to mark batch as unavailable
+  isSoldOut: boolean;
 }
 
 export interface Transaction {
-  id: string; // timestamp as string
+  id: string;
   timestamp: number;
   products: {
     productId: string;
@@ -44,21 +44,22 @@ export interface CashierData {
 }
 
 class CashierService {
+  private supabase = createClient();
   private syncPromise: Promise<boolean> | null = null;
   private salesSyncPromise: Promise<void> | null = null;
   private initialSyncDone = false;
   private initialSalesSyncDone = false;
 
-  private getStorageKey(key: string): string {
-    const user = authService.getUser();
+  private async getStorageKey(key: string): Promise<string> {
+    const user = await authService.getUser();
     if (!user) return key;
-    return `cashier_${user.username}_${key}`;
+    return `cashier_${user.username || user.id}_${key}`;
   }
 
-  private get<T>(key: string): T[] {
+  private async get<T>(key: string): Promise<T[]> {
     if (typeof window === 'undefined') return [];
     try {
-      const storageKey = this.getStorageKey(key);
+      const storageKey = await this.getStorageKey(key);
       const data = localStorage.getItem(storageKey);
       return data ? JSON.parse(data) : [];
     } catch (error) {
@@ -67,50 +68,53 @@ class CashierService {
     }
   }
 
-  private set<T>(key: string, data: T[]) {
+  private async set<T>(key: string, data: T[]) {
     if (typeof window === 'undefined') return;
-    const storageKey = this.getStorageKey(key);
+    const storageKey = await this.getStorageKey(key);
     localStorage.setItem(storageKey, JSON.stringify(data));
   }
 
-  async syncWithBackend(token?: string): Promise<boolean> {
-    // If already syncing, return the existing promise
+  async syncWithBackend(): Promise<boolean> {
     if (this.syncPromise) {
       return this.syncPromise;
     }
 
-    // Create new sync promise
     this.syncPromise = (async () => {
       try {
-        const jwt = token || authService.getToken();
-        if (!jwt) {
+        const user = await authService.getUser();
+        if (!user) return false;
+
+        // Fetch products with stock batches from Supabase
+        const { data: products, error } = await this.supabase
+          .from('products')
+          .select('*, stock_batches(*)')
+          .order('name');
+
+        if (error) {
+          console.error('Sync error:', error);
           return false;
         }
 
-        const user = authService.getUser();
-        if (!user) {
-          return false;
-        }
+        // Transform Supabase data to match our interface
+        const transformedProducts: Product[] = (products || []).map((p) => ({
+          id: p.name,
+          name: p.name,
+          barcode: p.barcode || '',
+          price: Number(p.price),
+          buyPrice: Number(p.buy_price) || 0,
+          sold: p.sold || 0,
+          createdAt: p.created_at,
+          lastEditAt: p.last_edit_at,
+          stock: (p.stock_batches || []).map((s: Record<string, unknown>) => ({
+            productId: p.name,
+            expirationDate: s.expiration_date || '',
+            addedDate: s.added_date,
+            quantity: s.quantity,
+            isSoldOut: s.is_sold_out || false,
+          })),
+        }));
 
-        const response = await apiFetch('/api/frontend/getProducts', {
-          method: 'GET',
-          headers: jwt ? { Authorization: `Bearer ${jwt}` } : undefined,
-        });
-
-        if (!response.ok) {
-          return false;
-        }
-
-        const data: { products: (Product & { stock?: StockBatch[] })[] } =
-          await response.json();
-
-        // Store the fetched data in localStorage with username prefix
-        if (typeof window !== 'undefined') {
-          const prefix = `cashier_${user.username}_`;
-          const products = data.products || [];
-          localStorage.setItem(`${prefix}products`, JSON.stringify(products));
-        }
-
+        await this.set('products', transformedProducts);
         this.initialSyncDone = true;
         return true;
       } catch (error) {
@@ -125,19 +129,14 @@ class CashierService {
     return this.syncPromise;
   }
 
-  hasData(): boolean {
+  async hasData(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
-    const user = authService.getUser();
-    if (!user) return false;
-
-    const prefix = `cashier_${user.username}_`;
-    const products = localStorage.getItem(`${prefix}products`);
-
-    return !!(products && products !== '[]');
+    const products = await this.get<Product>('products');
+    return products.length > 0;
   }
 
   async getProducts(): Promise<Product[]> {
-    const products = this.get<Product>('products');
+    const products = await this.get<Product>('products');
     if (products.length === 0 && !this.initialSyncDone) {
       await this.syncWithBackend();
       return this.get<Product>('products');
@@ -155,78 +154,104 @@ class CashierService {
     const existingProduct = products.find((p) => p.id === product.id);
 
     try {
-      const token = authService.getToken();
-      if (!token) throw new Error('No authentication token');
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      // Ensure we preserve the 'sold' count from the existing product if it's not provided in the update
-      // This acts as a guard to prevent accidental overwrites of the sold count
-      const productToSave = {
-        ...product,
-        sold: existingProduct?.sold || product.sold || 0,
-      };
+      const now = new Date().toISOString();
 
-      let response;
       if (existingProduct) {
-        // Edit existing product
-        response = await apiFetch('/api/frontend/editProduct', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            oldName: existingProduct.name,
-            product: productToSave,
-          }),
-        });
-      } else {
-        // Add new product
-        response = await apiFetch('/api/frontend/addProduct', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product: productToSave }),
-        });
-      }
+        // Update existing product
+        const { error } = await this.supabase
+          .from('products')
+          .update({
+            name: product.name,
+            barcode: product.barcode,
+            price: product.price,
+            buy_price: product.buyPrice || null,
+            last_edit_at: now,
+          })
+          .eq('name', existingProduct.name)
+          .eq('user_id', user.id);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error?.message || 'Failed to save product');
-      }
+        if (error) throw error;
 
-      // Parse response to get product with backend-generated timestamps
-      const responseData = await response.json();
-      const savedProduct = responseData.product;
+        // Handle stock batches update
+        if (product.stock) {
+          // Delete existing batches and insert new ones
+          await this.supabase
+            .from('stock_batches')
+            .delete()
+            .eq('user_id', user.id)
+            .in(
+              'product_id',
+              (
+                await this.supabase
+                  .from('products')
+                  .select('id')
+                  .eq('name', product.name)
+                  .eq('user_id', user.id)
+              ).data?.map((p) => p.id) || []
+            );
 
-      // Update local storage with backend response (includes createdAt/lastEditAt)
-      const allProducts = this.get<Product>('products');
-      const productIndex = allProducts.findIndex(
-        (p) => p.id === productToSave.id || p.name === existingProduct?.name
-      );
+          // Get the product ID
+          const { data: productData } = await this.supabase
+            .from('products')
+            .select('id')
+            .eq('name', product.name)
+            .eq('user_id', user.id)
+            .single();
 
-      // Build the product object with all fields from backend response
-      const productWithTimestamps: Product = {
-        id: product.name, // id is always the product name
-        name: product.name,
-        barcode: product.barcode,
-        price: product.price,
-        buyPrice: product.buyPrice,
-        sold: savedProduct?.sold ?? productToSave.sold,
-        stock: product.stock,
-        createdAt: savedProduct?.createdAt,
-        lastEditAt: savedProduct?.lastEditAt,
-      };
+          if (productData && product.stock.length > 0) {
+            const batchesToInsert = product.stock.map((batch) => ({
+              product_id: productData.id,
+              user_id: user.id,
+              expiration_date: batch.expirationDate || null,
+              added_date: batch.addedDate,
+              quantity: batch.quantity,
+              is_sold_out: batch.isSoldOut,
+            }));
 
-      if (productIndex >= 0) {
-        // Update existing product - remove old entry if name changed
-        if (existingProduct && existingProduct.name !== product.name) {
-          allProducts.splice(productIndex, 1);
-          allProducts.push(productWithTimestamps);
-        } else {
-          allProducts[productIndex] = productWithTimestamps;
+            await this.supabase.from('stock_batches').insert(batchesToInsert);
+          }
         }
       } else {
-        // Add new product
-        allProducts.push(productWithTimestamps);
+        // Insert new product
+        const { data: newProduct, error } = await this.supabase
+          .from('products')
+          .insert({
+            user_id: user.id,
+            name: product.name,
+            barcode: product.barcode,
+            price: product.price,
+            buy_price: product.buyPrice || null,
+            sold: 0,
+            created_at: now,
+            last_edit_at: now,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Insert stock batches if any
+        if (product.stock && product.stock.length > 0 && newProduct) {
+          const batchesToInsert = product.stock.map((batch) => ({
+            product_id: newProduct.id,
+            user_id: user.id,
+            expiration_date: batch.expirationDate || null,
+            added_date: batch.addedDate,
+            quantity: batch.quantity,
+            is_sold_out: batch.isSoldOut,
+          }));
+
+          await this.supabase.from('stock_batches').insert(batchesToInsert);
+        }
       }
 
-      this.set('products', allProducts);
+      // Refresh local cache
+      await this.syncWithBackend();
       toast.success('Product saved successfully');
     } catch (error: unknown) {
       console.error('Save product error:', error);
@@ -239,28 +264,25 @@ class CashierService {
 
   async deleteProduct(productName: string): Promise<void> {
     try {
-      const token = authService.getToken();
-      if (!token) throw new Error('No authentication token');
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      const response = await apiFetch('/api/frontend/deleteProduct', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName }),
-      });
+      const { error } = await this.supabase
+        .from('products')
+        .delete()
+        .eq('name', productName)
+        .eq('user_id', user.id);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.error?.message || 'Failed to delete product'
-        );
-      }
+      if (error) throw error;
 
-      // Update local storage directly instead of fetching from backend
-      const allProducts = this.get<Product>('products');
+      // Update local storage
+      const allProducts = await this.get<Product>('products');
       const filteredProducts = allProducts.filter(
         (p) => p.name !== productName
       );
-      this.set('products', filteredProducts);
+      await this.set('products', filteredProducts);
 
       toast.success('Product deleted successfully');
     } catch (error: unknown) {
@@ -320,29 +342,6 @@ class CashierService {
     }
   }
 
-  async saveSaleToBackend(transaction: Transaction): Promise<void> {
-    try {
-      const token = authService.getToken();
-      if (!token) throw new Error('No authentication token');
-
-      const response = await apiFetch('/api/frontend/saveSale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transaction }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.error?.message || 'Failed to save transaction to backend'
-        );
-      }
-    } catch (error) {
-      console.error('Failed to save transaction to backend:', error);
-      throw error; // Re-throw to let caller handle error display
-    }
-  }
-
   async processSale(
     cartItems: {
       productId: string;
@@ -357,6 +356,11 @@ class CashierService {
       grandTotal: number;
     }
   ): Promise<void> {
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const timestamp = Date.now();
     const transactionId = timestamp.toString();
 
@@ -376,52 +380,127 @@ class CashierService {
       change: paymentDetails.amountPaid - paymentDetails.grandTotal,
     };
 
-    // 1. Try to save to backend FIRST
-    await this.saveSaleToBackend(transaction);
+    let insertedTxId: number | null = null;
 
-    // 2. If successful, update local state
-    const allSales = this.get<Transaction>('sales');
-    const products = this.get<Product>('products');
+    try {
+      // Insert transaction to Supabase
+      const { data: txData, error: txError } = await this.supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          timestamp: new Date(timestamp).toISOString(),
+          total_amount: transaction.totalAmount,
+          amount_paid: transaction.amountPaid,
+          change: transaction.change,
+        })
+        .select()
+        .single();
 
-    allSales.push(transaction);
+      if (txError) throw txError;
+      insertedTxId = txData.id;
 
-    // Update local product sold count
-    transaction.products.forEach((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      if (product) {
-        product.sold = (product.sold || 0) + item.quantity;
+      // Insert transaction items
+      const items = transaction.products.map((item) => ({
+        transaction_id: txData.id,
+        product_id: item.productId,
+        product_name: item.productName,
+        product_barcode: item.productBarcode,
+        price: item.price,
+        buy_price: item.buyPrice,
+        quantity: item.quantity,
+      }));
+
+      const { error: itemsError } = await this.supabase
+        .from('transaction_items')
+        .insert(items);
+
+      if (itemsError) throw itemsError;
+
+      // Batch-fetch all products to avoid N+1 queries
+      const productNames = cartItems.map((item) => item.productId);
+      const { data: productsData } = await this.supabase
+        .from('products')
+        .select('name, sold')
+        .eq('user_id', user.id)
+        .in('name', productNames);
+
+      const productSoldMap = new Map(
+        (productsData || []).map((p) => [p.name, p.sold || 0])
+      );
+
+      // Update sold counts for products
+      for (const item of cartItems) {
+        const currentSold = productSoldMap.get(item.productId) || 0;
+
+        await this.supabase
+          .from('products')
+          .update({ sold: currentSold + item.quantity })
+          .eq('name', item.productId)
+          .eq('user_id', user.id);
       }
-    });
 
-    this.set('sales', allSales);
-    this.set('products', products);
+      // Update local state
+      const allSales = await this.get<Transaction>('sales');
+      const products = await this.get<Product>('products');
+
+      allSales.push(transaction);
+
+      transaction.products.forEach((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        if (product) {
+          product.sold = (product.sold || 0) + item.quantity;
+        }
+      });
+
+      await this.set('sales', allSales);
+      await this.set('products', products);
+    } catch (error) {
+      // Cleanup orphaned transaction if items insert failed
+      if (insertedTxId) {
+        await this.supabase
+          .from('transactions')
+          .delete()
+          .eq('id', insertedTxId);
+      }
+      throw error;
+    }
   }
 
   async syncSalesWithBackend(): Promise<void> {
-    // If already syncing, return the existing promise
     if (this.salesSyncPromise) {
       return this.salesSyncPromise;
     }
 
-    // Create new sync promise
     this.salesSyncPromise = (async () => {
       try {
-        const token = authService.getToken();
-        if (!token) return;
+        const { data: transactions, error } = await this.supabase
+          .from('transactions')
+          .select('*, transaction_items(*)')
+          .order('timestamp', { ascending: false });
 
-        const response = await apiFetch('/api/frontend/getSales');
+        if (error) throw error;
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch sales history');
-        }
+        const sales: Transaction[] = (transactions || []).map((tx) => ({
+          id: new Date(tx.timestamp).getTime().toString(),
+          timestamp: new Date(tx.timestamp).getTime(),
+          products: (tx.transaction_items || []).map(
+            (item: Record<string, unknown>) => ({
+              productId: item.product_id,
+              productName: item.product_name,
+              productBarcode: item.product_barcode || '',
+              price: Number(item.price),
+              buyPrice: Number(item.buy_price),
+              quantity: item.quantity,
+            })
+          ),
+          totalAmount: Number(tx.total_amount),
+          amountPaid: Number(tx.amount_paid),
+          change: Number(tx.change),
+        }));
 
-        const data: { sales: Transaction[] } = await response.json();
-        const sales = data.sales || [];
-
-        this.set('sales', sales);
+        await this.set('sales', sales);
       } catch (error) {
         console.error('Sync sales error:', error);
-        // Don't throw, just log error so UI doesn't break
         toast.error('Failed to sync sales history.');
       } finally {
         this.salesSyncPromise = null;
@@ -432,13 +511,12 @@ class CashierService {
   }
 
   async getSalesHistory(): Promise<Transaction[]> {
-    const allSales = this.get<Transaction>('sales');
+    const allSales = await this.get<Transaction>('sales');
 
-    // Auto-fetch if local data is empty and not yet synced
     if (allSales.length === 0 && !this.initialSalesSyncDone) {
       await this.syncSalesWithBackend();
       this.initialSalesSyncDone = true;
-      const syncedSales = this.get<Transaction>('sales');
+      const syncedSales = await this.get<Transaction>('sales');
       return syncedSales.sort((a, b) => b.timestamp - a.timestamp);
     }
 
@@ -447,7 +525,7 @@ class CashierService {
 
   async getProductStock(productId: string): Promise<number> {
     const batches = await this.getStockBatches(productId);
-    const products = this.get<Product>('products');
+    const products = await this.get<Product>('products');
     const product = products.find((p) => p.id === productId);
 
     const totalAdded = batches.reduce((sum, batch) => sum + batch.quantity, 0);
@@ -462,13 +540,12 @@ class CashierService {
       batches: StockBatch[];
     })[]
   > {
-    let products = this.get<Product>('products');
+    let products = await this.get<Product>('products');
 
-    // Auto-fetch if local data is empty and not yet synced
     if (products.length === 0 && !this.initialSyncDone) {
       await this.syncWithBackend();
       this.initialSyncDone = true;
-      products = this.get<Product>('products');
+      products = await this.get<Product>('products');
     }
 
     return products.map((product) => {

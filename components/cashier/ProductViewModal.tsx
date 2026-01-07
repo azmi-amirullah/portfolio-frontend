@@ -19,7 +19,7 @@ export function ProductViewModal({ product, onEdit }: ProductViewModalProps) {
         <div>
           <label className='block font-medium'>Barcode</label>
           <div className='mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md'>
-            {product.barcode}
+            {product.barcode || <span className='text-gray-400'>-</span>}
           </div>
         </div>
         <div>

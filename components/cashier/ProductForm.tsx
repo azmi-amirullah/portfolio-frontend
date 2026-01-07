@@ -211,6 +211,27 @@ export default function ProductForm({
           />
         </div>
         <div>
+          <label className='block font-medium'>Margin (per unit)</label>
+          {(() => {
+            const sellPrice = parseFloat(price) || 0;
+            const costPrice = parseFloat(buyPrice) || 0;
+            const margin = sellPrice - costPrice;
+            return (
+              <div
+                className={`mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 ${
+                  margin > 0
+                    ? 'text-green-600'
+                    : margin < 0
+                    ? 'text-red-600'
+                    : 'text-gray-500'
+                }`}
+              >
+                Rp {margin.toLocaleString()}
+              </div>
+            );
+          })()}
+        </div>
+        <div>
           <label className='block font-medium'>Total Sold</label>
           <input
             type='text'

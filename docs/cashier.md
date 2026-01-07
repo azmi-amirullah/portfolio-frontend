@@ -1,7 +1,7 @@
 # Cashier Module - Technical Documentation
 
-**Last Updated:** 2025-12-15  
-**Tech Stack:** Next.js 15, React 19, TypeScript, Tailwind CSS
+**Last Updated:** 2026-01-07  
+**Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, Supabase
 
 ---
 
@@ -25,8 +25,8 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 - **Sales Processing** - Barcode scanning, cart management, payment processing
 - **Inventory Management** - Product CRUD, stock batches with expiration tracking
 - **Sales History** - Transaction logs with profit calculation
-- **Analytics Dashboard** - Revenue, profit, and sales trend visualization
 - **Local Caching** - localStorage cache to reduce API calls
+- **Serverless Backend** - Supabase for database and authentication
 
 ---
 
@@ -48,32 +48,110 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 │  ├─ Layout: MobileHeader, DesktopSidebar, BottomNav          │
 │  ├─ POS: ProductSearchDropdown, PaymentModal, BarcodeScanner │
 │  ├─ Inventory: ProductForm, ExpirationManager, Table         │
-│  └─ Shared: Modal, Button, Loading, Select, ErrorBoundary    │
+│  └─ Shared: Modal, Button, Loading                           │
 ├─────────────────────────────────────────────────────────────┤
 │                       Hooks Layer                            │
 │  ├─ useCart (cart state management)                          │
-│  ├─ useInventory (product list + CRUD state)                 │
-│  └─ useAnalytics (dashboard data + filtering)                │
+│  └─ useInventory (product list + CRUD state)                 │
 ├─────────────────────────────────────────────────────────────┤
 │                      Service Layer                           │
-│  ├─ cashierService (data operations + sync)                  │
-│  └─ authService (authentication)                             │
+│  ├─ cashierService (data operations + Supabase sync)         │
+│  └─ authService (Supabase authentication)                    │
+├─────────────────────────────────────────────────────────────┤
+│                     Supabase Layer                           │
+│  ├─ lib/supabase/client.ts (browser client)                  │
+│  ├─ lib/supabase/server.ts (server client)                   │
+│  └─ lib/supabase/middleware.ts (session refresh)             │
 ├─────────────────────────────────────────────────────────────┤
 │                        Storage                               │
 │  ├─ localStorage (offline cache, user-scoped)                │
-│  └─ Strapi Backend (source of truth)                         │
+│  └─ Supabase PostgreSQL (source of truth)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Design Decisions
 
-| Decision                      | Rationale                                                  |
-| ----------------------------- | ---------------------------------------------------------- |
-| **Local Caching**             | localStorage caches data to reduce API calls on page loads |
-| **Backend = Source of Truth** | Write ops (payment, add, edit) require internet            |
-| **One-Way Sync**              | Sync pulls BE → FE; no offline queue                       |
-| **User-Scoped Storage**       | Each user has isolated localStorage data                   |
-| **Mobile-First**              | Primary use case is mobile/tablet at checkout              |
+| Decision                  | Rationale                                                  |
+| ------------------------- | ---------------------------------------------------------- |
+| **Supabase Backend**      | Serverless PostgreSQL with built-in auth and RLS           |
+| **Cookie-based Sessions** | More secure than localStorage JWT, works with SSR          |
+| **Local Caching**         | localStorage caches data to reduce API calls on page loads |
+| **Row Level Security**    | User data isolation enforced at database level             |
+| **One-Way Sync**          | Sync pulls BE → FE; no offline queue                       |
+| **User-Scoped Storage**   | Each user has isolated localStorage data                   |
+| **Mobile-First**          | Primary use case is mobile/tablet at checkout              |
+
+---
+
+## Database Schema
+
+### Products Table
+
+```sql
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  barcode TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  buy_price DECIMAL(10,2),  -- nullable
+  sold INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_edit_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, name)
+);
+```
+
+### Stock Batches Table
+
+```sql
+CREATE TABLE stock_batches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  expiration_date DATE,
+  added_date TIMESTAMPTZ DEFAULT NOW(),
+  quantity INTEGER NOT NULL,
+  is_sold_out BOOLEAN DEFAULT FALSE
+);
+```
+
+### Transactions Table
+
+```sql
+CREATE TABLE transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  timestamp TIMESTAMPTZ DEFAULT NOW(),
+  total_amount DECIMAL(10,2) NOT NULL,
+  amount_paid DECIMAL(10,2) NOT NULL,
+  change DECIMAL(10,2) NOT NULL
+);
+```
+
+### Transaction Items Table
+
+```sql
+CREATE TABLE transaction_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  transaction_id UUID REFERENCES transactions(id) ON DELETE CASCADE,
+  product_id TEXT NOT NULL,
+  product_name TEXT NOT NULL,
+  product_barcode TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  buy_price DECIMAL(10,2),  -- nullable
+  quantity INTEGER NOT NULL
+);
+```
+
+### Row Level Security
+
+All tables have RLS enabled with policies ensuring users can only access their own data:
+
+```sql
+CREATE POLICY "Users can CRUD own data" ON [table]
+  FOR ALL USING (auth.uid() = user_id);
+```
 
 ---
 
@@ -86,12 +164,12 @@ interface Product {
   id: string; // Product name as ID
   barcode: string; // Scannable barcode
   name: string; // Display name
-  price: number; // Sell price
-  buyPrice: number; // Cost price
+  price: number; // Sell price (required)
+  buyPrice: number; // Cost price (optional)
   sold?: number; // Total units sold
   stock?: StockBatch[];
-  createdAt?: string; // ISO timestamp - when product was created
-  lastEditAt?: string; // ISO timestamp - when product was last modified
+  createdAt?: string; // ISO timestamp
+  lastEditAt?: string; // ISO timestamp
 }
 ```
 
@@ -131,23 +209,34 @@ interface Transaction {
 
 ## Service Layer
 
+### AuthService
+
+**Location:** `lib/services/auth-service.ts`
+
+Handles Supabase authentication with cookie-based sessions.
+
+| Method              | Purpose                                                              |
+| ------------------- | -------------------------------------------------------------------- |
+| `login()`           | Sign in with email/password (username auto-converts to @guest.local) |
+| `logout()`          | Sign out and clear session                                           |
+| `getUser()`         | Get current authenticated user                                       |
+| `isAuthenticated()` | Check if user has active session                                     |
+
 ### CashierService
 
 **Location:** `lib/services/cashier-service.ts`
 
-The singleton service handles all data operations with localStorage caching.
+Handles all data operations with Supabase and localStorage caching.
 
-#### Key Methods
-
-| Method                   | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `syncWithBackend()`      | Fetch products from Strapi and cache locally |
-| `getProducts()`          | Get products (auto-syncs if empty)           |
-| `saveProduct()`          | Create/update product + sync to backend      |
-| `deleteProduct()`        | Remove product + sync to backend             |
-| `processSale()`          | Deduct stock, record transaction, sync       |
-| `getSalesHistory()`      | Get transactions sorted by date              |
-| `getProductsWithStock()` | Get products with calculated available stock |
+| Method                   | Purpose                                        |
+| ------------------------ | ---------------------------------------------- |
+| `syncWithBackend()`      | Fetch products from Supabase and cache locally |
+| `getProducts()`          | Get products (auto-syncs if empty)             |
+| `saveProduct()`          | Create/update product in Supabase              |
+| `deleteProduct()`        | Remove product from Supabase                   |
+| `processSale()`          | Record transaction, update sold counts         |
+| `getSalesHistory()`      | Get transactions sorted by date                |
+| `getProductsWithStock()` | Get products with calculated available stock   |
 
 #### Storage Keys
 
@@ -155,6 +244,37 @@ All keys are prefixed with `cashier_{username}_`:
 
 - `products` - Product catalog
 - `sales` - Transaction history
+
+---
+
+## Supabase Utilities
+
+### Browser Client
+
+**Location:** `lib/supabase/client.ts`
+
+```typescript
+import { createBrowserClient } from '@supabase/ssr';
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
+  );
+}
+```
+
+### Server Client
+
+**Location:** `lib/supabase/server.ts`
+
+Used in Server Components and Route Handlers with cookie handling.
+
+### Middleware Helper
+
+**Location:** `lib/supabase/middleware.ts`
+
+Handles session refresh and route protection in `proxy.ts`.
 
 ---
 
@@ -181,76 +301,29 @@ const {
 
 **Location:** `lib/hooks/useInventory.ts`
 
-Manages inventory page state including sorting, pagination, and modals.
+Manages inventory page state including modals.
 
 ```typescript
 const {
   // Data
-  products,
   filteredProducts,
-  paginatedProducts,
   isLoading,
   searchTerm,
   isSyncing,
-
-  // Sorting
-  sortBy, // 'name' | 'price' | 'stock' | 'createdAt' | 'lastEditAt'
-  sortOrder, // 'asc' | 'desc'
-
-  // Pagination
-  currentPage,
-  pageSize, // Default: 25
-  totalPages,
-  totalItems,
 
   // Modal state
   isModalOpen,
   editingProduct,
   isEditMode,
   isDeleteModalOpen,
-  productToDelete,
 
   // Actions
-  setSearchTerm,
-  setIsEditMode,
-  setSortBy,
-  setSortOrder,
-  setPageSize,
-  goToPage,
   handleSync,
   handleAddClick,
-  handleViewClick,
   handleEditClick,
   handleSave,
-  handleCloseModal,
-  handleDeleteClick,
   confirmDelete,
-  handleCloseDeleteModal,
 } = useInventory();
-```
-
-### useAnalytics
-
-**Location:** `lib/hooks/useAnalytics.ts`
-
-Manages analytics dashboard data with date range and product filtering.
-
-```typescript
-const {
-  // Computed analytics
-  summary, // { totalRevenue, totalProfit, totalMargin, totalTransactions, averageOrderValue, itemsSold }
-  salesTrend, // DailySales[] for chart
-  topProducts, // TopProduct[] ranked by quantity
-  uniqueProducts, // ProductOption[] for filter dropdown
-
-  // State
-  isLoading,
-  isRefreshing,
-  isEmpty,
-
-  // Actions
-  refresh, // () => Promise<void>
-} = useAnalytics(dateRange, filterProductId);
 ```
 
 ---
@@ -259,9 +332,10 @@ const {
 
 ### Login (`/cashier`)
 
-- Cloudflare Turnstile verification
-- Guest credentials option
-- Animated transitions with Framer Motion
+- Cloudflare Turnstile verification (bot protection)
+- Supabase email/password authentication
+- Username login converts to `username@guest.local`
+- Guest credentials: `guest` / `guest.password`
 
 ### POS (`/cashier/pos`)
 
@@ -273,24 +347,21 @@ const {
 
 ### Inventory (`/cashier/inventory`)
 
-- Product list with search
+- Product list with search and pagination
 - CRUD operations via modal
 - Stock batch management with expiration dates
 - Sync button for backend refresh
 
 ### History (`/cashier/history`)
 
-- Transaction list with filters (Recent 10, Today, Yesterday, This Week, This Month, All Time)
+- Transaction list with filters (Today, Week, Month, All)
 - Revenue and profit calculation
 - Sale details modal
 
 ### Dashboard (`/cashier/dashboard`)
 
-- Analytics cards (revenue, profit, margin, transactions)
-- Sales trend chart with Recharts
-- Top products by quantity
-- Date range filter (Today, Last 7 Days, Last 30 Days, All Time)
-- Product filter dropdown
+- Sales analytics and charts
+- Date range filtering
 
 ---
 
@@ -326,32 +397,6 @@ const {
 | `MobileProductCard`  | Product card (mobile)     |
 | `Table`              | Generic data table        |
 | `DeleteConfirmModal` | Deletion confirmation     |
-
-### History Components
-
-| Component          | Purpose                           |
-| ------------------ | --------------------------------- |
-| `SaleDetailsModal` | Transaction details popup         |
-| `PageHeader`       | Reusable page header with actions |
-
-### Shared UI Components (`components/ui`)
-
-| Component       | Purpose                                   |
-| --------------- | ----------------------------------------- |
-| `Modal`         | Base modal wrapper                        |
-| `Button`        | Styled button component                   |
-| `Loading`       | Loading spinner                           |
-| `Select`        | Styled react-select wrapper               |
-| `Pagination`    | Page size selector + prev/next navigation |
-| `Turnstile`     | Cloudflare Turnstile widget               |
-| `ErrorBoundary` | React error boundary                      |
-
-### Utilities (`lib/utils`)
-
-| Utility               | Purpose                            |
-| --------------------- | ---------------------------------- |
-| `formatDate()`        | Format ISO date with optional time |
-| `formatDateCompact()` | Format date as "27 Dec" for mobile |
 
 ### Settings
 
@@ -404,26 +449,43 @@ On dark BG           → text-white or text-white/80 (secondary)
 
 ---
 
-## API Endpoints
+## Environment Variables
 
-The frontend communicates with Strapi backend via:
-
-| Endpoint                      | Method | Purpose                 |
-| ----------------------------- | ------ | ----------------------- |
-| `/api/frontend/getProducts`   | GET    | Fetch all products      |
-| `/api/frontend/addProduct`    | POST   | Create new product      |
-| `/api/frontend/editProduct`   | POST   | Update existing product |
-| `/api/frontend/deleteProduct` | POST   | Delete product          |
-| `/api/frontend/getSales`      | GET    | Fetch sales history     |
-| `/api/frontend/saveSale`      | POST   | Record new sale         |
-
-All endpoints require JWT authentication via `Authorization: Bearer <token>` header.
+| Variable                                       | Purpose                     |
+| ---------------------------------------------- | --------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                     | Supabase project URL        |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Supabase public/anon key    |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`               | Cloudflare Turnstile widget |
 
 ---
 
-## Environment Variables
+## Authentication Flow
 
-| Variable                         | Purpose                     |
-| -------------------------------- | --------------------------- |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile widget |
-| `NEXT_PUBLIC_STRAPI_URL`         | Backend API base URL        |
+1. User visits `/cashier` (login page)
+2. Turnstile verification (bot protection)
+3. User enters credentials (username or email + password)
+4. If username without `@`, converts to `username@guest.local`
+5. Supabase `signInWithPassword()` called
+6. Session stored in cookies (managed by `@supabase/ssr`)
+7. `proxy.ts` refreshes session on each request
+8. Protected routes redirect to login if no session
+
+---
+
+## Proxy (Route Protection)
+
+**Location:** `proxy.ts` (root)
+
+```typescript
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
+}
+
+export const config = {
+  matcher: ['/cashier/:path*'],
+};
+```
+
+- Refreshes Supabase session on every cashier route
+- Redirects unauthenticated users to `/cashier` (login)
+- Redirects authenticated users away from login page to `/cashier/pos`

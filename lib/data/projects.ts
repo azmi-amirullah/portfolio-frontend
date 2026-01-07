@@ -5,7 +5,15 @@ export const pastProjects: Project[] = [
     title: 'Claim Monitoring Tool (CMT)',
     description:
       'The Claim Monitoring Tool (CMT) by Panrise is a sophisticated software designed for litigation funding. It offers advanced data analysis, risk identification, and opportunity assessment for investors and partners. Key features include seamless data import/export, customizable reporting, AI-enhanced document analysis, and structured approval workflows, all aimed at improving decision-making and operational efficiency.',
-    tags: ['React.js', 'Node.js', 'Strapi', 'Tailwind', 'PostgreSQL', 'Redux'],
+    tags: [
+      'React.js',
+      'Node.js',
+      'Strapi',
+      'Tailwind',
+      'PostgreSQL',
+      'Redux',
+      'AI Integration',
+    ],
     images: Array.from(
       { length: 2 },
       (_, i) => `/projects/cmt/cmt_${i + 1}.png`
@@ -108,7 +116,10 @@ export const personalProjects: Project[] = [
       'Strapi',
       'PostgreSQL',
     ],
-    images: ['/projects/cashier/cashier_1.png'],
+    images: Array.from(
+      { length: 9 },
+      (_, i) => `/projects/cashier/cashier_${i + 1}.png`
+    ),
     webUrl: '/cashier',
   },
   {

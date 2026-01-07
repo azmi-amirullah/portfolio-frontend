@@ -28,8 +28,9 @@ export default function CashierLoginPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (authService.isAuthenticated()) {
+    const checkAuth = async () => {
+      const authenticated = await authService.isAuthenticated();
+      if (authenticated) {
         router.replace('/cashier/pos');
       } else {
         setIsCheckingAuth(false);
@@ -117,7 +118,7 @@ export default function CashierLoginPage() {
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       className='block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600'
-                      placeholder='Enter your username or email'
+                      placeholder='Enter username or email'
                     />
                   </div>
                 </div>
@@ -179,13 +180,6 @@ export default function CashierLoginPage() {
                   <span className='font-medium'>Password:</span> guest.password
                 </p>
               </div>
-            </div>
-
-            <div className='bg-amber-50 border border-amber-200 rounded-lg py-2 px-4'>
-              <p className='text-amber-800'>
-                <span className='font-medium'>⚠️ Note:</span> First login may
-                take 30-60s due to server cold start.
-              </p>
             </div>
 
             <div className='text-center'>
