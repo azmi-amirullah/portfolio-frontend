@@ -10,6 +10,7 @@ export default function About() {
     'Tailwind CSS',
     'Next.js',
     'Strapi',
+    'Supabase',
     'Redux',
     'Node.js',
     'PostgreSQL',

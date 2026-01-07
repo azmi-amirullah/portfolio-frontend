@@ -1,7 +1,7 @@
 # Garage (Vehicle Maintenance) Module - Technical Documentation
 
-**Last Updated:** 2025-12-27
-**Tech Stack:** Next.js 15, React 19, Tailwind CSS, Strapi v5
+**Last Updated:** 2026-01-07
+**Tech Stack:** Next.js 16, React 19, Tailwind CSS, Supabase
 
 ---
 
@@ -23,9 +23,9 @@ The **Garage** module is a digital service book designed to help users track mai
 Following the Cashier module pattern:
 
 - **Frontend**: Next.js App Router (`/garage` base route).
-- **Backend**: Existing Strapi instance with single JSON-blob collection.
+- **Backend**: Supabase (PostgreSQL with RLS).
 - **State**: `garage-service.ts` (Singleton pattern) handling data fetching and caching.
-- **Auth**: Reuses `auth-service.ts` JWT token.
+- **Auth**: Reuses `auth-service.ts` (Supabase Auth with cookie-based sessions).
 
 ### Caching Strategy: Cache-First with Backend Sync
 
@@ -67,121 +67,204 @@ Following the Cashier module pattern:
 
 Each user can only see their own vehicles.
 
-| Layer      | Implementation                                         |
-| ---------- | ------------------------------------------------------ |
-| **Strapi** | `user` relation (oneToOne) - filter queries by user ID |
-| **Cache**  | localStorage key scoped: `garage_{username}_data`      |
+| Layer        | Implementation                                    |
+| ------------ | ------------------------------------------------- |
+| **Supabase** | Row Level Security (RLS) - `auth.uid() = user_id` |
+| **Cache**    | localStorage keys scoped per table (see below)    |
 
-> [!WARNING] > **Backend must enforce**: Filter all queries by `user = ctx.state.user.id`.
-> Frontend filtering alone is NOT secure.
+> [!WARNING] > **RLS must be enabled**: Row Level Security policies ensure users can only access their own data at the database level. Frontend filtering alone is NOT secure.
 
 ---
 
-## 3. Data Models
+## 3. Database Schema
 
-### Storage Pattern
+Data is stored in **normalized tables** (same pattern as Cashier module).
 
-All data is stored in a **single Strapi collection** with a JSON field containing the entire data structure per user.
+### Vehicles Table
 
-> [!IMPORTANT] > **Strapi Collection**: `vehicle-maintenance`
->
-> | Field  | Type     | Description                            |
-> | ------ | -------- | -------------------------------------- |
-> | `name` | string   | User identifier                        |
-> | `data` | JSON     | Contains all vehicles with nested data |
-> | `user` | relation | oneToOne with User                     |
+```sql
+CREATE TABLE vehicles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('car', 'motorcycle')),
+  name TEXT NOT NULL,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  plate_number TEXT NOT NULL,
+  current_odometer INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
-```typescript
-// Root structure stored in Strapi 'data' JSON field
-interface VehicleMaintenanceData {
-  vehicles: Vehicle[];
-}
+### Maintenance Items Table
+
+```sql
+CREATE TABLE maintenance_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  interval_km INTEGER,
+  interval_months INTEGER,
+  last_performed_date DATE,
+  last_performed_odometer INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Service Logs Table
+
+```sql
+CREATE TABLE service_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  odometer INTEGER NOT NULL,
+  garage_name TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Service Log Items Table
+
+```sql
+CREATE TABLE service_log_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_log_id UUID REFERENCES service_logs(id) ON DELETE CASCADE,
+  maintenance_item_id UUID REFERENCES maintenance_items(id) ON DELETE SET NULL,
+  cost DECIMAL(10,2)
+);
+```
+
+### Row Level Security
+
+All tables have RLS enabled with policies ensuring users can only access their own data:
+
+```sql
+-- Apply to all tables: vehicles, maintenance_items, service_logs
+CREATE POLICY "Users can CRUD own data" ON [table]
+  FOR ALL USING (auth.uid() = user_id);
+
+-- service_log_items: access via service_logs join
+CREATE POLICY "Users can CRUD own items" ON service_log_items
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM service_logs
+      WHERE service_logs.id = service_log_items.service_log_id
+      AND service_logs.user_id = auth.uid()
+    )
+  );
+```
+
+### Indexes (Performance Critical)
+
+> [!IMPORTANT] > **RLS Performance**: Without indexes on `user_id`, RLS policies can cause up to **99%+ slower queries**. Always index columns used in RLS policies.
+
+```sql
+-- Index user_id for RLS performance (critical)
+CREATE INDEX idx_vehicles_user_id ON vehicles(user_id);
+CREATE INDEX idx_maintenance_items_user_id ON maintenance_items(user_id);
+CREATE INDEX idx_service_logs_user_id ON service_logs(user_id);
+
+-- Index foreign keys for join performance
+CREATE INDEX idx_maintenance_items_vehicle_id ON maintenance_items(vehicle_id);
+CREATE INDEX idx_service_logs_vehicle_id ON service_logs(vehicle_id);
+CREATE INDEX idx_service_log_items_service_log_id ON service_log_items(service_log_id);
+```
+
+### Triggers
+
+Auto-update `updated_at` timestamp on row modification:
+
+```sql
+-- Create reusable trigger function
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply to vehicles table
+CREATE TRIGGER vehicles_updated_at
+  BEFORE UPDATE ON vehicles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
 ```
 
 ---
 
-### 3.1. Vehicle
+## 4. Data Models
 
-_The top-level container. Each vehicle contains its own maintenance rules and service history._
+### Vehicle
 
 ```typescript
 interface Vehicle {
-  id: string; // UUID or timestamp-based
+  id: string;
   type: 'car' | 'motorcycle';
-  name: string; // e.g., "Daily Driver"
-  brand: string; // e.g., "Honda"
-  model: string; // e.g., "Beat", "Civic"
+  name: string;
+  brand: string;
+  model: string;
   year: number;
   plateNumber: string;
-  currentOdometer: number; // Updated by latest Service Log
-
-  // Embedded arrays (no separate collections needed)
-  maintenanceItems: MaintenanceItem[];
-  serviceLogs: ServiceLog[];
+  currentOdometer: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 ```
 
----
-
-### 3.2. Maintenance Item (Embedded)
-
-_The "rules" for maintenance. Embedded inside each Vehicle._
-
-> [!NOTE]
-> No `vehicleId` needed - items are already nested inside their parent Vehicle.
-> This allows different intervals per vehicle (motorcycle 2000km vs car 5000km).
+### MaintenanceItem
 
 ```typescript
 interface MaintenanceItem {
   id: string;
-  name: string; // e.g., "Engine Oil Change"
-
-  // The Rule (at least one required)
-  intervalKm?: number; // e.g., 2000 for motorcycle, 5000 for car
-  intervalMonths?: number; // e.g., 3 for motorcycle, 6 for car
-
-  // The State (updated when service logged)
-  lastPerformedDate?: string; // ISO Date
+  vehicleId: string;
+  name: string;
+  intervalKm?: number;
+  intervalMonths?: number;
+  lastPerformedDate?: string;
   lastPerformedOdometer?: number;
 }
 ```
 
----
-
-### 3.3. Service Log (Embedded)
-
-_Records of completed maintenance. Embedded inside each Vehicle._
+### ServiceLog
 
 ```typescript
 interface ServiceLog {
   id: string;
-  date: string; // ISO Date of service
-  odometer: number; // Odometer reading at time of service
-  garageName?: string; // e.g., "Official Dealer", "Self"
+  vehicleId: string;
+  date: string;
+  odometer: number;
+  garageName?: string;
   notes?: string;
-
-  // What was done?
   items: ServiceLogItem[];
 }
 
 interface ServiceLogItem {
-  maintenanceItemId: string; // Reference to MaintenanceItem.id within same vehicle
-  cost?: number; // Cost for this specific item
+  id: string;
+  serviceLogId: string;
+  maintenanceItemId: string;
+  cost?: number;
 }
 ```
 
 ---
 
-## 4. Logic & Calculation Flow
+## 5. Logic & Calculation Flow
 
 ### Service Status Calculation
 
 To determine if a maintenance item is due, check both **Distance** and **Time**:
 
-1. **Distance Due**: `LastPerformedOdometer + IntervalKm`
-2. **Date Due**: `LastPerformedDate + IntervalMonths`
+1. **Distance Due**: `lastPerformedOdometer + intervalKm`
+2. **Date Due**: `lastPerformedDate + intervalMonths`
 3. **Current Status**:
-   - Compare `Vehicle.currentOdometer` vs `Distance Due`.
+   - Compare `vehicle.currentOdometer` vs `Distance Due`.
    - Compare `Today` vs `Date Due`.
    - **Worst case wins**: If distance is okay but date is passed, it is **Overdue**.
 
@@ -193,30 +276,63 @@ When a user submits a "Service Log":
    - Current Odometer (e.g., 15,000 km)
    - Services done (Checklist: [x] Oil, [x] Filter)
    - Cost per item (optional)
-2. **Action**:
-   - Update the vehicle's `serviceLogs` array.
-   - **Update Odometer**: Set `Vehicle.currentOdometer` **ONLY IF** new value > current.
-   - **Update Schedules**: For each checked item, update `lastPerformedOdometer` and `lastPerformedDate`.
-   - Save entire `data` JSON back to Strapi.
+2. **Database Operations**:
+   - Insert into `service_logs` table.
+   - Insert checked items into `service_log_items` table.
+   - **Update Odometer**: Update `vehicles.current_odometer` **ONLY IF** new value > current.
+   - **Update Schedules**: For each checked item, update `maintenance_items.last_performed_odometer` and `last_performed_date`.
 
 > [!CAUTION] > **Odometer Guard**: Only update if `ServiceLog.odometer > Vehicle.currentOdometer`.
 > This allows backdated service logs without corrupting current odometer.
 
 ---
 
-## 5. API Endpoints
+## 6. Data Access
 
-Single collection approach - minimal endpoints:
+Direct Supabase client calls (no REST endpoints needed):
 
-| Endpoint                         | Method | Description                |
-| -------------------------------- | ------ | -------------------------- |
-| `/api/vehicle-maintenances`      | GET    | Get user's data (vehicles) |
-| `/api/vehicle-maintenances`      | POST   | Create initial record      |
-| `/api/vehicle-maintenances/{id}` | PUT    | Update entire data JSON    |
+### Vehicles
+
+| Operation | Supabase Method                      |
+| --------- | ------------------------------------ |
+| List      | `supabase.from('vehicles').select()` |
+| Create    | `supabase.from('vehicles').insert()` |
+| Update    | `supabase.from('vehicles').update()` |
+| Delete    | `supabase.from('vehicles').delete()` |
+
+### Maintenance Items
+
+| Operation | Supabase Method                                                    |
+| --------- | ------------------------------------------------------------------ |
+| List      | `supabase.from('maintenance_items').select().eq('vehicle_id', id)` |
+| Create    | `supabase.from('maintenance_items').insert()`                      |
+| Update    | `supabase.from('maintenance_items').update()`                      |
+| Delete    | `supabase.from('maintenance_items').delete()`                      |
+
+### Service Logs
+
+| Operation | Supabase Method                                                                        |
+| --------- | -------------------------------------------------------------------------------------- |
+| List      | `supabase.from('service_logs').select('*, service_log_items(*)').eq('vehicle_id', id)` |
+| Create    | `supabase.from('service_logs').insert()` + `service_log_items.insert()`                |
+| Delete    | `supabase.from('service_logs').delete()` (cascades to items)                           |
+
+> [!NOTE]
+> RLS policies automatically filter by `user_id`, so no manual filtering is needed in queries.
+
+### Storage Keys
+
+All keys are prefixed with `garage_{username}_`:
+
+| Key                | Data Cached                |
+| ------------------ | -------------------------- |
+| `vehicles`         | All user's vehicles        |
+| `maintenanceItems` | Maintenance rules          |
+| `serviceLogs`      | Service history with items |
 
 ---
 
-## 6. UI Structure (Mobile First)
+## 7. UI Structure (Mobile First)
 
 ### Navigation Menu
 
@@ -269,16 +385,18 @@ Three main menu items (same pattern as Cashier with `/pos`, `/inventory`, `/hist
 
 ---
 
-## 7. Implementation Plan
+## 8. Implementation Plan
 
-### Phase 1: Backend
+### Phase 1: Backend (Supabase)
 
-1. ~~Create `vehicle-maintenance` collection in Strapi~~ ✅
-2. Set up permissions for authenticated users.
+1. Create `vehicles` table with RLS policy.
+2. Create `maintenance_items` table with RLS policy.
+3. Create `service_logs` table with RLS policy.
+4. Create `service_log_items` table with RLS policy (via join).
 
 ### Phase 2: Frontend
 
-1. Create `lib/services/garage-service.ts`
+1. Create `lib/services/garage-service.ts` (uses Supabase client from `lib/supabase/client.ts`).
 2. Scaffold `/garage` pages with vehicle selection flow.
 
 ### Phase 3: Core Logic
