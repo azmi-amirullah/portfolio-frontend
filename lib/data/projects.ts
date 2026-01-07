@@ -117,7 +117,7 @@ export const personalProjects: Project[] = [
       'PostgreSQL',
     ],
     images: Array.from(
-      { length: 9 },
+      { length: 10 },
       (_, i) => `/projects/cashier/cashier_${i + 1}.png`
     ),
     webUrl: '/cashier',
