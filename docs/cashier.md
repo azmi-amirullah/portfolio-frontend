@@ -11,10 +11,11 @@
 2. [Architecture](#architecture)
 3. [Data Models](#data-models)
 4. [Service Layer](#service-layer)
-5. [Hooks](#hooks)
-6. [Pages](#pages)
-7. [Components](#components)
-8. [Design System](#design-system)
+5. [Utilities](#utilities)
+6. [Hooks](#hooks)
+7. [Pages](#pages)
+8. [Components](#components)
+9. [Design System](#design-system)
 
 ---
 
@@ -52,7 +53,8 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 ├─────────────────────────────────────────────────────────────┤
 │                       Hooks Layer                            │
 │  ├─ useCart (cart state management)                          │
-│  └─ useInventory (product list + CRUD state)                 │
+│  ├─ useInventory (product list + CRUD state)                 │
+│  └─ useAnalytics (dashboard analytics)                       │
 ├─────────────────────────────────────────────────────────────┤
 │                      Service Layer                           │
 │  ├─ cashierService (data operations + Supabase sync)         │
@@ -62,6 +64,10 @@ The Cashier module is a full-featured Point of Sale (POS) system with:
 │  ├─ lib/supabase/client.ts (browser client)                  │
 │  ├─ lib/supabase/server.ts (server client)                   │
 │  └─ lib/supabase/middleware.ts (session refresh)             │
+├─────────────────────────────────────────────────────────────┤
+│                     Context & Utilities                      │
+│  ├─ lib/context/TextSizeContext.tsx                          │
+│  └─ lib/utils/date.ts                                        │
 ├─────────────────────────────────────────────────────────────┤
 │                        Storage                               │
 │  ├─ localStorage (offline cache, user-scoped)                │
@@ -215,12 +221,13 @@ interface Transaction {
 
 Handles Supabase authentication with cookie-based sessions.
 
-| Method              | Purpose                                                              |
-| ------------------- | -------------------------------------------------------------------- |
-| `login()`           | Sign in with email/password (username auto-converts to @guest.local) |
-| `logout()`          | Sign out and clear session                                           |
-| `getUser()`         | Get current authenticated user                                       |
-| `isAuthenticated()` | Check if user has active session                                     |
+| Method                | Purpose                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| `login()`             | Sign in with email/password (username auto-converts to @guest.local) |
+| `logout()`            | Sign out and clear session                                           |
+| `getUser()`           | Get current authenticated user                                       |
+| `isAuthenticated()`   | Check if user has active session                                     |
+| `getSupabaseClient()` | Get underlying Supabase client instance                              |
 
 ### CashierService
 
@@ -231,12 +238,20 @@ Handles all data operations with Supabase and localStorage caching.
 | Method                   | Purpose                                        |
 | ------------------------ | ---------------------------------------------- |
 | `syncWithBackend()`      | Fetch products from Supabase and cache locally |
+| `syncSalesWithBackend()` | Fetch transactions from Supabase and cache     |
 | `getProducts()`          | Get products (auto-syncs if empty)             |
+| `getProductByBarcode()`  | Find product by barcode string                 |
+| `getProductById()`       | Find product by ID                             |
 | `saveProduct()`          | Create/update product in Supabase              |
 | `deleteProduct()`        | Remove product from Supabase                   |
+| `getStockBatches()`      | Get stock batches for a product                |
+| `addStock()`             | Add new stock batch to product                 |
+| `updateStockBatch()`     | Update existing stock batch                    |
 | `processSale()`          | Record transaction, update sold counts         |
 | `getSalesHistory()`      | Get transactions sorted by date                |
+| `getProductStock()`      | Get available stock count for product          |
 | `getProductsWithStock()` | Get products with calculated available stock   |
+| `hasData()`              | Check if local cache has product data          |
 
 #### Storage Keys
 
@@ -268,13 +283,35 @@ export function createClient() {
 
 **Location:** `lib/supabase/server.ts`
 
-Used in Server Components and Route Handlers with cookie handling.
+Use in Server Components and Route Handlers. Required when:
 
-### Middleware Helper
+- Fetching data in `page.tsx` (server-side rendering)
+- API routes that need authenticated user context
+- Any server-side code that needs to read auth session
 
-**Location:** `lib/supabase/middleware.ts`
+Uses cookies instead of localStorage for session management.
 
-Handles session refresh and route protection in `proxy.ts`.
+---
+
+## Utilities
+
+### Date Formatting
+
+**Location:** `lib/utils/date.ts`
+
+| Function              | Purpose                                            |
+| --------------------- | -------------------------------------------------- |
+| `formatDate()`        | Full date with optional time (e.g., "27 Dec 2026") |
+| `formatDateCompact()` | Short date for mobile (e.g., "27 Dec")             |
+
+```typescript
+formatDate(dateStr?: string | null, options?: {
+  includeTime?: boolean; // default: false
+  shortMonth?: boolean;  // default: true
+}): string;
+
+formatDateCompact(dateStr?: string | null): string;
+```
 
 ---
 
@@ -285,6 +322,16 @@ Handles session refresh and route protection in `proxy.ts`.
 **Location:** `lib/hooks/useCart.ts`
 
 Manages shopping cart state for POS page.
+
+**Exported Types:**
+
+```typescript
+interface CartItem extends Product {
+  quantity: number;
+}
+```
+
+**Hook API:**
 
 ```typescript
 const {
@@ -301,29 +348,120 @@ const {
 
 **Location:** `lib/hooks/useInventory.ts`
 
-Manages inventory page state including modals.
+Manages inventory page state including modals, sorting, and pagination.
+
+**Exported Types:**
+
+```typescript
+type ProductWithStock = Product & {
+  availableStock: number;
+  batches: StockBatch[];
+};
+type SortField = 'name' | 'price' | 'stock' | 'createdAt' | 'lastEditAt';
+type SortOrder = 'asc' | 'desc';
+```
+
+**Hook API:**
 
 ```typescript
 const {
   // Data
+  products,
   filteredProducts,
+  paginatedProducts,
   isLoading,
   searchTerm,
   isSyncing,
+  sortBy,
+  sortOrder,
+
+  // Pagination
+  currentPage,
+  pageSize,
+  totalPages,
+  totalItems,
 
   // Modal state
   isModalOpen,
   editingProduct,
   isEditMode,
   isDeleteModalOpen,
+  productToDelete,
+  isDeleting,
 
   // Actions
+  setSearchTerm,
+  setIsEditMode,
+  setSortBy,
+  setSortOrder,
+  setPageSize,
+  goToPage,
   handleSync,
   handleAddClick,
+  handleViewClick,
   handleEditClick,
   handleSave,
+  handleCloseModal,
+  handleDeleteClick,
   confirmDelete,
+  handleCloseDeleteModal,
 } = useInventory();
+```
+
+### useAnalytics
+
+**Location:** `lib/hooks/useAnalytics.ts`
+
+Manages dashboard analytics with date range and product filtering.
+
+**Exported Types:**
+
+```typescript
+type DateRange = 'today' | 'last7' | 'last30' | 'all';
+
+interface DailySales {
+  date: string; // "Mon", "Dec 12"
+  fullDate: string; // YYYY-MM-DD
+  revenue: number;
+  profit: number;
+  transactions: number;
+}
+
+interface TopProduct {
+  id: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+}
+
+interface AnalyticsSummary {
+  totalRevenue: number;
+  totalProfit: number;
+  totalMargin: number;
+  totalTransactions: number;
+  averageOrderValue: number;
+  itemsSold: number;
+}
+
+interface ProductOption {
+  id: string;
+  name: string;
+}
+```
+
+**Hook API:**
+
+```typescript
+const {
+  summary, // AnalyticsSummary
+  salesTrend, // DailySales[]
+  topProducts, // TopProduct[]
+  uniqueProducts, // ProductOption[] (for filter dropdown)
+  isLoading,
+  isRefreshing,
+  isEmpty,
+  refresh, // () => Promise<void>
+} = useAnalytics(dateRange, filterProductId);
 ```
 
 ---
@@ -351,17 +489,25 @@ const {
 - CRUD operations via modal
 - Stock batch management with expiration dates
 - Sync button for backend refresh
+- Column sorting (name, price, stock, created, last edit)
+- Conditional date columns based on current sort field
+- Responsive layout: table (desktop) / cards (mobile)
 
 ### History (`/cashier/history`)
 
-- Transaction list with filters (Today, Week, Month, All)
+- Transaction list with filters (Today, Yesterday, Week, Month, All)
 - Revenue and profit calculation
 - Sale details modal
+- Sync button for backend refresh
 
 ### Dashboard (`/cashier/dashboard`)
 
-- Sales analytics and charts
-- Date range filtering
+- Summary stats: revenue, profit, margin, transactions, AOV, items sold
+- Sales trend chart (revenue + profit by day)
+- Top 5 products bar chart
+- Date range filter (Today, Last 7 Days, Last 30 Days, All Time)
+- Product filter dropdown
+- Refresh/sync capability
 
 ---
 
@@ -398,12 +544,38 @@ const {
 | `Table`              | Generic data table        |
 | `DeleteConfirmModal` | Deletion confirmation     |
 
+### History Components
+
+| Component          | Purpose                  |
+| ------------------ | ------------------------ |
+| `SaleDetailsModal` | Transaction details view |
+
+### Shared Components
+
+| Component    | Purpose                    |
+| ------------ | -------------------------- |
+| `PageHeader` | Reusable page title header |
+
 ### Settings
 
-| Component         | Purpose                              |
-| ----------------- | ------------------------------------ |
-| `SettingsModal`   | Text size adjustment                 |
-| `TextSizeContext` | Font size provider (normal/large/xl) |
+| Component       | Purpose                 |
+| --------------- | ----------------------- |
+| `SettingsModal` | Text size adjustment UI |
+
+### Context
+
+**Location:** `lib/context/TextSizeContext.tsx`
+
+| Export             | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| `TextSizeProvider` | Wraps app, manages font size state      |
+| `useTextSize()`    | Hook to get/set current text size       |
+| `TextSize`         | Type: `'normal' \| 'large' \| 'xl'`     |
+| `TEXT_SIZE_MAP`    | Maps size to CSS value (100%/110%/125%) |
+
+```typescript
+const { textSize, setTextSize } = useTextSize();
+```
 
 ---
 
