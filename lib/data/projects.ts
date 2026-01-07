@@ -113,7 +113,7 @@ export const personalProjects: Project[] = [
       'TypeScript',
       'React',
       'Tailwind CSS',
-      'Strapi',
+      'Supabase',
       'PostgreSQL',
     ],
     images: Array.from(
