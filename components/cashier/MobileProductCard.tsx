@@ -1,5 +1,5 @@
 import { Product } from '@/lib/services/cashier-service';
-import { formatDateCompact } from '@/lib/utils/date';
+import { formatDate } from '@/lib/utils/date';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import { Button } from '@/components/ui/Button';
 
@@ -56,8 +56,8 @@ export function MobileProductCard({
       </div>
       <div className='flex justify-between items-center mt-3 pt-3 border-t border-gray-200'>
         <div className='text-gray-500 text-sm'>
-          <div>Created: {formatDateCompact(product.createdAt)}</div>
-          <div>Edited: {formatDateCompact(product.lastEditAt)}</div>
+          <div>Created: {formatDate(product.createdAt)}</div>
+          <div>Edited: {formatDate(product.lastEditAt)}</div>
         </div>
         <div className='flex gap-2'>
           <Button

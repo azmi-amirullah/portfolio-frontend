@@ -234,22 +234,32 @@ export default function InventoryPage() {
                   </span>
                 ),
               },
-              {
-                header: 'Created',
-                renderRow: (product) => (
-                  <span className='text-gray-500'>
-                    {formatDate(product.createdAt)}
-                  </span>
-                ),
-              },
-              {
-                header: 'Last Edit',
-                renderRow: (product) => (
-                  <span className='text-gray-500'>
-                    {formatDate(product.lastEditAt)}
-                  </span>
-                ),
-              },
+              // Show Created column only when sorting by createdAt
+              ...(sortBy === 'createdAt'
+                ? [
+                    {
+                      header: 'Created',
+                      renderRow: (product: (typeof paginatedProducts)[0]) => (
+                        <span className='text-gray-500'>
+                          {formatDate(product.createdAt)}
+                        </span>
+                      ),
+                    },
+                  ]
+                : []),
+              // Show Last Edit column only when sorting by lastEditAt
+              ...(sortBy === 'lastEditAt'
+                ? [
+                    {
+                      header: 'Last Edit',
+                      renderRow: (product: (typeof paginatedProducts)[0]) => (
+                        <span className='text-gray-500'>
+                          {formatDate(product.lastEditAt)}
+                        </span>
+                      ),
+                    },
+                  ]
+                : []),
               {
                 header: 'Actions',
                 align: 'right',
