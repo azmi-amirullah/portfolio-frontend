@@ -137,18 +137,4 @@ export const personalProjects: Project[] = [
     images: ['/projects/portfolio/portfolio_1.png'],
     webUrl: '#',
   },
-  {
-    title: 'MQL Trading Tools & Expert Advisors',
-    description:
-      'Development of custom Expert Advisors (EAs), indicators, and automated trading solutions for MetaTrader 4 and MetaTrader 5 platforms. Specialized in algorithmic trading strategies and technical analysis tools for forex and financial markets.',
-    tags: [
-      'MQL4',
-      'MQL5',
-      'Expert Advisors',
-      'Algorithmic Trading',
-      'MetaTrader',
-    ],
-    images: ['/projects/mql5/mql5_1.png'],
-    webUrl: 'https://www.mql5.com/en/users/azmiupb/seller',
-  },
 ];
