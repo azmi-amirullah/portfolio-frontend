@@ -16,7 +16,7 @@ export const pastProjects: Project[] = [
     ],
     images: Array.from(
       { length: 2 },
-      (_, i) => `/projects/cmt/cmt_${i + 1}.png`
+      (_, i) => `/projects/cmt/cmt_${i + 1}.png`,
     ),
     webUrl: '',
   },
@@ -27,7 +27,7 @@ export const pastProjects: Project[] = [
     tags: ['React.js', 'Next.js', 'Firebase', 'JavaScript', 'Tailwind'],
     images: Array.from(
       { length: 1 },
-      (_, i) => `/projects/claimback/claimback_${i + 1}.png`
+      (_, i) => `/projects/claimback/claimback_${i + 1}.png`,
     ),
     webUrl: 'https://claimback.de',
   },
@@ -38,7 +38,7 @@ export const pastProjects: Project[] = [
     tags: ['React.js', 'Next.js', 'TypeScript', 'Tailwind', 'Ant Design'],
     images: Array.from(
       { length: 3 },
-      (_, i) => `/projects/odysseus/odysseus_${i + 1}.png`
+      (_, i) => `/projects/odysseus/odysseus_${i + 1}.png`,
     ),
     webUrl: 'https://www.astra-daihatsu.id/',
   },
@@ -49,7 +49,7 @@ export const pastProjects: Project[] = [
     tags: ['React.js', 'TypeScript', 'Node.js', 'Ant Design', 'SCSS', 'MobX'],
     images: Array.from(
       { length: 27 },
-      (_, i) => `/projects/rssp/rssp_${i + 1}.png`
+      (_, i) => `/projects/rssp/rssp_${i + 1}.png`,
     ),
     webUrl: '',
   },
@@ -105,6 +105,24 @@ export const pastProjects: Project[] = [
 
 export const personalProjects: Project[] = [
   {
+    title: 'LinkBase',
+    description:
+      'A fully functional Linktree clone featuring drag-and-drop link management, real-time mobile preview, profile customization with dynamic backgrounds, and secure authentication via Supabase.',
+    tags: [
+      'Next.js 16',
+      'Supabase',
+      'Tailwind CSS',
+      'dnd-kit',
+      'Framer Motion',
+      'Radix UI',
+    ],
+    images: Array.from(
+      { length: 1 },
+      (_, i) => `/projects/linkbase/linkbase_${i + 1}.png`,
+    ),
+    webUrl: 'https://link-base.vercel.app',
+  },
+  {
     title: 'Mini Market Cashier System',
     description:
       'A full-stack point-of-sale (POS) system for mini markets with inventory management, transaction-based sales tracking, stock management with expiration dates, backend synchronization, and comprehensive sales history with advanced search and filtering.',
@@ -118,7 +136,7 @@ export const personalProjects: Project[] = [
     ],
     images: Array.from(
       { length: 10 },
-      (_, i) => `/projects/cashier/cashier_${i + 1}.png`
+      (_, i) => `/projects/cashier/cashier_${i + 1}.png`,
     ),
     webUrl: '/cashier',
   },
