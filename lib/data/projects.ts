@@ -105,22 +105,23 @@ export const pastProjects: Project[] = [
 
 export const personalProjects: Project[] = [
   {
-    title: 'LinkBase',
+    title: 'UKIT',
     description:
-      'A fully functional Linktree clone featuring drag-and-drop link management, real-time mobile preview, profile customization with dynamic backgrounds, and secure authentication via Supabase.',
+      'A comprehensive personal utility platform that evolves beyond simple link-in-bio tools. Features a multi-app architecture starting with "Bio", layered identity management, username aliases, and strictly separated public/private routing. Built for scalability with a Google-like ecosystem approach.',
     tags: [
       'Next.js 16',
+      'React 19',
       'Supabase',
       'Tailwind CSS',
-      'dnd-kit',
+      'Shadcn/UI',
       'Framer Motion',
-      'Radix UI',
+      'dnd-kit',
     ],
     images: Array.from(
       { length: 1 },
-      (_, i) => `/projects/linkbase/linkbase_${i + 1}.png`,
+      (_, i) => `/projects/ukit/ukit_${i + 1}.png`,
     ),
-    webUrl: 'https://link-base.vercel.app',
+    webUrl: 'https://ukitapp.vercel.app',
   },
   {
     title: 'Mini Market Cashier System',

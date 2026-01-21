@@ -60,7 +60,7 @@ export default function Navigation() {
                 key={link.name}
                 variant='ghost'
                 onClick={() => scrollToSection(link.href)}
-                className='text-foreground/80 hover:text-secondary hover:bg-transparent font-medium transition-colors px-0'
+                className='text-foreground/80 hover:text-secondary hover:bg-transparent font-medium transition-colors px-0 text-base'
                 data-testid={`nav-link-${link.name.toLowerCase()}`}
               >
                 {link.name}
