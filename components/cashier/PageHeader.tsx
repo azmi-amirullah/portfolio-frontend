@@ -25,7 +25,11 @@ export function PageHeader({
         </h1>
         <p className='text-gray-500 mt-1 lg:text-base'>{subtitle}</p>
       </div>
-      {actions && <div className='flex gap-2 w-full sm:w-auto'>{actions}</div>}
+      {actions && (
+        <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
