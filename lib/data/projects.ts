@@ -107,7 +107,7 @@ export const personalProjects: Project[] = [
   {
     title: 'UKIT',
     description:
-      'A comprehensive personal utility platform that evolves beyond simple link-in-bio tools. Features a multi-app architecture starting with "Bio", layered identity management, username aliases, and strictly separated public/private routing. Built for scalability with a Google-like ecosystem approach.',
+      'A unified personal utility platform that evolves beyond simple link-in-bio tools. Features a modular architecture (Bio, Cashflow, List, Track), layered identity management, and strictly separated public/private routing. Built for scalability with a privacy-first, ecosystem approach.',
     tags: [
       'Next.js 16',
       'React 19',

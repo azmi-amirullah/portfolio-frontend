@@ -28,8 +28,9 @@ export default function ProjectCard({
           hidden: { opacity: 0, y: 20 },
           show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
         }}
+        className='h-full'
       >
-        <div className='group overflow-hidden border border-border rounded-lg hover:border-secondary/50 transition-all duration-300 hover:shadow-lg bg-white h-full flex flex-col'>
+        <div className='group relative overflow-hidden border border-border rounded-xl hover:border-secondary transition-all duration-300 hover:shadow-lg bg-white h-full flex flex-col'>
           <div
             className={`relative overflow-hidden aspect-video ${
               galleryImages.length > 0 ? 'cursor-pointer' : ''
@@ -62,36 +63,38 @@ export default function ProjectCard({
           </div>
 
           <div className='p-6 pb-2'>
-            <div className='flex justify-between items-start mb-2'>
-              <h3 className='text-2xl font-heading font-bold text-primary group-hover:text-secondary transition-colors'>
-                {title}
-              </h3>
-
-              {webUrl && (
-                <div className='flex gap-3 mt-1.5'>
-                  <a
-                    href={webUrl}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-muted-foreground hover:text-secondary transition-colors'
-                    title='View Website'
-                  >
+            <div className='mb-2'>
+              {webUrl ? (
+                <a
+                  href={webUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='group/header flex justify-between items-center'
+                >
+                  <h3 className='text-2xl font-heading font-bold text-primary group-hover/header:text-secondary transition-all underline-offset-4 decoration-secondary/0 group-hover/header:decoration-secondary decoration-2 duration-300'>
+                    {title}
+                  </h3>
+                  <div className='text-muted-foreground group-hover/header:text-secondary transition-all duration-300'>
                     <LuExternalLink size={20} />
-                  </a>
-                </div>
+                  </div>
+                </a>
+              ) : (
+                <h3 className='text-2xl font-heading font-bold text-primary'>
+                  {title}
+                </h3>
               )}
             </div>
           </div>
 
           <div className='p-6 pt-2 grow flex flex-col'>
-            <p className='text-lg text-muted-foreground leading-relaxed mb-8'>
+            <p className='text-lg text-muted-foreground leading-relaxed mb-8 grow'>
               {description}
             </p>
             <div className='flex flex-wrap gap-2 mt-auto'>
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className='inline-flex cursor-default items-center px-3 py-1 rounded-full text-sm font-normal bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors'
+                  className='inline-flex cursor-default items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/5 text-primary border border-primary/10 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/20 transition-all duration-300'
                 >
                   {tag}
                 </span>
